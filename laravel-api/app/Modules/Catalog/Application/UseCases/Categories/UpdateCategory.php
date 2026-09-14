@@ -1,0 +1,4 @@
+<?php
+namespace App\Modules\Catalog\Application\UseCases\Categories;
+use App\Modules\Catalog\Domain\ValueObjects\CategoryData;use App\Modules\Catalog\Domain\Contracts\CategoryRepositoryInterface;use App\Modules\Catalog\Domain\Exceptions\BusinessRuleException;use App\Modules\Catalog\Domain\Exceptions\DuplicateSlugException;use Illuminate\Support\Str;
+final class UpdateCategory {public function __construct(private readonly CategoryRepositoryInterface $categories){} public function execute(int $id,CategoryData $d):object{$this->categories->findOrFail($id);if($d->parentId!==null){$this->categories->findOrFail($d->parentId);if($this->categories->wouldCreateCycle($id,$d->parentId))throw new BusinessRuleException('The selected parent would create a category cycle.');}$s=Str::slug($d->slug?:$d->name);if($this->categories->slugExists($s,$id))throw new DuplicateSlugException($s);return $this->categories->update($id,$d,$s);}}

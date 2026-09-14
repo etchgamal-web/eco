@@ -1,0 +1,4 @@
+<?php
+namespace App\Modules\Customer\Application\UseCases;
+use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;use App\Modules\Auth\Domain\Exceptions\AuthenticationException;use App\Modules\Customer\Domain\Contracts\WishlistRepositoryInterface;
+final class ManageCustomerWishlist {public function __construct(private readonly AuthenticationServiceInterface $auth,private readonly WishlistRepositoryInterface $repo){}private function id():int{$u=$this->auth->user();if(!$u)throw new AuthenticationException('Unauthenticated.');return $u->id;}public function list():iterable{return $this->repo->listForUser($this->id());}public function add(int $productId){return $this->repo->add($this->id(),$productId);}public function remove(int $productId):void{$this->repo->remove($this->id(),$productId);} }

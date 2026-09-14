@@ -1,0 +1,2 @@
+# Install for the application user with: crontab deploy/ecommerce-scheduler.cron
+* * * * * cd /var/www/ecommerce-platform && /usr/bin/php artisan schedule:run --no-ansi >> /var/log/ecommerce-scheduler.log 2>&1
