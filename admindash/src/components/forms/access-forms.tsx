@@ -1,0 +1,24 @@
+"use client";
+
+import { useState } from "react";
+
+const groups = [
+  { name: "Catalog", permissions: ["View products", "Manage products", "Manage categories"] },
+  { name: "Sales", permissions: ["View orders", "Manage orders", "Issue refunds"] },
+  { name: "Customers", permissions: ["View customers", "Export customers"] },
+  { name: "Settings", permissions: ["Manage store settings", "Manage team access"] },
+];
+
+export function RoleEditor({ mode = "create" }: { mode?: "create" | "edit" }) {
+  const [saved, setSaved] = useState(false);
+  const [selected, setSelected] = useState<string[]>(mode === "edit" ? ["View products", "Manage products", "View orders", "View customers"] : ["View products"]);
+  const toggle = (permission: string) => setSelected((items) => items.includes(permission) ? items.filter((item) => item !== permission) : [...items, permission]);
+  return <form onSubmit={(event) => { event.preventDefault(); setSaved(true); }} className="space-y-5"><section className="rounded-2xl border border-[#e1e9e1] bg-white p-6"><h3 className="font-bold">Role details</h3><p className="mt-1 text-xs text-[#8b9991]">Give this role a clear name so your team knows when to use it.</p><div className="mt-6 grid gap-5 md:grid-cols-2"><label className="block"><span className="mb-2 block text-xs font-semibold text-[#52655a]">Role name</span><input required defaultValue={mode === "edit" ? "Catalog manager" : ""} placeholder="e.g. Support agent" className="h-11 w-full rounded-lg border border-[#dfe7df] px-3 text-sm outline-none focus:border-[#8daf60]" /></label><label className="block"><span className="mb-2 block text-xs font-semibold text-[#52655a]">Description</span><input defaultValue={mode === "edit" ? "Can manage products and view orders." : ""} placeholder="What can this role do?" className="h-11 w-full rounded-lg border border-[#dfe7df] px-3 text-sm outline-none focus:border-[#8daf60]" /></label></div></section><section className="rounded-2xl border border-[#e1e9e1] bg-white p-6"><div className="flex items-center justify-between"><div><h3 className="font-bold">Permissions</h3><p className="mt-1 text-xs text-[#8b9991]">Select the capabilities available to this role.</p></div><span className="rounded-full bg-[#edf7dc] px-2.5 py-1 text-[10px] font-bold text-[#608428]">{selected.length} selected</span></div><div className="mt-6 grid gap-4 md:grid-cols-2">{groups.map((group) => <div key={group.name} className="rounded-xl border border-[#edf1ed] p-4"><p className="mb-3 text-xs font-bold uppercase tracking-[0.13em] text-[#7e9b61]">{group.name}</p><div className="space-y-3">{group.permissions.map((permission) => <label key={permission} className="flex items-center gap-3 text-xs text-[#52655a]"><input type="checkbox" checked={selected.includes(permission)} onChange={() => toggle(permission)} className="size-4 accent-[#608428]" />{permission}</label>)}</div></div>)}</div></section><div className="flex justify-end"><button className="rounded-lg bg-[#173b2d] px-5 py-2.5 text-xs font-bold text-white">{saved ? "Role saved ✓" : mode === "edit" ? "Save changes" : "Create role"}</button></div></form>;
+}
+
+export function PermissionsMatrix() {
+  const [matrix, setMatrix] = useState<Record<string, boolean>>({ "products.view:Administrator": true, "products.view:Catalog manager": true, "orders.view:Administrator": true, "customers.view:Administrator": true });
+  const rows = [{ key: "products.view", label: "View products" }, { key: "products.manage", label: "Manage products" }, { key: "orders.view", label: "View orders" }, { key: "orders.manage", label: "Manage orders" }, { key: "customers.view", label: "View customers" }, { key: "settings.manage", label: "Manage settings" }];
+  const roles = ["Administrator", "Catalog manager", "Support agent"];
+  return <div className="overflow-x-auto rounded-2xl border border-[#e1e9e1] bg-white"><table className="w-full min-w-[620px] text-left text-xs"><thead className="bg-[#fafcf9] text-[10px] uppercase tracking-wider text-[#9aa79f]"><tr><th className="px-5 py-4">Permission</th>{roles.map((role) => <th key={role} className="px-5 py-4 text-center">{role}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.key} className="border-t border-[#edf1ed]"><td className="px-5 py-4 font-semibold text-[#203a2d]">{row.label}</td>{roles.map((role) => { const key = `${row.key}:${role}`; return <td key={role} className="px-5 py-4 text-center"><input type="checkbox" checked={Boolean(matrix[key])} onChange={() => setMatrix((items) => ({ ...items, [key]: !items[key] }))} className="size-4 accent-[#608428]" aria-label={`${row.label} for ${role}`} /></td>; })}</tr>)}</tbody></table><div className="flex justify-end border-t border-[#edf1ed] p-4"><button className="rounded-lg bg-[#173b2d] px-4 py-2.5 text-xs font-bold text-white">Save permissions</button></div></div>;
+}

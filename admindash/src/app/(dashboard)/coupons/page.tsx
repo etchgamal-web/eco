@@ -1,0 +1,2 @@
+import { ResourcePage } from "@/components/tables/resource-page";
+export default function CouponsPage() { return <ResourcePage eyebrow="Sales" title="Coupons" description="Create and manage promotions that convert." action="Create coupon" createHref="/coupons/create" rows={[{ id: "1", name: "WELCOME10", detail: "10% off · expires Oct 01", value: "248 uses", status: "Active" }, { id: "2", name: "AUTUMN20", detail: "20% off · expires Sep 30", value: "86 uses", status: "Active" }]} />; }

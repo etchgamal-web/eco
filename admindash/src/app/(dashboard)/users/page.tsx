@@ -1,0 +1,2 @@
+import { ResourcePage } from "@/components/tables/resource-page";
+export default function UsersPage() { return <ResourcePage eyebrow="Users & Access" title="Users" description="Manage administrator accounts and access levels." action="Invite user" createHref="/users/invite" rows={[{ id: "1", name: "Alex Morgan", detail: "alex@northstar.com", value: "Full access", status: "Active" }, { id: "2", name: "Mia Chen", detail: "mia@northstar.com", value: "Catalog manager", status: "Active" }]} />; }

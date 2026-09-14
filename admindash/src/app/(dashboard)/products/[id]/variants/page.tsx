@@ -1,0 +1,3 @@
+import { Breadcrumbs } from "@/components/layout/dashboard-shell";
+import { ResourcePage } from "@/components/tables/resource-page";
+export default function ProductVariantsPage() { return <><Breadcrumbs items={["Catalog", "Products", "Minimal leather wallet", "Variants"]} /><ResourcePage eyebrow="Product variants" title="Minimal leather wallet" description="Manage size, color, and inventory variations for this product." action="Add variant" rows={[{ id: "1", name: "Natural / One size", detail: "WL-2048-NAT", value: "$48 · 78 units", status: "Active" }, { id: "2", name: "Black / One size", detail: "WL-2048-BLK", value: "$48 · 46 units", status: "Active" }]} /></>; }
