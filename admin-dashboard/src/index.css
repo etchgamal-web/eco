@@ -48,3 +48,12 @@ button { cursor: pointer; }
 @media (max-width: 1050px) { .conversion-section { grid-column: 1 / 3; } .conversion-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .conversion-section { order: 5; overflow: visible; } .conversion-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .conversion-card { height: 190px; padding: 12px 11px 0; } .conversion-card-top { font-size: 10px; min-height: 34px; } .conversion-card > b { font-size: 17px; } .conversion-card em { font-size: 9px; } }
 @media (max-width: 380px) { .conversion-card-grid { grid-template-columns: 1fr; } .conversion-card { height: 150px; } }
+
+/* كروت أرقام بسيطة وواضحة مثل كروت الإجماليات */
+.conversion-card { height: 142px; padding: 18px; justify-content: flex-start; }
+.conversion-card-top { color: #555; font-size: 11px; min-height: 24px; }
+.conversion-card > b { font-size: 28px; line-height: 1.15; letter-spacing: .4px; margin-top: 15px; }
+.conversion-card em { font-size: 11px; margin-top: 12px; }
+.conversion-card.abandoned-card { background: #fff8f8; }
+@media (max-width: 760px) { .conversion-card { height: 126px; padding: 14px; }.conversion-card > b { font-size: 23px; margin-top: 12px; }.conversion-card em { margin-top: 9px; } }
+@media (max-width: 380px) { .conversion-card { height: 116px; } }
