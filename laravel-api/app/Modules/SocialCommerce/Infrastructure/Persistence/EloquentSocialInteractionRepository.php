@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Modules\SocialCommerce\Infrastructure\Persistence;
+
+use App\Models\SocialConversation;
+use App\Models\SocialInteraction;
+use App\Models\SocialMessage;
+use App\Models\SocialWebhookEvent;
+use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
+
+final class EloquentSocialInteractionRepository implements SocialInteractionRepositoryInterface
+{
+    public function list(array $filters = []): array
+    {
+        $q = SocialInteraction::query()->with(['customer:id,name,email,phone', 'product:id,name']);
+        foreach (['channel', 'customer_id', 'product_id', 'interaction_type', 'status'] as $key) {
+            if (isset($filters[$key])) {
+                $q->where($key, $filters[$key]);
+            }
+        }if (isset($filters['from'])) {
+            $q->whereDate('created_at', '>=', $filters['from']);
+        }if (isset($filters['to'])) {
+            $q->whereDate('created_at', '<=', $filters['to']);
+        }
+
+        return $q->latest()->get()->all();
+    }
+
+    public function create(array $data): object
+    {
+        return SocialInteraction::query()->create($data);
+    }
+
+    public function find(int $id): object
+    {
+        return SocialInteraction::query()->findOrFail($id);
+    }
+
+    public function findConversation(int $id): object
+    {
+        return SocialConversation::query()->findOrFail($id);
+    }
+
+    public function findOrCreateConversation(array $data): object
+    {
+        return SocialConversation::query()->firstOrCreate(['channel' => $data['channel'], 'provider_conversation_id' => $data['provider_conversation_id']], $data);
+    }
+
+    public function addMessage(array $data): object
+    {
+        return SocialMessage::query()->create($data);
+    }
+
+    public function messages(object $conversation): array
+    {
+        return SocialMessage::query()->where('conversation_id', $conversation->id)->oldest()->get()->all();
+    }
+
+    public function updateConversation(object $conversation, array $data): object
+    {
+        $conversation->fill($data);
+        $conversation->save();
+
+        return $conversation;
+    }
+
+    public function findWebhookEvent(string $channel, string $providerEventId): ?object
+    {
+        return SocialWebhookEvent::query()->where('channel', $channel)->where('provider_event_id', $providerEventId)->first();
+    }
+
+    public function recordWebhookEvent(array $data): object
+    {
+        return SocialWebhookEvent::query()->create($data);
+    }
+
+    public function markWebhookProcessed(object $event): void
+    {
+        $event->update(['status' => 'processed', 'processed_at' => now()]);
+    }
+}

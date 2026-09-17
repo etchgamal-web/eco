@@ -92,6 +92,10 @@
     {
       "name": "Webhooks",
       "description": "Webhooks operations."
+    },
+    {
+      "name": "Social Commerce",
+      "description": "Social Commerce and customer messaging automation operations."
     }
   ],
   "security": [
@@ -18168,6 +18172,2140 @@
           "CONFLICT",
           "RATE_LIMITED"
         ]
+      }
+    },
+    "/admin/social/connections": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "connections_index",
+        "operationId": "social_get_connections_index",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.connections.view",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "connections_store",
+        "operationId": "social_post_connections_store",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.connections.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/connections/{connection}": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "connections_show",
+        "operationId": "social_get_connections_show",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.connections.view",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "connections_update",
+        "operationId": "social_put_connections_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.connections.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "connections_update",
+        "operationId": "social_patch_connections_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.connections.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "connections_destroy",
+        "operationId": "social_delete_connections_destroy",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.connections.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/social/conversations/{conversation}": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "conversations_show",
+        "operationId": "social_get_conversations_show",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.conversations.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/social/conversations/{conversation}/manual": {
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "conversations_manual",
+        "operationId": "social_post_conversations_manual",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.conversations.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/conversations/{conversation}/messages": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "conversations_messages",
+        "operationId": "social_get_conversations_messages",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.conversations.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "conversations_messages_store",
+        "operationId": "social_post_conversations_messages_store",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.conversations.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/conversations/{conversation}/pause": {
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "conversations_pause",
+        "operationId": "social_post_conversations_pause",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.conversations.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/conversations/{conversation}/resume": {
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "conversations_resume",
+        "operationId": "social_post_conversations_resume",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.conversations.manage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/interactions": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "interactions_index",
+        "operationId": "social_get_interactions_index",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.interactions.view",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/social/webhooks/{channel}": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "webhooks_verify",
+        "operationId": "social_get_webhooks_verify",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "120 requests per minute",
+        "security": []
+      },
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "webhooks_receive",
+        "operationId": "social_post_webhooks_receive",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "120 requests per minute",
+        "security": []
+      }
+    },
+    "/admin/social/templates": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_get_templates_index",
+        "operationId": "social_get_templates_index",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.templates.view",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_post_templates_store",
+        "operationId": "social_post_templates_store",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.templates.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/templates/{template}": {
+      "put": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_put_templates_update",
+        "operationId": "social_put_templates_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.templates.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_patch_templates_update",
+        "operationId": "social_patch_templates_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.templates.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_delete_templates_destroy",
+        "operationId": "social_delete_templates_destroy",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.templates.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/social/templates/{template}/preview": {
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_post_templates_preview",
+        "operationId": "social_post_templates_preview",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.templates.view",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/automation-rules": {
+      "get": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_get_automation_index",
+        "operationId": "social_get_automation_index",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.automation.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_post_automation_store",
+        "operationId": "social_post_automation_store",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.automation.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/social/automation-rules/{rule}": {
+      "put": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_put_automation_update",
+        "operationId": "social_put_automation_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.automation.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_patch_automation_update",
+        "operationId": "social_patch_automation_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.automation.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_delete_automation_destroy",
+        "operationId": "social_delete_automation_destroy",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.automation.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/admin/social/interactions/{interaction}/reply": {
+      "post": {
+        "tags": [
+          "Social Commerce"
+        ],
+        "summary": "social_post_interactions_reply",
+        "operationId": "social_post_interactions_reply",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-required-permission": "social.conversations.manage",
+        "x-rate-limit": "social-admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/landing-pages/{slug}": {
+      "get": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "public_show",
+        "operationId": "landing_public_show",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": []
+      }
+    },
+    "/landing-pages/{slug}/leads": {
+      "post": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "public_leads",
+        "operationId": "landing_public_leads",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/landing-pages": {
+      "get": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "index",
+        "operationId": "landing_index",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.view"
+      },
+      "post": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "store",
+        "operationId": "landing_store",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/landing-pages/{page}": {
+      "put": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "update",
+        "operationId": "landing_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "update",
+        "operationId": "landing_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "destroy",
+        "operationId": "landing_destroy",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.manage"
+      }
+    },
+    "/admin/landing-pages/{page}/publish": {
+      "post": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "publish",
+        "operationId": "landing_publish",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.manage"
+      }
+    },
+    "/admin/landing-pages/{page}/unpublish": {
+      "post": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "unpublish",
+        "operationId": "landing_unpublish",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.manage"
+      }
+    },
+    "/landing-pages/{slug}/events": {
+      "post": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "public_events",
+        "operationId": "landing_public_events",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/landing-leads": {
+      "get": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "leads_index",
+        "operationId": "landing_leads_index",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.view"
+      }
+    },
+    "/admin/landing-leads/{lead}": {
+      "put": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "leads_update",
+        "operationId": "landing_leads_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.view",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "leads_update",
+        "operationId": "landing_leads_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.view",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/landing-pages/{page}/stats": {
+      "get": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "stats",
+        "operationId": "landing_stats",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "cms.view"
+      }
+    },
+    "/admin/ai/products/draft": {
+      "post": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "products_draft",
+        "operationId": "landing_products_draft",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "products.create",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/ai/social/reply-suggestion": {
+      "post": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "social_reply_suggestion",
+        "operationId": "landing_social_reply_suggestion",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "social.conversations.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/ai/settings": {
+      "get": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "ai_settings_show",
+        "operationId": "landing_ai_settings_show",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "settings.view"
+      },
+      "put": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "ai_settings_update",
+        "operationId": "landing_ai_settings_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "settings.update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Landing Pages"
+        ],
+        "summary": "ai_settings_update",
+        "operationId": "landing_ai_settings_update",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "201": {
+            "description": "Resource created"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "422": {
+            "description": "Validation or business rule failure"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "settings.update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "summary": "Request payload",
+                  "value": {
+                    "title": "Summer offer",
+                    "slug": "summer-offer",
+                    "sections": [
+                      {
+                        "type": "hero",
+                        "data": {
+                          "headline": "Summer offer"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

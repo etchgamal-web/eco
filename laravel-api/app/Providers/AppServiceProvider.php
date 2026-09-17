@@ -32,5 +32,6 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('cart-mutation', static fn (Request $request): Limit => Limit::perMinute(60)->by((string) ($request->user()?->id ?? $request->ip())));
         RateLimiter::for('payment-webhook', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
         RateLimiter::for('shipping-webhook', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
+        RateLimiter::for('social-webhook', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
     }
 }

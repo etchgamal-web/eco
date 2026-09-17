@@ -14,6 +14,15 @@ class RbacSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
+            // Social Commerce
+            ['name' => 'View Social Connections', 'slug' => 'social.connections.view', 'group' => 'social'],
+            ['name' => 'Manage Social Connections', 'slug' => 'social.connections.manage', 'group' => 'social'],
+            ['name' => 'View Social Interactions', 'slug' => 'social.interactions.view', 'group' => 'social'],
+            ['name' => 'Manage Social Conversations', 'slug' => 'social.conversations.manage', 'group' => 'social'],
+            ['name' => 'View Social Message Templates', 'slug' => 'social.templates.view', 'group' => 'social'],
+            ['name' => 'Manage Social Message Templates', 'slug' => 'social.templates.manage', 'group' => 'social'],
+            ['name' => 'Manage Social Automation', 'slug' => 'social.automation.manage', 'group' => 'social'],
+
             // Dashboard
             ['name' => 'View Dashboard', 'slug' => 'dashboard.view', 'group' => 'dashboard'],
 

@@ -1,6 +1,19 @@
 <?php
 
 return [
+    'ai' => [
+        'base_url' => env('AI_BASE_URL'),
+        'key' => env('AI_API_KEY'),
+        'model' => env('AI_MODEL', 'gpt-5-mini'),
+        'timeout' => (int) env('AI_TIMEOUT', 30),
+        'provider_order' => array_values(array_filter(array_map('trim', explode(',', (string) env('AI_PROVIDER_ORDER', 'gemini,openai,groq,openrouter'))))),
+        'providers' => [
+            'gemini' => ['base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'), 'key' => env('GEMINI_API_KEY'), 'model' => env('GEMINI_MODEL', 'gemini-2.5-flash')],
+            'openai' => ['base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'), 'key' => env('OPENAI_API_KEY'), 'model' => env('OPENAI_MODEL', 'gpt-5-mini')],
+            'groq' => ['base_url' => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'), 'key' => env('GROQ_API_KEY'), 'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile')],
+            'openrouter' => ['base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'), 'key' => env('OPENROUTER_API_KEY'), 'model' => env('OPENROUTER_MODEL', 'openai/gpt-4o-mini')],
+        ],
+    ],
     'postmark' => ['key' => env('POSTMARK_API_KEY')],
     'resend' => ['key' => env('RESEND_API_KEY')],
     'ses' => [
@@ -38,6 +51,12 @@ return [
         'redirect_url' => env('KASHIER_REDIRECT_URL'),
         'timeout' => (int) env('KASHIER_TIMEOUT', 15),
         'sandbox_probe_url' => env('KASHIER_SANDBOX_PROBE_URL'),
+    ],
+    'social' => [
+        'timeout' => (int) env('SOCIAL_HTTP_TIMEOUT', 15),
+        'facebook' => ['verify_token' => env('SOCIAL_FACEBOOK_VERIFY_TOKEN'), 'send_url' => env('SOCIAL_FACEBOOK_SEND_URL'), 'comment_reply_url' => env('SOCIAL_FACEBOOK_COMMENT_REPLY_URL')],
+        'instagram' => ['verify_token' => env('SOCIAL_INSTAGRAM_VERIFY_TOKEN'), 'send_url' => env('SOCIAL_INSTAGRAM_SEND_URL'), 'comment_reply_url' => env('SOCIAL_INSTAGRAM_COMMENT_REPLY_URL')],
+        'whatsapp' => ['verify_token' => env('SOCIAL_WHATSAPP_VERIFY_TOKEN'), 'send_url' => env('SOCIAL_WHATSAPP_SEND_URL'), 'comment_reply_url' => env('SOCIAL_WHATSAPP_COMMENT_REPLY_URL')],
     ],
     'bosta' => [
         'enabled' => (bool) env('BOSTA_ENABLED', false),

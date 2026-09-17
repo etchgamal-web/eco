@@ -16,7 +16,7 @@ final class ApiVersioningTest extends TestCase
             }
         }
 
-        $this->assertCount(119, $apiRoutes);
+        $this->assertCount(159, $apiRoutes);
         $this->assertTrue(collect($apiRoutes)->every(
             static fn ($route): bool => str_starts_with($route->uri(), 'api/v1/')
         ));

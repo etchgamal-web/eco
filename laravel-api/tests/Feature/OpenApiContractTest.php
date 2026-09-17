@@ -9,13 +9,13 @@ final class OpenApiContractTest extends TestCase
 {
     public function test_openapi_documents_every_registered_v1_operation(): void
     {
-        $path = dirname(__DIR__, 2) . '/docs/openapi.json';
+        $path = dirname(__DIR__, 2).'/docs/openapi.json';
         $document = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
         $documented = [];
 
         foreach ($document['paths'] as $uri => $operations) {
             foreach (array_keys($operations) as $method) {
-                $documented[] = strtoupper($method) . ' ' . ltrim($uri, '/');
+                $documented[] = strtoupper($method).' '.ltrim($uri, '/');
             }
         }
         $documented = array_values(array_filter($documented, static function (string $operation): bool {
@@ -34,7 +34,7 @@ final class OpenApiContractTest extends TestCase
             foreach ($route->methods() as $method) {
                 if ($method !== 'HEAD') {
                     $uri = preg_replace('/\{([^}?]+)\?\}/', '{$1}', $route->uri());
-                    $registered[] = $method . ' ' . ltrim(str_replace('api/v1/', '', $uri), '/');
+                    $registered[] = $method.' '.ltrim(str_replace('api/v1/', '', $uri), '/');
                 }
             }
         }
@@ -46,7 +46,7 @@ final class OpenApiContractTest extends TestCase
 
     public function test_openapi_publishes_security_rate_limit_idempotency_and_error_contracts(): void
     {
-        $document = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/docs/openapi.json'), true, 512, JSON_THROW_ON_ERROR);
+        $document = json_decode((string) file_get_contents(dirname(__DIR__, 2).'/docs/openapi.json'), true, 512, JSON_THROW_ON_ERROR);
         $operations = array_merge(...array_values($document['paths']));
 
         $this->assertNotEmpty($document['x-error-codes']);

@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Modules\Auth\Presentation\Http\Requests\AuthRequest;
+use App\Modules\Auth\Presentation\Http\Requests\ChangePasswordRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
@@ -21,17 +23,17 @@ final class EndpointAuthorizationTest extends TestCase
         foreach ($routes as $route) {
             $this->assertTrue(
                 str_starts_with($route->uri(), 'api/v1/'),
-                'Legacy API route registered: ' . $route->uri()
+                'Legacy API route registered: '.$route->uri()
             );
 
             $public = $this->isPublicRoute($route);
             if (! $public) {
-                $this->assertContains('auth', $route->gatherMiddleware(), 'Missing auth middleware: ' . $route->uri());
+                $this->assertContains('auth', $route->gatherMiddleware(), 'Missing auth middleware: '.$route->uri());
             }
 
             [$controller, $method] = $this->controllerAction($route);
             $requestClass = $this->formRequestClass($controller, $method);
-            $this->assertNotNull($requestClass, 'Missing FormRequest: ' . $route->uri());
+            $this->assertNotNull($requestClass, 'Missing FormRequest: '.$route->uri());
 
             $source = file_get_contents((new \ReflectionClass($requestClass))->getFileName());
             $this->assertIsString($source);
@@ -40,10 +42,10 @@ final class EndpointAuthorizationTest extends TestCase
                     str_contains($source, 'authorizePermission(')
                     || str_contains($source, 'authenticatedUser()')
                     || in_array($requestClass, [
-                        \App\Modules\Auth\Presentation\Http\Requests\AuthRequest::class,
-                        \App\Modules\Auth\Presentation\Http\Requests\ChangePasswordRequest::class,
+                        AuthRequest::class,
+                        ChangePasswordRequest::class,
                     ], true),
-                    'Missing permission check: ' . $requestClass . ' for ' . $route->uri()
+                    'Missing permission check: '.$requestClass.' for '.$route->uri()
                 );
             }
         }
@@ -52,7 +54,7 @@ final class EndpointAuthorizationTest extends TestCase
     private function isPublicRoute(Route $route): bool
     {
         $name = (string) $route->getName();
-        if (in_array($name, ['auth.register', 'auth.login', 'webhooks.paymob', 'webhooks.kashier', 'webhooks.bosta', 'customer.checkout'], true)) {
+        if (in_array($name, ['auth.register', 'auth.login', 'webhooks.paymob', 'webhooks.kashier', 'webhooks.bosta', 'social.webhooks.verify', 'social.webhooks.receive', 'customer.checkout', 'landing.public.show', 'landing.public.leads', 'landing.public.events'], true)) {
             return true;
         }
 
