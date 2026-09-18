@@ -7,11 +7,11 @@ use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Exceptions\SocialCommerceException;
-use Illuminate\Support\Facades\DB;
+use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
 
 final class ReplyToSocialComment
 {
-    public function __construct(private readonly SocialInteractionRepositoryInterface $interactions, private readonly SocialConnectionRepositoryInterface $connections, private readonly AuthenticationServiceInterface $authentication) {}
+    public function __construct(private readonly SocialInteractionRepositoryInterface $interactions, private readonly SocialConnectionRepositoryInterface $connections, private readonly TransactionManagerInterface $transactions, private readonly AuthenticationServiceInterface $authentication) {}
 
     public function execute(int $interactionId, string $body, ?string $idempotencyKey = null): object
     {
@@ -29,7 +29,7 @@ final class ReplyToSocialComment
         }
         $actor = $this->authentication->user();
         $key = $idempotencyKey ?: 'social:comment-reply:'.hash('sha256', implode('|', [$interaction->id, $body, $actor?->id ?? 'system']));
-        return DB::transaction(function () use ($interaction, $body, $actor, $commentId, $connection, $key): object {
+        return $this->transactions->run(function () use ($interaction, $body, $actor, $commentId, $connection, $key): object {
             $existing = $this->interactions->find($interaction->id);
             $duplicate = \App\Models\SocialInteraction::query()->where('idempotency_key', $key)->first();
             if ($duplicate) return $duplicate;

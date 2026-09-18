@@ -73,8 +73,8 @@ final class AiGatewayFeatureTest extends TestCase
 
         $response = $this->actingAs($this->userWithRole('owner'))->postJson('/api/v1/admin/ai/products/draft', ['brief' => 'test']);
 
-        $response->assertStatus(500)
-            ->assertJsonPath('message', 'An internal server error occurred.')
+        $response->assertStatus(503)
+            ->assertJsonPath('message', 'AI service is temporarily unavailable.')
             ->assertJsonMissing(['message' => 'secret provider failure'])
             ->assertJsonMissing(['message' => 'openai']);
         self::assertSame(1, AiGeneration::query()->where('status', 'failed')->count());
@@ -87,8 +87,8 @@ final class AiGatewayFeatureTest extends TestCase
 
         $this->actingAs($this->userWithRole('owner'))
             ->postJson('/api/v1/admin/ai/products/draft', ['brief' => 'test'])
-            ->assertStatus(500)
-            ->assertJsonPath('message', 'An internal server error occurred.')
+            ->assertStatus(503)
+            ->assertJsonPath('message', 'AI service is temporarily unavailable.')
             ->assertJsonMissing(['message' => 'missing required fields']);
 
         self::assertDatabaseHas('ai_generations', ['status' => 'failed', 'kind' => 'product_draft']);
@@ -103,8 +103,8 @@ final class AiGatewayFeatureTest extends TestCase
 
         $this->actingAs($this->userWithRole('owner'))
             ->postJson('/api/v1/admin/ai/social/reply-suggestion', ['message' => 'Hello', 'channel' => 'facebook'])
-            ->assertStatus(500)
-            ->assertJsonPath('message', 'An internal server error occurred.');
+            ->assertStatus(503)
+            ->assertJsonPath('message', 'AI service is temporarily unavailable.');
     }
 
     public function test_ai_endpoints_require_authentication(): void

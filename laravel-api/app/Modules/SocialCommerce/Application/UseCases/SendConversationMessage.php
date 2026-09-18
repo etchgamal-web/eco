@@ -7,13 +7,14 @@ use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Exceptions\ConversationNotFoundException;
-use Illuminate\Support\Facades\DB;
+use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
 
 final class SendConversationMessage
 {
     public function __construct(
         private readonly SocialInteractionRepositoryInterface $interactions,
         private readonly SocialConnectionRepositoryInterface $connections,
+        private readonly TransactionManagerInterface $transactions,
         private readonly GetSocialConversation $getConversation,
         private readonly AuthenticationServiceInterface $authentication,
     ) {}
@@ -29,7 +30,7 @@ final class SendConversationMessage
         $actor = $this->authentication->user();
         $key = $idempotencyKey ?: 'social:message:'.hash('sha256', implode('|', [$conversation->id, $body, $actor?->id ?? 'system']));
 
-        return DB::transaction(function () use ($conversation, $body, $actor, $key): object {
+        return $this->transactions->run(function () use ($conversation, $body, $actor, $key): object {
             $existing = \App\Models\SocialMessage::query()->where('idempotency_key', $key)->first();
             if ($existing) return $existing;
             $responder = ['type' => 'human', 'id' => $actor?->id, 'name' => $actor?->name ?? 'Human Operator'];

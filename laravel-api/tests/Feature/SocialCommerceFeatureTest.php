@@ -53,12 +53,9 @@ final class SocialCommerceFeatureTest extends TestCase
         $raw = json_encode($payload, JSON_THROW_ON_ERROR);
         $signature = 'sha256='.hash_hmac('sha256', $raw, 'secret');
 
-        $this->withHeaders(['X-Hub-Signature-256' => 'sha256=invalid'])
-            ->call('POST', '/api/v1/social/webhooks/facebook', [], [], [], ['CONTENT_TYPE' => 'application/json'], $raw)
-            ->assertUnauthorized();
+        $this->postWebhook('facebook', $raw, 'sha256=invalid')->assertUnauthorized();
 
-        $request = fn () => $this->withHeaders(['X-Hub-Signature-256' => $signature])
-            ->call('POST', '/api/v1/social/webhooks/facebook', [], [], [], ['CONTENT_TYPE' => 'application/json'], $raw);
+        $request = fn () => $this->postWebhook('facebook', $raw, $signature);
 
         $request()->assertOk()->assertJsonPath('received', true);
         $request()->assertOk()->assertJsonPath('received', true);
@@ -86,8 +83,7 @@ final class SocialCommerceFeatureTest extends TestCase
                 'channel' => $channel, 'name' => $channel, 'provider_account_id' => 'account-1',
                 'webhook_secret' => 'secret', 'is_active' => true,
             ]);
-            $this->withHeaders(['X-Hub-Signature-256' => $signature])
-                ->call('POST', "/api/v1/social/webhooks/{$channel}", [], [], [], ['CONTENT_TYPE' => 'application/json'], $raw)
+            $this->postWebhook($channel, $raw, $signature)
                 ->assertOk()
                 ->assertJsonPath('received', true);
         }
@@ -120,8 +116,7 @@ final class SocialCommerceFeatureTest extends TestCase
                 ]],
             ]]];
             $raw = json_encode($payload, JSON_THROW_ON_ERROR);
-            $this->withHeaders(['X-Hub-Signature-256' => 'sha256='.hash_hmac('sha256', $raw, 'secret')])
-                ->call('POST', '/api/v1/social/webhooks/facebook', [], [], [], ['CONTENT_TYPE' => 'application/json'], $raw)
+            $this->postWebhook('facebook', $raw, 'sha256='.hash_hmac('sha256', $raw, 'secret'))
                 ->assertOk();
         }
 
@@ -154,8 +149,7 @@ final class SocialCommerceFeatureTest extends TestCase
         ]]];
         $raw = json_encode($payload, JSON_THROW_ON_ERROR);
 
-        $this->withHeaders(['X-Hub-Signature-256' => 'sha256='.hash_hmac('sha256', $raw, 'secret')])
-            ->call('POST', '/api/v1/social/webhooks/facebook', [], [], [], ['CONTENT_TYPE' => 'application/json'], $raw)
+        $this->postWebhook('facebook', $raw, 'sha256='.hash_hmac('sha256', $raw, 'secret'))
             ->assertUnprocessable()
             ->assertJsonMissing(['message' => 'secret Meta failure']);
     }
@@ -167,5 +161,13 @@ final class SocialCommerceFeatureTest extends TestCase
 
         $this->actingAs($user)->getJson('/api/v1/admin/social/connections')->assertForbidden();
         $this->actingAs($user)->getJson('/api/v1/admin/social/interactions')->assertForbidden();
+    }
+
+    private function postWebhook(string $channel, string $raw, string $signature): \Illuminate\Testing\TestResponse
+    {
+        return $this->call('POST', "/api/v1/social/webhooks/{$channel}", [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_HUB_SIGNATURE_256' => $signature,
+        ], $raw);
     }
 }
