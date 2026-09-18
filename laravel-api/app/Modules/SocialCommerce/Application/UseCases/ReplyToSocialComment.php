@@ -2,16 +2,16 @@
 
 namespace App\Modules\SocialCommerce\Application\UseCases;
 
-use App\Models\OutboxEvent;
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Exceptions\SocialCommerceException;
 use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
+use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 
 final class ReplyToSocialComment
 {
-    public function __construct(private readonly SocialInteractionRepositoryInterface $interactions, private readonly SocialConnectionRepositoryInterface $connections, private readonly TransactionManagerInterface $transactions, private readonly AuthenticationServiceInterface $authentication) {}
+    public function __construct(private readonly SocialInteractionRepositoryInterface $interactions, private readonly SocialConnectionRepositoryInterface $connections, private readonly TransactionManagerInterface $transactions, private readonly AuthenticationServiceInterface $authentication, private readonly OutboxEventRepositoryInterface $outbox) {}
 
     public function execute(int $interactionId, string $body, ?string $idempotencyKey = null): object
     {
@@ -41,11 +41,7 @@ final class ReplyToSocialComment
                 'responder_id' => $responder['id'], 'responder_name' => $responder['name'],
                 'metadata' => ['provider_comment_id' => $commentId, 'responder' => $responder],
             ]);
-            OutboxEvent::query()->create([
-                'aggregate_type' => 'social_comment', 'aggregate_id' => $reply->id, 'event_type' => 'social.comment.reply',
-                'deduplication_key' => $key, 'status' => 'pending',
-                'payload' => ['channel' => $connection->channel, 'comment_id' => $commentId, 'body' => $body],
-            ]);
+            $this->outbox->record('social_comment', (int) $reply->id, 'social.comment.reply', $key, ['channel' => $connection->channel, 'comment_id' => $commentId, 'body' => $body]);
             return $reply;
         });
     }

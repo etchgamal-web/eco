@@ -3,16 +3,20 @@
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
 use App\Models\Shipment;
-use App\Models\OutboxEvent;
 use App\Models\ShipmentEvent;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShipmentNotFoundException;
 use App\Modules\Shipping\Domain\StateMachines\ShipmentStateMachine;
+use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentShipmentRepository implements ShipmentRepositoryInterface
 {
+    public function __construct(private readonly OutboxEventRepositoryInterface $outbox)
+    {
+    }
+
     public function find(int $id): object
     {
         $shipment = Shipment::query()->with(['order', 'method', 'events'])->find($id);
@@ -39,16 +43,7 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
         return DB::transaction(function () use ($attributes): object {
             try {
                 $shipment = Shipment::query()->create($attributes)->load(['order', 'method', 'events']);
-                OutboxEvent::query()->firstOrCreate(
-                    ['deduplication_key' => 'shipment:create:' . $attributes['idempotency_key']],
-                    [
-                        'aggregate_type' => 'shipment',
-                        'aggregate_id' => $shipment->id,
-                        'event_type' => 'shipment.create.requested',
-                        'status' => 'pending',
-                        'payload' => ['shipment_id' => $shipment->id, 'idempotency_key' => $attributes['idempotency_key']],
-                    ]
-                );
+                $this->outbox->record('shipment', (int) $shipment->id, 'shipment.create.requested', 'shipment:create:' . $attributes['idempotency_key'], ['shipment_id' => $shipment->id, 'idempotency_key' => $attributes['idempotency_key']]);
                 return $shipment;
             } catch (QueryException $exception) {
                 $existing = $this->findByIdempotencyKey((string) $attributes['idempotency_key']);

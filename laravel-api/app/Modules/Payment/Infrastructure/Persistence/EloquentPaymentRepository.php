@@ -3,16 +3,20 @@
 namespace App\Modules\Payment\Infrastructure\Persistence;
 
 use App\Models\Payment;
-use App\Models\OutboxEvent;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\PaymentNotFoundException;
 use App\Modules\Payment\Domain\ValueObjects\PaymentClaim;
 use App\Modules\Payment\Domain\StateMachines\PaymentStateMachine;
+use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentPaymentRepository implements PaymentRepositoryInterface
 {
+    public function __construct(private readonly OutboxEventRepositoryInterface $outbox)
+    {
+    }
+
     public function find(int $paymentId): object
     {
         $payment = Payment::query()->with('order')->find($paymentId);
@@ -96,16 +100,7 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
                     'idempotency_key' => $idempotencyKey,
                     'status' => 'processing',
                 ]))->load('order');
-                OutboxEvent::query()->firstOrCreate(
-                    ['deduplication_key' => 'payment:create:' . $idempotencyKey],
-                    [
-                        'aggregate_type' => 'payment',
-                        'aggregate_id' => $payment->id,
-                        'event_type' => 'payment.create.requested',
-                        'status' => 'pending',
-                        'payload' => ['payment_id' => $payment->id, 'idempotency_key' => $idempotencyKey],
-                    ]
-                );
+                $this->outbox->record('payment', (int) $payment->id, 'payment.create.requested', 'payment:create:' . $idempotencyKey, ['payment_id' => $payment->id, 'idempotency_key' => $idempotencyKey]);
 
                 return new PaymentClaim($payment, true);
             } catch (QueryException $exception) {

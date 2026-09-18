@@ -3,7 +3,6 @@
 namespace App\Modules\Payment\Application\UseCases;
 
 use App\Models\AuditLog;
-use App\Models\OutboxEvent;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
@@ -12,6 +11,7 @@ use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
+use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 use Illuminate\Support\Str;
 
 final class RefundPayment
@@ -22,6 +22,7 @@ final class RefundPayment
         private readonly PaymentGatewayInterface $gateway,
         private readonly OrderRepositoryInterface $orders,
         private readonly TransactionManagerInterface $transactions,
+        private readonly OutboxEventRepositoryInterface $outbox,
     ) {}
 
     public function execute(int $paymentId): object
@@ -54,7 +55,7 @@ final class RefundPayment
                 throw new PaymentFailedException('Payment refund failed.');
             }
             $this->operations->complete((int) $payment->id, 'refund', 'confirmed', $payment->provider_reference, $result);
-            OutboxEvent::query()->firstOrCreate(['deduplication_key' => 'payment:refund:' . $payment->id], ['aggregate_type' => 'payment', 'aggregate_id' => $payment->id, 'event_type' => 'payment.refund.completed', 'status' => 'pending', 'payload' => ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference]]);
+            $this->outbox->record('payment', (int) $payment->id, 'payment.refund.completed', 'payment:refund:' . $payment->id, ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference]);
         } catch (\Throwable $exception) {
             $this->operations->fail((int) $payment->id, 'refund', $exception->getMessage(), ! ($exception instanceof PaymentFailedException));
             throw $exception;
