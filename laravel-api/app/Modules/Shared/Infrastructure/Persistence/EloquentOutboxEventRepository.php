@@ -26,8 +26,10 @@ final class EloquentOutboxEventRepository implements OutboxEventRepositoryInterf
         );
     }
 
-    public function claim(int $eventId, int $staleAfterMinutes = 10): bool
+    public function claim(int $eventId, int $staleAfterMinutes = 0): bool
     {
+        $staleAfterMinutes = $staleAfterMinutes > 0 ? $staleAfterMinutes : (int) config('outbox.lease_minutes', 5);
+
         return OutboxEvent::query()
             ->whereKey($eventId)
             ->where(function ($query) use ($staleAfterMinutes): void {

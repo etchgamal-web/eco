@@ -22,11 +22,13 @@ $this->outbox->record(
 
 يشغّل Laravel scheduler الأمر `outbox:dispatch` كل دقيقة. الأمر يقرأ الأحداث `pending` المستحقة، أو الأحداث `processing` التي انتهت مدة lease الخاصة بها، ثم يستخدم تحديثًا ذريًا مشروطًا لحجز كل event قبل إرسال `ProcessOutboxEvent` إلى queue. لذلك يمكن تشغيل أكثر من scheduler/worker دون تنفيذ نفس event بالتوازي.
 
+قيمة lease الافتراضية خمس دقائق ويمكن ضبطها عبر `OUTBOX_LEASE_MINUTES`. مهلة الـ job الافتراضية دقيقتان (`OUTBOX_JOB_TIMEOUT_SECONDS=120`) بينما نافذة إعادة تسليم database queue الافتراضية ثلاث دقائق (`DB_QUEUE_RETRY_AFTER=180`). يجب أن تظل نافذة queue أكبر من timeout حتى لا يعيد queue تسليم job ما زال يعمل، وأن تكون lease أكبر من أطول استدعاء خارجي متوقع.
+
 بعد النجاح تصبح الحالة `dispatched`. عند الفشل تعود إلى `pending` مع `attempt_count` و`next_attempt_at` و`last_error`. وبعد استنفاد محاولات Laravel تتحول إلى `failed` وتظل قابلة للمراجعة من operational dashboard.
 
 ## إضافة نوع event جديد
 
-1. أنشئ event عبر `OutboxEventRepositoryInterface::record` داخل transaction.
+1. أنشئ event عبر `OutboxEventRepositoryInterface::record` داخل transaction. جدول `outbox_events` يفرض `UNIQUE` على `deduplication_key`، لذلك الحماية من race condition موجودة على مستوى قاعدة البيانات وليس التطبيق فقط.
 2. أضف handler في `app/Modules/Shared/Application/Jobs/ProcessOutboxEvent.php` أو انقل المعالجة إلى handler مستقل إذا كبر النوع.
 3. اجعل التنفيذ idempotent عبر provider idempotency key أو operation record قبل استدعاء مزود خارجي.
 4. أضف اختبارًا يثبت التسجيل مرة واحدة، والـ retry، وأن claim الثاني لا ينجح.

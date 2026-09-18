@@ -3,12 +3,16 @@ namespace App\Modules\Order\Infrastructure\Persistence;
 use App\Models\AuditLog;
 use App\Models\CustomerOrder;
 use App\Models\OrderReturn;
-use App\Models\OutboxEvent;
 use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\ReturnException;
+use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 final class EloquentReturnRepository implements ReturnRepositoryInterface
 {
+    public function __construct(private readonly OutboxEventRepositoryInterface $outbox)
+    {
+    }
+
     public function createForCustomer(int $userId, int $orderId, array $data): object
     {
         return DB::transaction(function () use ($userId, $orderId, $data): object {
@@ -36,7 +40,7 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
             $return = OrderReturn::query()->lockForUpdate()->find($returnId);
             if ($return === null || $return->status !== 'pending') throw ReturnException::invalidTransition();
             $return->update(['status' => 'approved']);
-            OutboxEvent::query()->firstOrCreate(['deduplication_key' => 'return:approved:' . $return->id], ['aggregate_type' => 'order_return', 'aggregate_id' => $return->id, 'event_type' => 'order.return.approved', 'status' => 'pending', 'payload' => ['return_id' => $return->id, 'order_id' => $return->order_id, 'refund_amount' => $return->refund_amount]]);
+            $this->outbox->record('order_return', (int) $return->id, 'order.return.approved', 'return:approved:' . $return->id, ['return_id' => $return->id, 'order_id' => $return->order_id, 'refund_amount' => $return->refund_amount]);
             AuditLog::query()->create(['actor_id' => auth()->id(), 'action' => 'order.return.approved', 'target_type' => OrderReturn::class, 'target_id' => $return->id, 'metadata' => ['refund_amount' => $return->refund_amount]]);
             return $return->fresh('items');
         });

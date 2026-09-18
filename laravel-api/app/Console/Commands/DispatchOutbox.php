@@ -27,7 +27,7 @@ final class DispatchOutbox extends Command
             ->limit((int) $this->option('limit'))
             ->get()
             ->each(function (OutboxEvent $event) use (&$count, $outbox): void {
-                if ($outbox->claim((int) $event->id)) {
+                if ($outbox->claim((int) $event->id, (int) config('outbox.lease_minutes', 5))) {
                     ProcessOutboxEvent::dispatch($event->id);
                     $count++;
                 }

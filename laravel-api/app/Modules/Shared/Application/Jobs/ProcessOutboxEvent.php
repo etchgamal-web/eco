@@ -26,10 +26,12 @@ final class ProcessOutboxEvent implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
+    public int $timeout;
     public array $backoff = [60, 300, 900, 3600, 21600];
 
     public function __construct(public readonly int $eventId)
     {
+        $this->timeout = (int) config('outbox.job_timeout_seconds', 120);
     }
 
     public function failed(Throwable $exception): void
