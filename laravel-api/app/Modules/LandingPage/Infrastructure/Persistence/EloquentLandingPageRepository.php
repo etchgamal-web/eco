@@ -43,6 +43,12 @@ final class EloquentLandingPageRepository implements LandingPageRepositoryInterf
         return LandingPageLead::query()->create(array_merge($data, ['landing_page_id' => $pageId]));
     }
 
+    public function recentLeadByKey(int $pageId, string $key, int $hours = 24): ?object
+    {
+        return LandingPageLead::query()->where('landing_page_id', $pageId)->where('dedupe_key', $key)
+            ->where('created_at', '>=', now()->subHours($hours))->latest('id')->first();
+    }
+
     public function listLeads(array $filters = []): array
     {
         return LandingPageLead::query()->with(['page:id,title,slug'])
@@ -63,6 +69,16 @@ final class EloquentLandingPageRepository implements LandingPageRepositoryInterf
     public function recordEvent(int $pageId, array $data): object
     {
         return LandingPageEvent::query()->create(array_merge($data, ['landing_page_id' => $pageId]));
+    }
+
+    public function eventExists(int $pageId, string $key): bool
+    {
+        return LandingPageEvent::query()->where('landing_page_id', $pageId)->where('dedupe_key', $key)->exists();
+    }
+
+    public function eventByKey(int $pageId, string $key): ?object
+    {
+        return LandingPageEvent::query()->where('landing_page_id', $pageId)->where('dedupe_key', $key)->first();
     }
 
     public function stats(int $pageId, array $filters = []): array

@@ -10,7 +10,7 @@ if (! class_exists(__NAMESPACE__ . '\\DispatchOutbox', false)) {
 final class DispatchOutbox extends Command
 {
     protected $signature = 'outbox:dispatch {--limit=100 : Maximum events to enqueue in one pass}';
-    protected $description = 'Dispatch pending payment and shipment outbox events to the queue';
+    protected $description = 'Dispatch pending payment, shipment, and social outbox events to the queue';
 
     public function handle(): int
     {

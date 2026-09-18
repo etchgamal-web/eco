@@ -12,7 +12,7 @@ final class LandingAnalyticsController extends Controller
 {
     public function event(LandingEventRequest $r, string $slug, TrackLandingEvent $u): JsonResponse
     {
-        return response()->json(['data' => $u->record($slug, $r->validated())], 201);
+        return response()->json(['data' => $u->record($slug, $r->validated(), $r->header('Idempotency-Key'))], 201);
     }
 
     public function stats(LandingLeadManagementRequest $r, int $page, TrackLandingEvent $u): JsonResponse

@@ -33,5 +33,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('payment-webhook', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
         RateLimiter::for('shipping-webhook', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
         RateLimiter::for('social-webhook', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
+        RateLimiter::for('landing-lead', static fn (Request $request): Limit => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('landing-event', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Modules\Shared\Application\Jobs;
 
 use App\Models\OutboxEvent;
+use App\Models\SocialInteraction;
+use App\Models\SocialMessage;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
@@ -10,11 +12,14 @@ use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
+use App\Modules\SocialCommerce\Domain\Contracts\SocialMessagingProviderInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 final class ProcessOutboxEvent implements ShouldQueue
 {
@@ -27,6 +32,18 @@ final class ProcessOutboxEvent implements ShouldQueue
     {
     }
 
+    public function failed(Throwable $exception): void
+    {
+        $event = OutboxEvent::query()->find($this->eventId);
+        if (! $event) return;
+        $event->update(['status' => 'failed', 'last_error' => $exception->getMessage(), 'updated_at' => now()]);
+        if ($event->aggregate_type === 'social_message') {
+            SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+        } elseif ($event->aggregate_type === 'social_comment') {
+            SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+        }
+    }
+
     public function handle(
         PaymentRepositoryInterface $payments,
         PaymentGatewayInterface $gateway,
@@ -35,6 +52,8 @@ final class ProcessOutboxEvent implements ShouldQueue
         ShippingProviderInterface $providers,
         ShipmentOperationRepositoryInterface $shipmentOperations,
         OutboxEventRepositoryInterface $outbox,
+        SocialConnectionRepositoryInterface $connections,
+        SocialMessagingProviderInterface $socialProvider,
     ): void {
         $event = OutboxEvent::query()->find($this->eventId);
         if ($event === null || $event->status === 'dispatched') {
@@ -42,7 +61,31 @@ final class ProcessOutboxEvent implements ShouldQueue
         }
 
         try {
-            if ($event->aggregate_type === 'payment') {
+            if ($event->aggregate_type === 'social_message') {
+                $message = SocialMessage::query()->find($event->aggregate_id);
+                if (! $message || $message->status === 'sent') {
+                    $outbox->markDispatched($event->deduplication_key);
+                    return;
+                }
+                $payload = $event->payload;
+                $connection = $connections->activeForChannel((string) ($payload['channel'] ?? ''));
+                if (! $connection) throw new \RuntimeException('No active social connection for queued message.');
+                $message->update(['status' => 'processing']);
+                $result = $socialProvider->sendMessage($connection, (string) $payload['recipient'], (string) $payload['body']);
+                $message->update(['status' => 'sent', 'provider_message_id' => $result['provider_message_id'] ?? null, 'metadata' => $result]);
+            } elseif ($event->aggregate_type === 'social_comment') {
+                $interaction = SocialInteraction::query()->find($event->aggregate_id);
+                if (! $interaction || $interaction->status === 'sent') {
+                    $outbox->markDispatched($event->deduplication_key);
+                    return;
+                }
+                $payload = $event->payload;
+                $connection = $connections->activeForChannel((string) ($payload['channel'] ?? ''));
+                if (! $connection) throw new \RuntimeException('No active social connection for queued comment.');
+                $interaction->update(['status' => 'processing']);
+                $result = $socialProvider->replyToComment($connection, (string) $payload['comment_id'], (string) $payload['body']);
+                $interaction->update(['status' => 'sent', 'provider_interaction_id' => $result['provider_message_id'] ?? null, 'metadata' => array_merge($interaction->metadata ?? [], $result)]);
+            } elseif ($event->aggregate_type === 'payment') {
                 $payment = $payments->find((int) $event->aggregate_id);
                 if (in_array($payment->status, ['provider_created', 'confirmed', 'paid', 'refunded', 'failed'], true)) {
                     $outbox->markDispatched($event->deduplication_key);
@@ -87,6 +130,11 @@ final class ProcessOutboxEvent implements ShouldQueue
             }
             $outbox->markDispatched($event->deduplication_key);
         } catch (\Throwable $exception) {
+            if ($event->aggregate_type === 'social_message') {
+                SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'retrying']);
+            } elseif ($event->aggregate_type === 'social_comment') {
+                SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'retrying']);
+            }
             $outbox->markFailed($event->deduplication_key, $exception->getMessage());
             throw $exception;
         }

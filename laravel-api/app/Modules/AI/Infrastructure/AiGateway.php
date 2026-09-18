@@ -52,6 +52,7 @@ final class AiGateway implements AiGatewayInterface, AiTextGeneratorInterface
             }try {
                 $model = $index === 0 ? $primaryModel : ($values['model_'.$providerName] ?? null);
                 $response = $provider->generate(new AiRequest($request->kind, $request->messages, $request->schema, array_merge($request->metadata, ['model' => $model])));
+                JsonSchemaValidator::validateOrFail($response->data, $request->schema);
                 $this->log($request, $response);
 
                 return $response;

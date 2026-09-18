@@ -7,8 +7,8 @@ use App\Modules\LandingPage\Presentation\Http\Controllers\PublicLandingPageContr
 use Illuminate\Support\Facades\Route;
 
 Route::get('landing-pages/{slug}', [PublicLandingPageController::class, 'show'])->middleware('throttle:api')->name('landing.public.show');
-Route::post('landing-pages/{slug}/leads', [PublicLandingPageController::class, 'lead'])->middleware('throttle:api')->name('landing.public.leads');
-Route::post('landing-pages/{slug}/events', [LandingAnalyticsController::class, 'event'])->middleware('throttle:api')->name('landing.public.events');
+Route::post('landing-pages/{slug}/leads', [PublicLandingPageController::class, 'lead'])->middleware('throttle:landing-lead')->name('landing.public.leads');
+Route::post('landing-pages/{slug}/events', [LandingAnalyticsController::class, 'event'])->middleware('throttle:landing-event')->name('landing.public.events');
 Route::middleware('auth')->group(function () {
     Route::get('admin/landing-pages', [LandingPageController::class, 'index'])->name('landing.index');
     Route::post('admin/landing-pages', [LandingPageController::class, 'store'])->name('landing.store');

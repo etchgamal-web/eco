@@ -16,11 +16,17 @@ interface LandingPageRepositoryInterface
 
     public function addLead(int $pageId, array $data): object;
 
+    public function recentLeadByKey(int $pageId, string $key, int $hours = 24): ?object;
+
     public function listLeads(array $filters = []): array;
 
     public function updateLead(int $id, array $data): object;
 
     public function recordEvent(int $pageId, array $data): object;
+
+    public function eventExists(int $pageId, string $key): bool;
+
+    public function eventByKey(int $pageId, string $key): ?object;
 
     public function stats(int $pageId, array $filters = []): array;
 }

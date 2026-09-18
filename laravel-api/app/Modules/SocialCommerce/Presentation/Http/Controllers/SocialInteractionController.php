@@ -18,6 +18,6 @@ final class SocialInteractionController extends Controller
 
     public function reply(SocialReplyRequest $request, int $interaction, ReplyToSocialComment $useCase): JsonResponse
     {
-        return response()->json(['data' => $useCase->execute($interaction, $request->validated('body'))], 201);
+        return response()->json(['data' => $useCase->execute($interaction, $request->validated('body'), $request->header('Idempotency-Key'))], 201);
     }
 }

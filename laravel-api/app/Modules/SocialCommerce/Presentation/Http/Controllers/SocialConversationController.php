@@ -24,7 +24,7 @@ final class SocialConversationController extends Controller
 
     public function send(ConversationRequest $request, int $conversation, SendConversationMessage $useCase): JsonResponse
     {
-        return response()->json(['data' => $useCase->execute($conversation, $request->validated('body'))], 201);
+        return response()->json(['data' => $useCase->execute($conversation, $request->validated('body'), $request->header('Idempotency-Key'))], 201);
     }
 
     public function pause(ConversationRequest $request, int $conversation, SetConversationMode $useCase): JsonResponse
