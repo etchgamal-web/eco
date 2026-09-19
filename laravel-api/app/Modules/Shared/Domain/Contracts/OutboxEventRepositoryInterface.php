@@ -15,7 +15,7 @@ interface OutboxEventRepositoryInterface
     ): OutboxEvent;
 
     /** Atomically reserves an event for one dispatcher/worker. */
-    public function claim(int $eventId, int $staleAfterMinutes = 10): bool;
+    public function claim(int $eventId, int $staleAfterMinutes = 0): bool;
 
     public function markDispatched(string $deduplicationKey): void;
 

@@ -56,7 +56,10 @@ final class EloquentOutboxEventRepository implements OutboxEventRepositoryInterf
 
     public function markFailed(string $deduplicationKey, string $error): bool
     {
-        $event = OutboxEvent::query()->where('deduplication_key', $deduplicationKey)->first();
+        $event = OutboxEvent::query()
+            ->where('deduplication_key', $deduplicationKey)
+            ->whereIn('status', ['pending', 'processing'])
+            ->first();
         if ($event === null) return false;
 
         $attempts = (int) $event->attempt_count + 1;

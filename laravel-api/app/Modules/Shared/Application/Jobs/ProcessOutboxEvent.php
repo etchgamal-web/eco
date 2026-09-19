@@ -37,10 +37,14 @@ final class ProcessOutboxEvent implements ShouldQueue
     {
         $event = OutboxEvent::query()->find($this->eventId);
         if (! $event) return;
-        $event->update(['status' => 'failed', 'last_error' => $exception->getMessage(), 'updated_at' => now()]);
-        if ($event->aggregate_type === 'social_message') {
+
+        $exhausted = app(OutboxEventRepositoryInterface::class)->markFailed(
+            (string) $event->deduplication_key,
+            $exception->getMessage(),
+        );
+        if ($exhausted && $event->aggregate_type === 'social_message') {
             SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
-        } elseif ($event->aggregate_type === 'social_comment') {
+        } elseif ($exhausted && $event->aggregate_type === 'social_comment') {
             SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
         }
     }

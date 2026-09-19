@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\OutboxEvent;
+use App\Modules\Shared\Application\Jobs\ProcessOutboxEvent;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 use App\Modules\Shared\Infrastructure\Persistence\EloquentOutboxEventRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,5 +70,25 @@ final class OutboxPatternTest extends TestCase
         self::assertSame('failed', $event->status);
         self::assertSame(2, $event->attempt_count);
         self::assertNull($event->next_attempt_at);
+    }
+
+    public function test_queue_failure_returns_event_to_outbox_retry_cycle(): void
+    {
+        config(['outbox.max_attempts' => 2, 'outbox.retry_delay_minutes' => 5]);
+        $event = OutboxEvent::query()->create([
+            'aggregate_type' => 'payment',
+            'aggregate_id' => 10,
+            'event_type' => 'payment.create.requested',
+            'deduplication_key' => 'payment:create:timeout-test',
+            'status' => 'processing',
+            'payload' => ['payment_id' => 10],
+        ]);
+
+        (new ProcessOutboxEvent((int) $event->id))->failed(new \RuntimeException('worker timeout'));
+
+        $event->refresh();
+        self::assertSame('pending', $event->status);
+        self::assertSame(1, $event->attempt_count);
+        self::assertSame('worker timeout', $event->last_error);
     }
 }
