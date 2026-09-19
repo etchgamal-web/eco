@@ -25,9 +25,8 @@ final class ProcessOutboxEvent implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 5;
+    public int $tries = 1;
     public int $timeout;
-    public array $backoff = [60, 300, 900, 3600, 21600];
 
     public function __construct(public readonly int $eventId)
     {
@@ -137,8 +136,12 @@ final class ProcessOutboxEvent implements ShouldQueue
             } elseif ($event->aggregate_type === 'social_comment') {
                 SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'retrying']);
             }
-            $outbox->markFailed($event->deduplication_key, $exception->getMessage());
-            throw $exception;
+            $exhausted = $outbox->markFailed($event->deduplication_key, $exception->getMessage());
+            if ($exhausted && $event->aggregate_type === 'social_message') {
+                SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+            } elseif ($exhausted && $event->aggregate_type === 'social_comment') {
+                SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+            }
         }
     }
 }

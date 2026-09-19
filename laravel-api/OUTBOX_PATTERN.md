@@ -24,7 +24,7 @@ $this->outbox->record(
 
 قيمة lease الافتراضية خمس دقائق ويمكن ضبطها عبر `OUTBOX_LEASE_MINUTES`. مهلة الـ job الافتراضية دقيقتان (`OUTBOX_JOB_TIMEOUT_SECONDS=120`) بينما نافذة إعادة تسليم database queue الافتراضية ثلاث دقائق (`DB_QUEUE_RETRY_AFTER=180`). يجب أن تظل نافذة queue أكبر من timeout حتى لا يعيد queue تسليم job ما زال يعمل، وأن تكون lease أكبر من أطول استدعاء خارجي متوقع.
 
-بعد النجاح تصبح الحالة `dispatched`. عند الفشل تعود إلى `pending` مع `attempt_count` و`next_attempt_at` و`last_error`. وبعد استنفاد محاولات Laravel تتحول إلى `failed` وتظل قابلة للمراجعة من operational dashboard.
+بعد النجاح تصبح الحالة `dispatched`. عند الفشل تعود إلى `pending` مع `attempt_count` و`next_attempt_at` و`last_error`. الـ Queue job لديه محاولة Laravel واحدة فقط؛ إعادة المحاولة تتم حصريًا بواسطة الـ Dispatcher والـ Outbox، حتى لا يتنافس Laravel retry مع إعادة enqueue من scheduler. بعد بلوغ `OUTBOX_MAX_ATTEMPTS` تتحول الحالة إلى `failed` وتظل قابلة للمراجعة من operational dashboard.
 
 ## إضافة نوع event جديد
 

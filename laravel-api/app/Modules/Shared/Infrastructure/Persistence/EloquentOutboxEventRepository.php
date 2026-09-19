@@ -54,13 +54,20 @@ final class EloquentOutboxEventRepository implements OutboxEventRepositoryInterf
         ]);
     }
 
-    public function markFailed(string $deduplicationKey, string $error): void
+    public function markFailed(string $deduplicationKey, string $error): bool
     {
-        OutboxEvent::query()->where('deduplication_key', $deduplicationKey)->update([
-            'status' => 'pending',
-            'attempt_count' => \Illuminate\Database\Query\Expression::raw('attempt_count + 1'),
+        $event = OutboxEvent::query()->where('deduplication_key', $deduplicationKey)->first();
+        if ($event === null) return false;
+
+        $attempts = (int) $event->attempt_count + 1;
+        $exhausted = $attempts >= (int) config('outbox.max_attempts', 5);
+        $event->update([
+            'status' => $exhausted ? 'failed' : 'pending',
+            'attempt_count' => $attempts,
             'last_error' => $error,
-            'next_attempt_at' => now()->addMinutes(5),
+            'next_attempt_at' => $exhausted ? null : now()->addMinutes((int) config('outbox.retry_delay_minutes', 5)),
         ]);
+
+        return $exhausted;
     }
 }

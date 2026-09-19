@@ -44,4 +44,30 @@ final class OutboxPatternTest extends TestCase
         $this->assertFalse($repository->claim((int) $event->id));
         $this->assertDatabaseHas('outbox_events', ['id' => $event->id, 'status' => 'processing']);
     }
+
+    public function test_failed_event_retries_through_outbox_and_then_exhausts(): void
+    {
+        config(['outbox.max_attempts' => 2, 'outbox.retry_delay_minutes' => 5]);
+        $event = OutboxEvent::query()->create([
+            'aggregate_type' => 'payment',
+            'aggregate_id' => 9,
+            'event_type' => 'payment.create.requested',
+            'deduplication_key' => 'payment:create:retry-test',
+            'status' => 'processing',
+            'payload' => ['payment_id' => 9],
+        ]);
+        $repository = app(OutboxEventRepositoryInterface::class);
+
+        self::assertFalse($repository->markFailed((string) $event->deduplication_key, 'temporary failure'));
+        $event->refresh();
+        self::assertSame('pending', $event->status);
+        self::assertSame(1, $event->attempt_count);
+        self::assertNotNull($event->next_attempt_at);
+
+        self::assertTrue($repository->markFailed((string) $event->deduplication_key, 'final failure'));
+        $event->refresh();
+        self::assertSame('failed', $event->status);
+        self::assertSame(2, $event->attempt_count);
+        self::assertNull($event->next_attempt_at);
+    }
 }
