@@ -2,18 +2,19 @@
 
 namespace App\Modules\Order\Infrastructure\Persistence;
 
+use App\Models\Coupon;
 use App\Models\CustomerOrder;
+use App\Models\Product;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
-use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
-use App\Modules\Tax\Domain\Contracts\TaxCalculatorInterface;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\CheckoutException;
-use App\Modules\Order\Domain\Exceptions\InvalidOrderStatusTransitionException;
 use App\Modules\Order\Domain\Exceptions\OrderActionNotAllowedException;
 use App\Modules\Order\Domain\Exceptions\OrderNotFoundException;
 use App\Modules\Order\Domain\StateMachines\OrderStateMachine;
+use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
+use App\Modules\Tax\Domain\Contracts\TaxCalculatorInterface;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentOrderRepository implements OrderRepositoryInterface
@@ -134,13 +135,55 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
                 throw new OrderNotFoundException('Order not found.');
             }
             $shippingAmount = $order->shipping_amount + $fee;
-            $order->update([
-                'shipping_amount' => $shippingAmount,
-                'total_amount' => $order->subtotal_amount - $order->discount_amount + $order->tax_amount + $shippingAmount,
-            ]);
+            $this->applyShippingAmounts($order, $shippingAmount, (int) $order->shipping_cost);
 
             return $order->fresh(['items.product', 'items.variant', 'payments', 'shipments']);
         });
+    }
+
+    public function setShippingCharge(int $orderId, int $customerShippingAmount): object
+    {
+        if ($customerShippingAmount < 0) {
+            throw new \InvalidArgumentException('Customer shipping amount cannot be negative.');
+        }
+
+        return DB::transaction(function () use ($orderId, $customerShippingAmount): CustomerOrder {
+            $order = CustomerOrder::query()->lockForUpdate()->find($orderId);
+            if ($order === null) {
+                throw new OrderNotFoundException('Order not found.');
+            }
+            $this->applyShippingAmounts($order, $customerShippingAmount, (int) $order->shipping_cost);
+
+            return $order->fresh(['items.product', 'items.variant', 'payments', 'shipments']);
+        });
+    }
+
+    public function setShippingCost(int $orderId, int $shippingCost): object
+    {
+        if ($shippingCost < 0) {
+            throw new \InvalidArgumentException('Shipping cost cannot be negative.');
+        }
+
+        return DB::transaction(function () use ($orderId, $shippingCost): CustomerOrder {
+            $order = CustomerOrder::query()->lockForUpdate()->find($orderId);
+            if ($order === null) {
+                throw new OrderNotFoundException('Order not found.');
+            }
+            $this->applyShippingAmounts($order, (int) $order->shipping_amount, $shippingCost);
+
+            return $order->fresh(['items.product', 'items.variant', 'payments', 'shipments']);
+        });
+    }
+
+    private function applyShippingAmounts(CustomerOrder $order, int $customerShippingAmount, int $shippingCost): void
+    {
+        $subtotal = $order->subtotal_amount ?? ((int) $order->total_amount - (int) $order->shipping_amount);
+        $order->update([
+            'shipping_amount' => $customerShippingAmount,
+            'shipping_cost' => $shippingCost,
+            'shipping_subsidy' => $shippingCost - $customerShippingAmount,
+            'total_amount' => $subtotal - (int) $order->discount_amount + (int) $order->tax_amount + $customerShippingAmount,
+        ]);
     }
 
     public function markRefunded(int $orderId): object
@@ -206,7 +249,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             $order = CustomerOrder::query()->create(['user_id' => $userId, 'status' => 'pending', 'total_amount' => $total, 'subtotal_amount' => $subtotal, 'discount_amount' => $promotion['discount'], 'coupon_code' => $promotion['code'], 'tax_amount' => $tax['amount'], 'tax_rate' => $tax['rate'], 'tax_rule_id' => $tax['rule_id'], 'shipping_amount' => 0, 'currency' => $currency, 'shipping_address' => ['recipient_name' => $address->recipient_name, 'phone' => $address->phone, 'address_line1' => $address->address_line1, 'address_line2' => $address->address_line2, 'city' => $address->city, 'state' => $address->state, 'postal_code' => $address->postal_code, 'country' => $address->country], 'idempotency_key' => $idempotencyKey]);
             $order->items()->createMany($snapshots);
             if ($promotion['code'] !== null) {
-                $coupon = \App\Models\Coupon::query()->where('code', $promotion['code'])->firstOrFail();
+                $coupon = Coupon::query()->where('code', $promotion['code'])->firstOrFail();
                 $coupon->usages()->create(['user_id' => $userId, 'order_id' => $order->id, 'discount_amount' => $promotion['discount']]);
             }
             $cart->items()->delete();
@@ -228,7 +271,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             $subtotal = 0;
             $snapshots = [];
             foreach ($items as $item) {
-                $product = \App\Models\Product::query()->with('variants')->find($item['product_id']);
+                $product = Product::query()->with('variants')->find($item['product_id']);
                 if ($product === null || $product->status !== 'active') {
                     throw CheckoutException::unavailableProduct((string) ($product?->name ?? 'unknown'));
                 }

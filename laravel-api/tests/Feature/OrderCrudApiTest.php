@@ -62,6 +62,30 @@ final class OrderCrudApiTest extends TestCase
             ->assertConflict();
     }
 
+    public function test_manager_controls_customer_shipping_charge_and_order_total(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $manager = $this->userWithRole('order_manager');
+        $order = CustomerOrder::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'status' => 'processing',
+            'subtotal_amount' => 1000,
+            'discount_amount' => 100,
+            'tax_amount' => 90,
+            'shipping_amount' => 0,
+            'shipping_cost' => 150,
+            'total_amount' => 990,
+            'currency' => 'EGP',
+        ]);
+
+        $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/shipping-charge", ['shipping_amount' => 50])
+            ->assertOk()
+            ->assertJsonPath('data.shipping_amount', 50)
+            ->assertJsonPath('data.shipping_cost', 150)
+            ->assertJsonPath('data.shipping_subsidy', 100)
+            ->assertJsonPath('data.total_amount', 1040);
+    }
+
     public function test_shipping_an_order_commits_reserved_inventory(): void
     {
         $this->seed(RbacSeeder::class);
@@ -88,7 +112,7 @@ final class OrderCrudApiTest extends TestCase
         Shipment::query()->create([
             'order_id' => $order->id, 'user_id' => $customer->id, 'shipping_method_id' => $method->id,
             'method_code' => $method->code, 'provider_code' => 'bosta', 'fee' => 0, 'currency' => 'EGP', 'status' => 'picked_up', 'creation_status' => 'created',
-            'address_snapshot' => [], 'idempotency_key' => 'test-shipment-' . $order->id,
+            'address_snapshot' => [], 'idempotency_key' => 'test-shipment-'.$order->id,
         ]);
 
         $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/status", ['status' => 'shipped'])
@@ -120,7 +144,7 @@ final class OrderCrudApiTest extends TestCase
             'order_id' => $order->id, 'user_id' => $customer->id, 'shipping_method_id' => $method->id,
             'method_code' => $method->code, 'provider_code' => 'bosta', 'fee' => 0, 'currency' => 'EGP',
             'status' => 'picked_up', 'creation_status' => 'creation_pending',
-            'address_snapshot' => [], 'idempotency_key' => 'uncreated-shipment-' . $order->id,
+            'address_snapshot' => [], 'idempotency_key' => 'uncreated-shipment-'.$order->id,
         ]);
 
         $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/status", ['status' => 'shipped'])
@@ -131,6 +155,7 @@ final class OrderCrudApiTest extends TestCase
     {
         $user = User::factory()->create();
         $user->roles()->attach(Role::query()->where('slug', $role)->firstOrFail());
+
         return $user;
     }
 }

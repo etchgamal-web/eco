@@ -20,6 +20,7 @@ final class OrderRequest extends FormRequest
             'customer.orders.index', 'customer.orders.show' => 'customer.orders.view',
             'customer.orders.cancel' => 'customer.orders.manage',
             'orders.status' => $this->input('status') === 'processing' ? 'orders.process' : ($this->input('status') === 'confirmed' ? 'orders.confirm' : 'orders.edit'),
+            'orders.shipping-charge' => 'orders.edit',
             'orders.cancel' => 'orders.cancel',
             default => 'orders.view',
         };
@@ -29,6 +30,9 @@ final class OrderRequest extends FormRequest
 
     public function rules(): array
     {
+        if ($this->route()?->getName() === 'orders.shipping-charge') {
+            return ['shipping_amount' => ['required', 'integer', 'min:0']];
+        }
         if ($this->route()?->getName() !== 'orders.status') {
             return [];
         }

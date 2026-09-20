@@ -27,7 +27,7 @@ final class CustomerSchemaTest extends TestCase
             ],
             'customer_orders' => [
                 'id', 'user_id', 'status', 'total_amount', 'subtotal_amount', 'discount_amount',
-                'coupon_code', 'tax_amount', 'tax_rate', 'tax_rule_id', 'shipping_amount',
+                'coupon_code', 'tax_amount', 'tax_rate', 'tax_rule_id', 'shipping_amount', 'shipping_cost', 'shipping_subsidy',
                 'currency', 'shipping_address', 'idempotency_key', 'created_at', 'updated_at',
             ],
             'customer_order_items' => [

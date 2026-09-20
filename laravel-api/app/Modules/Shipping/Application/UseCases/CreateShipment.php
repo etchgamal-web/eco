@@ -71,6 +71,7 @@ final class CreateShipment
             'idempotency_key' => $data->idempotencyKey,
             'metadata' => ['carrier' => $method->carrier, 'provider' => $providerCode],
         ]);
+        $this->orders->setShippingCost($order->id, $breakdown->total);
         $this->snapshots->create([
             'shipment_id' => $shipment->id,
             'shipping_provider_id' => $breakdown->provider?->id,

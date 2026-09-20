@@ -10,6 +10,7 @@ use App\Modules\Order\Application\UseCases\GetOrder;
 use App\Modules\Order\Application\UseCases\ListCustomerOrders;
 use App\Modules\Order\Application\UseCases\ListOrders;
 use App\Modules\Order\Application\UseCases\RecordOrderContact;
+use App\Modules\Order\Application\UseCases\SetOrderShippingCharge;
 use App\Modules\Order\Application\UseCases\StartOrderReview;
 use App\Modules\Order\Application\UseCases\UpdateOrderStatus;
 use App\Modules\Order\Presentation\Http\Requests\OrderRequest;
@@ -48,6 +49,11 @@ final class OrderController extends Controller
         return response()->json(['data' => $update->execute($id, (string) $request->validated('status'))]);
     }
 
+    public function setShippingCharge(OrderRequest $request, int $id, SetOrderShippingCharge $setCharge): JsonResponse
+    {
+        return response()->json(['data' => $setCharge->execute($id, (int) $request->validated('shipping_amount'))]);
+    }
+
     public function cancel(OrderRequest $request, int $id, UpdateOrderStatus $update): JsonResponse
     {
         return response()->json(['data' => $update->execute($id, 'cancelled')]);
@@ -61,6 +67,7 @@ final class OrderController extends Controller
     public function contact(OrderWorkflowRequest $request, int $id, RecordOrderContact $record): JsonResponse
     {
         $data = $request->validated();
+
         return response()->json(['data' => $record->execute($id, (string) $data['contact_result'], $data['notes'] ?? null)]);
     }
 

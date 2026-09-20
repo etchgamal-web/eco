@@ -10337,6 +10337,21 @@
         "x-required-permission": "shipments.create"
       }
     },
+    "/orders/{orderId}/shipping-charge": {
+      "patch": {
+        "tags": ["Orders"],
+        "summary": "Set the customer-facing shipping charge",
+        "operationId": "orders_shipping_charge_patch",
+        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"examples": {"default": {"value": {"shipping_amount": 50}}}}}
+        },
+        "responses": {"200": {"description": "Updated order"}, "409": {"description": "Conflict"}},
+        "security": [{"bearerAuth": []}],
+        "x-required-permission": "orders.edit"
+      }
+    },
     "/orders/{orderId}/status": {
       "patch": {
         "tags": [

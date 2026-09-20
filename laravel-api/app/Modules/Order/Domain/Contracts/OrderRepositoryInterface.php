@@ -24,5 +24,9 @@ interface OrderRepositoryInterface
 
     public function addShippingFee(int $orderId, int $fee): object;
 
+    public function setShippingCharge(int $orderId, int $customerShippingAmount): object;
+
+    public function setShippingCost(int $orderId, int $shippingCost): object;
+
     public function markRefunded(int $orderId): object;
 }
