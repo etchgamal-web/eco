@@ -129,6 +129,20 @@ final class ProcessOutboxEvent implements ShouldQueue
                     $outbox->markDispatched($event->deduplication_key);
                     return;
                 }
+                if ($shipmentOperations->hasAttempted((int) $shipment->id, 'create')) {
+                    $recovered = $providers->recover($shipment);
+                    if ($recovered === null) {
+                        throw new \RuntimeException('Shipment creation was previously attempted, but the provider could not recover an existing shipment safely.');
+                    }
+                    $shipmentOperations->complete((int) $shipment->id, 'create', 'provider_created', data_get($recovered, 'metadata.provider_reference'), $recovered);
+                    $createdShipment = $shipments->updateProviderData($shipment, $recovered);
+                    $order = $orders->find((int) $createdShipment->order_id);
+                    if ($order->status === 'processing') {
+                        $orders->updateStatus((int) $order->id, 'shipped');
+                    }
+                    $outbox->markDispatched($event->deduplication_key);
+                    return;
+                }
                 $shipments->markCreationPending($shipment);
                 $shipmentOperations->start((int) $shipment->id, 'create', $key);
                 $result = $providers->create($shipment);

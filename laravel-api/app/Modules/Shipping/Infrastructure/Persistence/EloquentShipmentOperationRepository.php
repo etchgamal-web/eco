@@ -29,6 +29,15 @@ final class EloquentShipmentOperationRepository implements ShipmentOperationRepo
         return (array) $record->response_payload;
     }
 
+    public function hasAttempted(int $shipmentId, string $operation): bool
+    {
+        return ShipmentOperation::query()
+            ->where('shipment_id', $shipmentId)
+            ->where('operation', $operation)
+            ->where('attempt_count', '>', 0)
+            ->exists();
+    }
+
     public function complete(int $shipmentId, string $operation, string $status, ?string $providerReference, array $response): void
     {
         ShipmentOperation::query()->where('shipment_id', $shipmentId)->where('operation', $operation)->update([

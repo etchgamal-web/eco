@@ -82,6 +82,11 @@ final class BostaShippingProvider implements ShippingProviderInterface
         ];
     }
 
+    public function recover(object $shipment): ?array
+    {
+        throw new ShippingException('Bosta does not expose a documented recovery lookup by businessReference; manual reconciliation is required before retrying this shipment.');
+    }
+
     public function track(object $shipment): array
     {
         $tracking = (string) $shipment->tracking_number;

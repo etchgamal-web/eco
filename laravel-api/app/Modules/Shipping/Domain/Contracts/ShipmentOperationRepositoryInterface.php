@@ -8,6 +8,8 @@ interface ShipmentOperationRepositoryInterface
 
     public function successfulResponse(int $shipmentId, string $operation): ?array;
 
+    public function hasAttempted(int $shipmentId, string $operation): bool;
+
     public function complete(int $shipmentId, string $operation, string $status, ?string $providerReference, array $response): void;
 
     public function fail(int $shipmentId, string $operation, string $error): void;

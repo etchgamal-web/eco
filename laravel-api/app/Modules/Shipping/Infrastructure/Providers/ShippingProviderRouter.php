@@ -33,6 +33,11 @@ final class ShippingProviderRouter implements ShippingProviderInterface
         return $this->providerFor($shipment)->create($shipment);
     }
 
+    public function recover(object $shipment): ?array
+    {
+        return $this->providerFor($shipment)->recover($shipment);
+    }
+
     public function track(object $shipment): array
     {
         return $this->providerFor($shipment)->track($shipment);

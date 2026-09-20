@@ -31,7 +31,7 @@ $this->outbox->record(
 
 1. أنشئ event عبر `OutboxEventRepositoryInterface::record` داخل transaction. جدول `outbox_events` يفرض `UNIQUE` على `deduplication_key`، لذلك الحماية من race condition موجودة على مستوى قاعدة البيانات وليس التطبيق فقط.
 2. أضف handler في `app/Modules/Shared/Application/Jobs/ProcessOutboxEvent.php` أو انقل المعالجة إلى handler مستقل إذا كبر النوع.
-3. اجعل التنفيذ idempotent عبر provider idempotency key أو operation record قبل استدعاء مزود خارجي.
-4. أضف اختبارًا يثبت التسجيل مرة واحدة، والـ retry، وأن claim الثاني لا ينجح.
+3. اجعل التنفيذ idempotent عبر provider idempotency key أو operation record قبل استدعاء مزود خارجي. إذا انتهت محاولة خارجية دون حفظ النتيجة محليًا، يجب استدعاء `recover` المخصص للمزود فقط؛ لا يجوز إعادة `create` تلقائيًا. إذا لم يدعم المزود lookup موثقًا، تتوقف العملية وتحتاج reconciliation يدويًا بدل المخاطرة بإنشاء شحنة ثانية.
+4. أضف اختبارًا يثبت التسجيل مرة واحدة، والـ retry، وأن claim الثاني لا ينجح، وأن المحاولة السابقة لا تعيد استدعاء `create` دون recovery آمن.
 
 لا ترسل side effect خارجيًا داخل transaction الأساسية؛ الـ Outbox مسؤول عن الفصل بين commit المحلي والتنفيذ الخارجي.
