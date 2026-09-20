@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Shipment extends Model
 {
     protected $fillable = [
-        'order_id', 'user_id', 'shipping_method_id', 'method_code', 'tracking_number',
-        'fee', 'currency', 'status', 'address_snapshot', 'idempotency_key', 'metadata',
+        'order_id', 'user_id', 'shipping_method_id', 'method_code', 'provider_code', 'tracking_number',
+        'fee', 'currency', 'status', 'creation_status', 'creation_error', 'created_at_provider',
+        'address_snapshot', 'idempotency_key', 'metadata',
     ];
 
     protected function casts(): array
     {
-        return ['fee' => 'integer', 'address_snapshot' => 'array', 'metadata' => 'array'];
+        return ['fee' => 'integer', 'address_snapshot' => 'array', 'metadata' => 'array', 'created_at_provider' => 'datetime'];
     }
 
     public function order(): BelongsTo { return $this->belongsTo(CustomerOrder::class, 'order_id'); }

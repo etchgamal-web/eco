@@ -20,12 +20,12 @@ final class ShippingApiTest extends TestCase
         $this->seed(RbacSeeder::class);
         $customer = $this->userWithRole('customer');
         $manager = $this->userWithRole('order_manager');
-        $method = ShippingMethod::query()->create(['code' => 'standard', 'name' => 'Standard', 'carrier' => 'Local', 'base_fee' => 150, 'currency' => 'EGP', 'is_active' => true]);
+        $method = ShippingMethod::query()->create(['code' => 'standard', 'name' => 'Standard', 'carrier' => 'bosta', 'base_fee' => 150, 'currency' => 'EGP', 'is_active' => true]);
         $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
 
         $this->actingAs($customer)->getJson('/api/v1/customer/shipping-methods')->assertOk()->assertJsonCount(1, 'data');
         $this->actingAs($customer)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'idempotency_key' => 'shipment-1'])->assertForbidden();
-        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'idempotency_key' => 'shipment-1'])
+        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'provider_code' => 'bosta', 'idempotency_key' => 'shipment-1'])
             ->assertCreated()->assertJsonPath('data.fee', 150)->assertJsonPath('data.status', 'pending');
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$order->id}/shipments")
             ->assertOk()->assertJsonCount(1, 'data');
@@ -40,7 +40,7 @@ final class ShippingApiTest extends TestCase
         $method = ShippingMethod::query()->create(['code' => 'express', 'name' => 'Express', 'base_fee' => 300, 'currency' => 'EGP', 'is_active' => true]);
         $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
         $foreign = CustomerOrder::query()->create(['user_id' => $other->id, 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Giza']]);
-        $payload = ['shipping_method_id' => $method->id, 'idempotency_key' => 'same-shipment'];
+        $payload = ['shipping_method_id' => $method->id, 'provider_code' => 'bosta', 'idempotency_key' => 'same-shipment'];
 
         $first = $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", $payload);
         $second = $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", $payload);

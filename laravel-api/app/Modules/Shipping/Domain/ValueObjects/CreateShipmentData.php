@@ -7,5 +7,6 @@ final readonly class CreateShipmentData
     public function __construct(
         public int $shippingMethodId,
         public string $idempotencyKey,
+        public string $providerCode,
     ) {}
 }

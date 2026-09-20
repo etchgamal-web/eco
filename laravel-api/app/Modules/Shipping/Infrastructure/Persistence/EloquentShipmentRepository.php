@@ -43,7 +43,11 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
         return DB::transaction(function () use ($attributes): object {
             try {
                 $shipment = Shipment::query()->create($attributes)->load(['order', 'method', 'events']);
-                $this->outbox->record('shipment', (int) $shipment->id, 'shipment.create.requested', 'shipment:create:' . $attributes['idempotency_key'], ['shipment_id' => $shipment->id, 'idempotency_key' => $attributes['idempotency_key']]);
+                $this->outbox->record('shipment', (int) $shipment->id, 'shipment.create.requested', 'shipment:create:' . $attributes['idempotency_key'], [
+                    'shipment_id' => $shipment->id,
+                    'idempotency_key' => $attributes['idempotency_key'],
+                    'provider_code' => $attributes['provider_code'],
+                ]);
                 return $shipment;
             } catch (QueryException $exception) {
                 $existing = $this->findByIdempotencyKey((string) $attributes['idempotency_key']);
@@ -60,8 +64,23 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
         $shipment->update([
             'tracking_number' => $data['tracking_number'] ?? $shipment->tracking_number,
             'status' => ($data['tracking_number'] ?? null) !== null ? 'provider_created' : $shipment->status,
+            'creation_status' => ($data['tracking_number'] ?? null) !== null ? 'created' : $shipment->creation_status,
+            'creation_error' => null,
+            'created_at_provider' => ($data['tracking_number'] ?? null) !== null ? now() : $shipment->created_at_provider,
             'metadata' => array_merge((array) $shipment->metadata, (array) ($data['metadata'] ?? [])),
         ]);
+        return $shipment->fresh(['order', 'method', 'events']);
+    }
+
+    public function markCreationPending(object $shipment): object
+    {
+        $shipment->update(['creation_status' => 'creation_pending', 'creation_error' => null]);
+        return $shipment->fresh(['order', 'method', 'events']);
+    }
+
+    public function markCreationFailed(object $shipment, string $error): object
+    {
+        $shipment->update(['creation_status' => 'creation_failed', 'creation_error' => $error]);
         return $shipment->fresh(['order', 'method', 'events']);
     }
     public function updateProviderStatus(object $shipment, string $status, ?string $note = null): object

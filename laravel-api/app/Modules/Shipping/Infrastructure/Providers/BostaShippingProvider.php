@@ -16,7 +16,7 @@ final class BostaShippingProvider implements ShippingProviderInterface
 
     public function supports(object $shipment): bool
     {
-        return strtolower((string) ($shipment->method->carrier ?? $shipment->method_code)) === 'bosta'
+        return strtolower((string) ($shipment->provider_code ?? '')) === 'bosta'
             && $this->settings->enabled('bosta', (bool) config('services.bosta.enabled', false));
     }
 

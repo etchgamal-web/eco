@@ -6,6 +6,7 @@ use App\Models\OutboxEvent;
 use App\Models\SocialInteraction;
 use App\Models\SocialMessage;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
+use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
@@ -56,6 +57,7 @@ final class ProcessOutboxEvent implements ShouldQueue
         ShipmentRepositoryInterface $shipments,
         ShippingProviderInterface $providers,
         ShipmentOperationRepositoryInterface $shipmentOperations,
+        OrderRepositoryInterface $orders,
         OutboxEventRepositoryInterface $outbox,
         SocialConnectionRepositoryInterface $connections,
         SocialMessagingProviderInterface $socialProvider,
@@ -113,13 +115,12 @@ final class ProcessOutboxEvent implements ShouldQueue
                 $payments->updateStatus($payment, $status, ['provider_reference' => $result['provider_reference'] ?? null, 'metadata' => $result['metadata'] ?? $payment->metadata]);
             } elseif ($event->aggregate_type === 'shipment') {
                 $shipment = $shipments->find((int) $event->aggregate_id);
-                if (data_get($shipment->metadata, 'provider_reference')) {
+                if ($shipment->creation_status === 'created' || data_get($shipment->metadata, 'provider_reference')) {
                     $outbox->markDispatched($event->deduplication_key);
                     return;
                 }
                 if (! $providers->supports($shipment)) {
-                    $outbox->markDispatched($event->deduplication_key);
-                    return;
+                    throw new \RuntimeException('The selected shipping provider is unavailable or not configured.');
                 }
                 $key = (string) $shipment->idempotency_key;
                 $previous = $shipmentOperations->successfulResponse((int) $shipment->id, 'create');
@@ -128,14 +129,22 @@ final class ProcessOutboxEvent implements ShouldQueue
                     $outbox->markDispatched($event->deduplication_key);
                     return;
                 }
+                $shipments->markCreationPending($shipment);
                 $shipmentOperations->start((int) $shipment->id, 'create', $key);
                 $result = $providers->create($shipment);
                 $shipmentOperations->complete((int) $shipment->id, 'create', 'provider_created', data_get($result, 'metadata.provider_reference'), $result);
-                $shipments->updateProviderData($shipment, $result);
+                $createdShipment = $shipments->updateProviderData($shipment, $result);
+                $order = $orders->find((int) $createdShipment->order_id);
+                if ($order->status === 'processing') {
+                    $orders->updateStatus((int) $order->id, 'shipped');
+                }
             }
             $outbox->markDispatched($event->deduplication_key);
         } catch (\Throwable $exception) {
-            if ($event->aggregate_type === 'social_message') {
+            if ($event->aggregate_type === 'shipment') {
+                $shipment = $shipments->find((int) $event->aggregate_id);
+                $shipments->markCreationFailed($shipment, $exception->getMessage());
+            } elseif ($event->aggregate_type === 'social_message') {
                 SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'retrying']);
             } elseif ($event->aggregate_type === 'social_comment') {
                 SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'retrying']);

@@ -32,7 +32,11 @@ final class ShippingRequest extends FormRequest
             ];
         }
         if ($this->route()?->getName() === 'shipments.store') {
-            return ['shipping_method_id' => ['required', 'integer', 'min:1'], 'idempotency_key' => ['required', 'string', 'max:100']];
+            return [
+                'shipping_method_id' => ['required', 'integer', 'min:1'],
+                'provider_code' => ['required', 'string', 'max:60', 'regex:/^[a-z0-9_-]+$/i'],
+                'idempotency_key' => ['required', 'string', 'max:100'],
+            ];
         }
         if ($this->route()?->getName() === 'shipments.status') {
             return ['status' => ['required', 'string', 'in:pending,picked_up,in_transit,out_for_delivery,delivered,cancelled'], 'note' => ['nullable', 'string', 'max:1000']];
