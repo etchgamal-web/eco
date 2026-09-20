@@ -12,5 +12,6 @@ final readonly class ShippingPricingBreakdown
         public ?string $zoneCode,
         public ?object $provider,
         public ?object $plan,
+        public string $pricingMethod,
     ) {}
 }

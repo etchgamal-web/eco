@@ -6,5 +6,5 @@ use App\Modules\Shipping\Domain\ValueObjects\ShippingPricingBreakdown;
 
 interface ShippingPricingCalculatorInterface
 {
-    public function calculateBreakdown(object $order, object $method, string $providerCode): ShippingPricingBreakdown;
+    public function calculateBreakdown(object $order, object $method, string $providerCode, string $event = 'delivery', array $context = []): ShippingPricingBreakdown;
 }

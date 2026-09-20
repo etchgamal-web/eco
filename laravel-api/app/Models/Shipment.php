@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Shipment extends Model
 {
@@ -19,10 +20,33 @@ class Shipment extends Model
         return ['fee' => 'integer', 'weight' => 'decimal:3', 'item_quantity' => 'integer', 'address_snapshot' => 'array', 'metadata' => 'array', 'created_at_provider' => 'datetime'];
     }
 
-    public function order(): BelongsTo { return $this->belongsTo(CustomerOrder::class, 'order_id'); }
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function method(): BelongsTo { return $this->belongsTo(ShippingMethod::class, 'shipping_method_id'); }
-    public function events(): HasMany { return $this->hasMany(ShipmentEvent::class); }
-    public function operations(): HasMany { return $this->hasMany(ShipmentOperation::class); }
-    public function pricingSnapshot(): \Illuminate\Database\Eloquent\Relations\HasOne { return $this->hasOne(ShipmentPricingSnapshot::class); }
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(CustomerOrder::class, 'order_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function method(): BelongsTo
+    {
+        return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(ShipmentEvent::class);
+    }
+
+    public function operations(): HasMany
+    {
+        return $this->hasMany(ShipmentOperation::class);
+    }
+
+    public function pricingSnapshot(): HasOne
+    {
+        return $this->hasOne(ShipmentPricingSnapshot::class);
+    }
 }
