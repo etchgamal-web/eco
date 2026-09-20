@@ -6,6 +6,8 @@ use App\Models\CustomerOrder;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\Role;
+use App\Models\Shipment;
+use App\Models\ShippingMethod;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,16 +30,23 @@ final class OrderCrudApiTest extends TestCase
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$foreign->id}")->assertNotFound();
     }
 
-    public function test_order_manager_can_update_status_and_invalid_transition_is_conflict(): void
+    public function test_order_manager_must_review_and_contact_before_confirmation(): void
     {
         $this->seed(RbacSeeder::class);
         $manager = $this->userWithRole('order_manager');
         $order = CustomerOrder::query()->create(['user_id' => User::factory()->create()->id, 'status' => 'pending', 'total_amount' => 100, 'currency' => 'EGP']);
 
         $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/status", ['status' => 'confirmed'])
-            ->assertOk()->assertJsonPath('data.status', 'confirmed');
-        $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/status", ['status' => 'delivered'])
             ->assertConflict();
+        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/review")
+            ->assertCreated()->assertJsonPath('data.order.status', 'reviewing');
+        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/confirm")
+            ->assertConflict();
+        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/contact", [
+            'contact_result' => 'confirmed', 'notes' => 'Customer confirmed the order.',
+        ])->assertOk();
+        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/confirm")
+            ->assertOk()->assertJsonPath('data.order.status', 'confirmed');
     }
 
     public function test_customer_can_cancel_pending_order_but_cannot_cancel_delivered_order(): void
@@ -72,6 +81,14 @@ final class OrderCrudApiTest extends TestCase
         ]);
         $inventory = InventoryItem::query()->create([
             'product_id' => $product->id, 'on_hand' => 5, 'reserved' => 2,
+        ]);
+        $method = ShippingMethod::query()->create([
+            'code' => 'test', 'name' => 'Test', 'base_fee' => 0, 'currency' => 'EGP', 'is_active' => true,
+        ]);
+        Shipment::query()->create([
+            'order_id' => $order->id, 'user_id' => $customer->id, 'shipping_method_id' => $method->id,
+            'method_code' => $method->code, 'fee' => 0, 'currency' => 'EGP', 'status' => 'picked_up',
+            'address_snapshot' => [], 'idempotency_key' => 'test-shipment-' . $order->id,
         ]);
 
         $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/status", ['status' => 'shipped'])

@@ -3,6 +3,7 @@
 namespace App\Modules\Order\Infrastructure\Persistence;
 
 use App\Models\CustomerOrder;
+use App\Models\Shipment;
 use App\Models\User;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
@@ -12,6 +13,7 @@ use App\Modules\Order\Domain\Exceptions\CheckoutException;
 use App\Modules\Order\Domain\Exceptions\InvalidOrderStatusTransitionException;
 use App\Modules\Order\Domain\Exceptions\OrderActionNotAllowedException;
 use App\Modules\Order\Domain\Exceptions\OrderNotFoundException;
+use App\Modules\Order\Domain\StateMachines\OrderStateMachine;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentOrderRepository implements OrderRepositoryInterface
@@ -24,17 +26,17 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function listForUser(int $userId): iterable
     {
-        return CustomerOrder::query()->with('items.product')->where('user_id', $userId)->latest()->get();
+        return CustomerOrder::query()->with(['items.product', 'review'])->where('user_id', $userId)->latest()->get();
     }
 
     public function listAll(): iterable
     {
-        return CustomerOrder::query()->with(['user', 'items.product'])->latest()->get();
+        return CustomerOrder::query()->with(['user', 'items.product', 'review.reviewer', 'review.confirmer'])->latest()->get();
     }
 
     public function findForUser(int $userId, int $orderId): object
     {
-        $order = CustomerOrder::query()->with('items.product')->where('user_id', $userId)->find($orderId);
+        $order = CustomerOrder::query()->with(['items.product', 'review.reviewer', 'review.confirmer'])->where('user_id', $userId)->find($orderId);
         if ($order === null) {
             throw new OrderNotFoundException('Order not found.');
         }
@@ -44,7 +46,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function find(int $orderId): object
     {
-        $order = CustomerOrder::query()->with(['user', 'items.product'])->find($orderId);
+        $order = CustomerOrder::query()->with(['user', 'items.product', 'review.reviewer', 'review.confirmer'])->find($orderId);
         if ($order === null) {
             throw new OrderNotFoundException('Order not found.');
         }
@@ -59,17 +61,20 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             if ($order === null) {
                 throw new OrderNotFoundException('Order not found.');
             }
-            $allowed = [
-                'pending' => ['confirmed', 'cancelled'],
-                'confirmed' => ['processing', 'cancelled'],
-                'processing' => ['shipped', 'cancelled'],
-                'shipped' => ['delivered'],
-                'delivered' => ['refunded'],
-                'cancelled' => [],
-                'refunded' => [],
-            ];
-            if (! in_array($status, $allowed[$order->status] ?? [], true)) {
-                throw InvalidOrderStatusTransitionException::from($order->status, $status);
+            if (in_array($status, ['reviewing', 'confirmed'], true)) {
+                throw new OrderActionNotAllowedException('Use the dedicated order workflow endpoint for this transition.');
+            }
+            OrderStateMachine::assert((string) $order->status, $status);
+            if ($status === 'shipped') {
+                $hasReadyShipment = Shipment::query()->where('order_id', $order->id)
+                    ->whereIn('status', ['picked_up', 'in_transit', 'out_for_delivery', 'delivered'])
+                    ->exists();
+                if (! $hasReadyShipment) {
+                    throw new OrderActionNotAllowedException('Order cannot be shipped without a picked up or in-transit shipment.');
+                }
+            }
+            if ($status === 'delivered' && ! Shipment::query()->where('order_id', $order->id)->where('status', 'delivered')->exists()) {
+                throw new OrderActionNotAllowedException('Order cannot be delivered without a delivered shipment.');
             }
             if ($status === 'shipped') {
                 foreach ($order->items as $item) {
@@ -78,7 +83,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             }
             $order->update(['status' => $status]);
 
-            return $order->fresh(['user', 'items.product']);
+            return $order->fresh(['user', 'items.product', 'review.reviewer', 'review.confirmer']);
         });
     }
 
@@ -144,9 +149,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             if ($order === null) {
                 throw new OrderNotFoundException('Order not found.');
             }
-            if (in_array($order->status, ['cancelled', 'refunded'], true)) {
-                throw new OrderActionNotAllowedException('This order cannot be refunded.');
-            }
+            OrderStateMachine::assert((string) $order->status, 'refunded');
             $order->update(['status' => 'refunded']);
 
             return $order->fresh(['items.product']);

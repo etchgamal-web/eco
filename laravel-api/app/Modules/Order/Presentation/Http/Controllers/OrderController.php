@@ -4,12 +4,16 @@ namespace App\Modules\Order\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Order\Application\UseCases\CancelOrder;
+use App\Modules\Order\Application\UseCases\ConfirmOrder;
 use App\Modules\Order\Application\UseCases\GetCustomerOrder;
 use App\Modules\Order\Application\UseCases\GetOrder;
 use App\Modules\Order\Application\UseCases\ListCustomerOrders;
 use App\Modules\Order\Application\UseCases\ListOrders;
+use App\Modules\Order\Application\UseCases\RecordOrderContact;
+use App\Modules\Order\Application\UseCases\StartOrderReview;
 use App\Modules\Order\Application\UseCases\UpdateOrderStatus;
 use App\Modules\Order\Presentation\Http\Requests\OrderRequest;
+use App\Modules\Order\Presentation\Http\Requests\OrderWorkflowRequest;
 use Illuminate\Http\JsonResponse;
 
 final class OrderController extends Controller
@@ -47,5 +51,21 @@ final class OrderController extends Controller
     public function cancel(OrderRequest $request, int $id, UpdateOrderStatus $update): JsonResponse
     {
         return response()->json(['data' => $update->execute($id, 'cancelled')]);
+    }
+
+    public function review(OrderWorkflowRequest $request, int $id, StartOrderReview $start): JsonResponse
+    {
+        return response()->json(['data' => $start->execute($id, (int) $request->user()->id)], 201);
+    }
+
+    public function contact(OrderWorkflowRequest $request, int $id, RecordOrderContact $record): JsonResponse
+    {
+        $data = $request->validated();
+        return response()->json(['data' => $record->execute($id, (string) $data['contact_result'], $data['notes'] ?? null)]);
+    }
+
+    public function confirm(OrderWorkflowRequest $request, int $id, ConfirmOrder $confirm): JsonResponse
+    {
+        return response()->json(['data' => $confirm->execute($id, (int) $request->user()->id)]);
     }
 }

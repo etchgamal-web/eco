@@ -3,6 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 class CustomerOrder extends Model
 {
     protected $fillable = [
@@ -25,4 +26,5 @@ class CustomerOrder extends Model
     public function payments(): HasMany { return $this->hasMany(Payment::class, 'order_id'); }
 
     public function shipments(): HasMany { return $this->hasMany(Shipment::class, 'order_id'); }
+    public function review(): HasOne { return $this->hasOne(OrderReview::class, 'order_id'); }
 }

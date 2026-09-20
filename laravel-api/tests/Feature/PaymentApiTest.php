@@ -68,10 +68,10 @@ final class PaymentApiTest extends TestCase
 
         $this->actingAs($owner)->postJson("/api/v1/payments/{$payment->id}/confirm")
             ->assertOk()->assertJsonPath('data.status', 'paid');
-        $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'confirmed']);
+        $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'pending']);
         $this->actingAs($owner)->postJson("/api/v1/payments/{$payment->id}/refund")
             ->assertOk()->assertJsonPath('data.status', 'refunded');
-        $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'refunded']);
+        $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'pending']);
         $this->actingAs($owner)->postJson("/api/v1/payments/{$payment->id}/refund")
             ->assertConflict();
     }

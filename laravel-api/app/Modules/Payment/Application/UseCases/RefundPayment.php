@@ -38,7 +38,10 @@ final class RefundPayment
                 $locked = $this->payments->findForUpdate($paymentId);
                 if (in_array($locked->status, ['paid', 'confirmed'], true)) {
                     $refunded = $this->payments->updateStatus($locked, 'refunded', ['metadata' => $previous['metadata'] ?? $locked->metadata]);
-                    $this->orders->markRefunded($payment->order_id);
+                    $order = $this->orders->find($payment->order_id);
+                    if ($order->status === 'delivered') {
+                        $this->orders->markRefunded($payment->order_id);
+                    }
                     return $refunded;
                 }
                 return $locked;
@@ -68,7 +71,10 @@ final class RefundPayment
             $refunded = $this->payments->updateStatus($locked, 'refunded', [
                 'metadata' => $result['metadata'] ?? $locked->metadata,
             ]);
-            $this->orders->markRefunded($payment->order_id);
+            $order = $this->orders->find($payment->order_id);
+            if ($order->status === 'delivered') {
+                $this->orders->markRefunded($payment->order_id);
+            }
             AuditLog::query()->create(['actor_id' => auth()->id(), 'action' => 'payment.refunded', 'target_type' => get_class($refunded), 'target_id' => $refunded->id, 'metadata' => ['provider_reference' => $refunded->provider_reference]]);
 
             return $refunded;

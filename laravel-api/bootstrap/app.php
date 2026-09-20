@@ -22,6 +22,7 @@ use App\Modules\Inventory\Domain\Exceptions\InventoryNotFoundException;
 use App\Modules\Order\Domain\Exceptions\CheckoutException;
 use App\Modules\Order\Domain\Exceptions\InvalidOrderStatusTransitionException;
 use App\Modules\Order\Domain\Exceptions\OrderActionNotAllowedException;
+use App\Modules\Order\Domain\Exceptions\OrderReviewException;
 use App\Modules\Order\Domain\Exceptions\OrderNotFoundException;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Domain\Exceptions\PaymentAlreadyProcessedException;
@@ -115,7 +116,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => $e->getMessage()], 422);
             }
         });
-        $exceptions->render(function (PaymentAlreadyProcessedException|PaymentInProgressException|InvalidPaymentTransitionException|InvalidOrderStatusTransitionException|InvalidShipmentTransitionException|OrderActionNotAllowedException $e, Request $r) {
+        $exceptions->render(function (PaymentAlreadyProcessedException|PaymentInProgressException|InvalidPaymentTransitionException|InvalidOrderStatusTransitionException|InvalidShipmentTransitionException|OrderActionNotAllowedException|OrderReviewException $e, Request $r) {
             if ($r->is('api/*')) {
                 return response()->json(['message' => $e->getMessage()], 409);
             }

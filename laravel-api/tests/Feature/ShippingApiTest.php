@@ -21,7 +21,7 @@ final class ShippingApiTest extends TestCase
         $customer = $this->userWithRole('customer');
         $manager = $this->userWithRole('order_manager');
         $method = ShippingMethod::query()->create(['code' => 'standard', 'name' => 'Standard', 'carrier' => 'Local', 'base_fee' => 150, 'currency' => 'EGP', 'is_active' => true]);
-        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'confirmed', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
+        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
 
         $this->actingAs($customer)->getJson('/api/v1/customer/shipping-methods')->assertOk()->assertJsonCount(1, 'data');
         $this->actingAs($customer)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'idempotency_key' => 'shipment-1'])->assertForbidden();
@@ -38,8 +38,8 @@ final class ShippingApiTest extends TestCase
         $manager = $this->userWithRole('order_manager');
         $other = User::factory()->create();
         $method = ShippingMethod::query()->create(['code' => 'express', 'name' => 'Express', 'base_fee' => 300, 'currency' => 'EGP', 'is_active' => true]);
-        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'confirmed', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
-        $foreign = CustomerOrder::query()->create(['user_id' => $other->id, 'status' => 'confirmed', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Giza']]);
+        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
+        $foreign = CustomerOrder::query()->create(['user_id' => $other->id, 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Giza']]);
         $payload = ['shipping_method_id' => $method->id, 'idempotency_key' => 'same-shipment'];
 
         $first = $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", $payload);

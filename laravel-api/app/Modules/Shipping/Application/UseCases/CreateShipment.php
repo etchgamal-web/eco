@@ -22,8 +22,8 @@ final class CreateShipment
     public function execute(int $orderId, CreateShipmentData $data): object
     {
         $order = $this->orders->find($orderId);
-        if (! in_array((string) $order->status, ['confirmed', 'processing'], true)) {
-            throw new ShippingException('Shipment can only be created for a confirmed or processing order.');
+        if ((string) $order->status !== 'processing') {
+            throw new ShippingException('Shipment can only be created for an order in processing status.');
         }
 
         $method = $this->methods->find($data->shippingMethodId);

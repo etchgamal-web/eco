@@ -71,6 +71,9 @@ class RbacSeeder extends Seeder
 
             // Orders
             ['name' => 'View Orders', 'slug' => 'orders.view', 'group' => 'orders'],
+            ['name' => 'Review Orders', 'slug' => 'orders.review', 'group' => 'orders'],
+            ['name' => 'Contact Order Customers', 'slug' => 'orders.contact', 'group' => 'orders'],
+            ['name' => 'Process Orders', 'slug' => 'orders.process', 'group' => 'orders'],
             ['name' => 'Verify Orders', 'slug' => 'orders.verify', 'group' => 'orders'],
             ['name' => 'Confirm Orders', 'slug' => 'orders.confirm', 'group' => 'orders'],
             ['name' => 'Edit Orders', 'slug' => 'orders.edit', 'group' => 'orders'],
@@ -177,7 +180,7 @@ class RbacSeeder extends Seeder
             'inventory.view', 'inventory.manage',
         ]);
         $orderManagerPermissions = $allPermissions->whereIn('slug', [
-            'orders.view', 'orders.manage', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
+            'orders.view', 'orders.manage', 'orders.review', 'orders.contact', 'orders.process', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
             'inventory.view',
         ]);
         $managerPermissions = $allPermissions->whereIn('slug', [
@@ -186,7 +189,7 @@ class RbacSeeder extends Seeder
             'attributes.view', 'attributes.create', 'attributes.update', 'attributes.delete',
             'brands.view', 'brands.create', 'brands.update', 'brands.delete',
             'categories.view', 'categories.create', 'categories.update', 'categories.delete',
-            'orders.view', 'orders.manage', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
+            'orders.view', 'orders.manage', 'orders.review', 'orders.contact', 'orders.process', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
             'inventory.view', 'inventory.manage',
         ]);
         $supportAgentPermissions = $allPermissions->whereIn('slug', [

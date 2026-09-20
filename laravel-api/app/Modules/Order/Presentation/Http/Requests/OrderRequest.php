@@ -19,7 +19,7 @@ final class OrderRequest extends FormRequest
             'orders.index', 'orders.show' => 'orders.view',
             'customer.orders.index', 'customer.orders.show' => 'customer.orders.view',
             'customer.orders.cancel' => 'customer.orders.manage',
-            'orders.status' => $this->input('status') === 'confirmed' ? 'orders.confirm' : 'orders.edit',
+            'orders.status' => $this->input('status') === 'processing' ? 'orders.process' : ($this->input('status') === 'confirmed' ? 'orders.confirm' : 'orders.edit'),
             'orders.cancel' => 'orders.cancel',
             default => 'orders.view',
         };
@@ -34,7 +34,7 @@ final class OrderRequest extends FormRequest
         }
 
         return [
-            'status' => ['required', 'string', 'in:pending,confirmed,processing,shipped,delivered,cancelled,refunded'],
+            'status' => ['required', 'string', 'in:reviewing,confirmed,processing,shipped,delivered,cancelled,refunded'],
         ];
     }
 }
