@@ -4,17 +4,18 @@ namespace App\Modules\Shipping\Application\UseCases;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;
-use App\Modules\Shipping\Domain\Contracts\ShippingRateCalculatorInterface;
+use App\Modules\Shipping\Domain\Contracts\ShippingPricingCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
 use App\Modules\Shipping\Domain\ValueObjects\CreateShipmentData;
+use App\Models\ShipmentPricingSnapshot;
 
 final class CreateShipment
 {
     public function __construct(
         private readonly OrderRepositoryInterface $orders,
         private readonly ShippingMethodRepositoryInterface $methods,
-        private readonly ShippingRateCalculatorInterface $rates,
+        private readonly ShippingPricingCalculatorInterface $rates,
         private readonly ShipmentRepositoryInterface $shipments,
     ) {
     }
@@ -42,13 +43,18 @@ final class CreateShipment
             return $existing;
         }
 
-        return $this->shipments->create([
+        $breakdown = $this->rates->calculateBreakdown($order, $method, $providerCode);
+        $zoneCode = $breakdown->zoneCode;
+        $shipment = $this->shipments->create([
             'order_id' => $order->id,
             'user_id' => $order->user_id,
             'shipping_method_id' => $method->id,
             'provider_code' => $providerCode,
             'method_code' => $method->code,
-            'fee' => $this->rates->calculate($order, $method),
+            'weight' => $breakdown?->weight,
+            'item_quantity' => $breakdown?->quantity,
+            'zone_code' => $zoneCode,
+            'fee' => $breakdown->total,
             'currency' => $order->currency,
             'status' => 'pending',
             'creation_status' => 'creation_pending',
@@ -56,5 +62,22 @@ final class CreateShipment
             'idempotency_key' => $data->idempotencyKey,
             'metadata' => ['carrier' => $method->carrier, 'provider' => $providerCode],
         ]);
+        if ($breakdown->provider !== null && $breakdown->plan !== null) {
+            ShipmentPricingSnapshot::query()->create([
+                'shipment_id' => $shipment->id,
+                'shipping_provider_id' => $breakdown->provider->id,
+                'shipping_pricing_plan_id' => $breakdown->plan->id,
+                'pricing_method' => $breakdown->plan->pricing_method,
+                'weight' => $breakdown->weight,
+                'item_quantity' => $breakdown->quantity,
+                'zone_code' => $zoneCode,
+                'currency' => $order->currency,
+                'base_amount' => $breakdown->total - array_sum(array_column($breakdown->fees, 'applied')),
+                'applied_fees' => $breakdown->fees,
+                'total_expected_cost' => $breakdown->total,
+                'calculation_inputs' => ['weight' => $breakdown->weight, 'quantity' => $breakdown->quantity, 'zone_code' => $zoneCode],
+            ]);
+        }
+        return $shipment;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Modules\Shipping;
 
 use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;
+use App\Modules\Shipping\Domain\Contracts\ShippingPricingCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingRateCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
@@ -22,6 +23,7 @@ final class ShippingServiceProvider extends ServiceProvider
 {
     public array $bindings = [
         ShippingMethodRepositoryInterface::class => EloquentShippingMethodRepository::class,
+        ShippingPricingCalculatorInterface::class => DatabaseShippingRateCalculator::class,
         ShippingRateCalculatorInterface::class => DatabaseShippingRateCalculator::class,
         ShipmentRepositoryInterface::class => EloquentShipmentRepository::class,
         ShippingProviderInterface::class => ShippingProviderRouter::class,
