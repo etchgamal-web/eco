@@ -8,7 +8,6 @@ use App\Models\CustomerCart;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\Role;
-use App\Models\ShippingMethod;
 use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Models\User;
@@ -128,7 +127,7 @@ final class CheckoutApiTest extends TestCase
         $this->assertDatabaseCount('coupon_usages', 1);
     }
 
-    public function test_checkout_orchestrates_shipping_and_payment_after_reserving_inventory(): void
+    public function test_checkout_creates_order_and_payment_without_creating_shipment(): void
     {
         $this->seed(RbacSeeder::class);
         $user = $this->userWithRole('customer');
@@ -143,32 +142,25 @@ final class CheckoutApiTest extends TestCase
         $cart = CustomerCart::query()->create(['user_id' => $user->id]);
         $cart->items()->create(['product_id' => $product->id, 'quantity' => 2]);
         InventoryItem::query()->create(['product_id' => $product->id, 'on_hand' => 5, 'reserved' => 0]);
-        $method = ShippingMethod::query()->create([
-            'code' => 'standard', 'name' => 'Standard', 'base_fee' => 150,
-            'currency' => 'EGP', 'is_active' => true,
-        ]);
-
         $response = $this->actingAs($user)->postJson('/api/v1/customer/checkout', [
             'address_id' => $address->id,
             'currency' => 'EGP',
             'idempotency_key' => 'full-flow-order',
-            'shipping_method_id' => $method->id,
-            'shipping_idempotency_key' => 'full-flow-shipment',
             'payment_method' => 'cash_on_delivery',
             'payment_idempotency_key' => 'full-flow-payment',
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.total_amount', 2650);
+        $response->assertCreated()->assertJsonPath('data.total_amount', 2500);
         $orderId = $response->json('data.id');
         $this->assertDatabaseHas('inventory_items', ['product_id' => $product->id, 'reserved' => 2]);
-        $this->assertDatabaseHas('shipments', ['order_id' => $orderId, 'fee' => 150, 'status' => 'pending']);
-        $this->assertDatabaseHas('payments', ['order_id' => $orderId, 'amount' => 2650, 'status' => 'pending']);
+        $this->assertDatabaseMissing('shipments', ['order_id' => $orderId]);
+        $this->assertDatabaseHas('payments', ['order_id' => $orderId, 'amount' => 2500, 'status' => 'pending']);
         $this->assertDatabaseCount('customer_orders', 1);
-        $this->assertDatabaseCount('shipments', 1);
+        $this->assertDatabaseCount('shipments', 0);
         $this->assertDatabaseCount('payments', 1);
     }
 
-    public function test_checkout_rolls_back_order_and_inventory_when_shipping_creation_fails(): void
+    public function test_checkout_does_not_validate_or_create_shipping_provider_state(): void
     {
         $this->seed(RbacSeeder::class);
         $user = $this->userWithRole('customer');
@@ -188,14 +180,12 @@ final class CheckoutApiTest extends TestCase
             'address_id' => $address->id,
             'currency' => 'EGP',
             'idempotency_key' => 'rollback-order',
-            'shipping_method_id' => 999999,
-            'shipping_idempotency_key' => 'rollback-shipment',
-        ])->assertUnprocessable();
+        ])->assertCreated();
 
-        $this->assertDatabaseCount('customer_orders', 0);
+        $this->assertDatabaseCount('customer_orders', 1);
         $this->assertDatabaseCount('shipments', 0);
-        $this->assertDatabaseHas('inventory_items', ['product_id' => $product->id, 'on_hand' => 5, 'reserved' => 0]);
-        $this->assertDatabaseCount('customer_cart_items', 1);
+        $this->assertDatabaseHas('inventory_items', ['product_id' => $product->id, 'on_hand' => 5, 'reserved' => 2]);
+        $this->assertDatabaseCount('customer_cart_items', 0);
     }
 
     private function userWithRole(string $role): User

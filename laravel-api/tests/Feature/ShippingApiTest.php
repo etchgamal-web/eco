@@ -15,32 +15,35 @@ final class ShippingApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_can_list_methods_create_shipment_and_list_own_shipments(): void
+    public function test_customer_can_list_methods_but_only_staff_can_create_shipment(): void
     {
         $this->seed(RbacSeeder::class);
         $customer = $this->userWithRole('customer');
+        $manager = $this->userWithRole('order_manager');
         $method = ShippingMethod::query()->create(['code' => 'standard', 'name' => 'Standard', 'carrier' => 'Local', 'base_fee' => 150, 'currency' => 'EGP', 'is_active' => true]);
-        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'pending', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
+        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'confirmed', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
 
         $this->actingAs($customer)->getJson('/api/v1/customer/shipping-methods')->assertOk()->assertJsonCount(1, 'data');
-        $this->actingAs($customer)->postJson("/api/v1/customer/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'idempotency_key' => 'shipment-1'])
+        $this->actingAs($customer)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'idempotency_key' => 'shipment-1'])->assertForbidden();
+        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'idempotency_key' => 'shipment-1'])
             ->assertCreated()->assertJsonPath('data.fee', 150)->assertJsonPath('data.status', 'pending');
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$order->id}/shipments")
             ->assertOk()->assertJsonCount(1, 'data');
     }
 
-    public function test_shipment_creation_is_idempotent_and_foreign_order_is_hidden(): void
+    public function test_staff_shipment_creation_is_idempotent_and_foreign_order_is_hidden(): void
     {
         $this->seed(RbacSeeder::class);
         $customer = $this->userWithRole('customer');
+        $manager = $this->userWithRole('order_manager');
         $other = User::factory()->create();
         $method = ShippingMethod::query()->create(['code' => 'express', 'name' => 'Express', 'base_fee' => 300, 'currency' => 'EGP', 'is_active' => true]);
-        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'pending', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
-        $foreign = CustomerOrder::query()->create(['user_id' => $other->id, 'status' => 'pending', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Giza']]);
+        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'confirmed', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
+        $foreign = CustomerOrder::query()->create(['user_id' => $other->id, 'status' => 'confirmed', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Giza']]);
         $payload = ['shipping_method_id' => $method->id, 'idempotency_key' => 'same-shipment'];
 
-        $first = $this->actingAs($customer)->postJson("/api/v1/customer/orders/{$order->id}/shipments", $payload);
-        $second = $this->actingAs($customer)->postJson("/api/v1/customer/orders/{$order->id}/shipments", $payload);
+        $first = $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", $payload);
+        $second = $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", $payload);
         $first->assertCreated();
         $second->assertCreated()->assertJsonPath('data.id', $first->json('data.id'));
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$foreign->id}/shipments")->assertNotFound();
@@ -58,7 +61,7 @@ final class ShippingApiTest extends TestCase
             ->assertCreated()->json('data');
 
         $order = CustomerOrder::query()->create(['user_id' => $owner->id, 'status' => 'pending', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
-        $shipment = \App\Models\Shipment::query()->create(['order_id' => $order->id, 'user_id' => $owner->id, 'shipping_method_id' => $method['id'], 'method_code' => 'same-day', 'fee' => 500, 'currency' => 'EGP', 'status' => 'pending', 'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'admin-shipment']);
+        $shipment = Shipment::query()->create(['order_id' => $order->id, 'user_id' => $owner->id, 'shipping_method_id' => $method['id'], 'method_code' => 'same-day', 'fee' => 500, 'currency' => 'EGP', 'status' => 'pending', 'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'admin-shipment']);
         $this->actingAs($owner)->patchJson("/api/v1/shipments/{$shipment->id}/status", ['status' => 'picked_up'])
             ->assertOk()->assertJsonPath('data.status', 'picked_up');
         $this->actingAs($owner)->deleteJson('/api/v1/shipping-methods/' . $deletable['id'])->assertNoContent();
@@ -68,21 +71,9 @@ final class ShippingApiTest extends TestCase
     {
         $this->seed(RbacSeeder::class);
         $owner = $this->userWithRole('owner');
-        $method = ShippingMethod::query()->create([
-            'code' => 'delivery', 'name' => 'Delivery', 'base_fee' => 100,
-            'currency' => 'EGP', 'is_active' => true,
-        ]);
-        $order = CustomerOrder::query()->create([
-            'user_id' => $owner->id, 'status' => 'shipped',
-            'total_amount' => 1000, 'currency' => 'EGP',
-            'shipping_address' => ['city' => 'Cairo'],
-        ]);
-        $shipment = Shipment::query()->create([
-            'order_id' => $order->id, 'user_id' => $owner->id,
-            'shipping_method_id' => $method->id, 'method_code' => $method->code,
-            'fee' => 100, 'currency' => 'EGP', 'status' => 'out_for_delivery',
-            'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'delivery-order',
-        ]);
+        $method = ShippingMethod::query()->create(['code' => 'delivery', 'name' => 'Delivery', 'base_fee' => 100, 'currency' => 'EGP', 'is_active' => true]);
+        $order = CustomerOrder::query()->create(['user_id' => $owner->id, 'status' => 'shipped', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
+        $shipment = Shipment::query()->create(['order_id' => $order->id, 'user_id' => $owner->id, 'shipping_method_id' => $method->id, 'method_code' => $method->code, 'fee' => 100, 'currency' => 'EGP', 'status' => 'out_for_delivery', 'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'delivery-order']);
 
         $this->actingAs($owner)->patchJson("/api/v1/shipments/{$shipment->id}/status", ['status' => 'delivered'])
             ->assertOk()->assertJsonPath('data.status', 'delivered');

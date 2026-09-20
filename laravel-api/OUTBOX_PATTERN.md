@@ -17,6 +17,7 @@ $this->outbox->record(
 ```
 
 يضمن `deduplication_key` أن إعادة الطلب لا تضيف event ثانية، ويجب أن يتم استدعاء `record` داخل نفس `DB::transaction` الخاصة بتغيير البيانات.
+في دورة الطلب، `Checkout` ينشئ الطلب والدفع فقط ولا ينشئ Shipment ولا يتواصل مع شركة الشحن. إنشاء الشحنة قرار إداري بعد تأكيد الطلب عبر `POST /api/v1/orders/{orderId}/shipments`، المحمي بصلاحية `shipments.create`. هذا المسار ينشئ سجل الشحنة محليًا ويسجل Outbox event؛ أما استدعاء شركة الشحن فيحدث لاحقًا داخل `ProcessOutboxEvent` فقط.
 
 ## دورة التشغيل
 

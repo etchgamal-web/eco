@@ -31,7 +31,6 @@ Route::middleware('auth')->group(function (): void {
     Route::get('customer/orders/{orderId}/payments', [PaymentController::class, 'index'])->name('customer.payments.index');
     Route::get('customer/shipping-methods', [ShippingController::class, 'customerMethods'])->name('customer.shipping-methods.index');
     Route::get('customer/orders/{orderId}/shipments', [ShippingController::class, 'customerShipments'])->name('customer.shipments.index');
-    Route::post('customer/orders/{orderId}/shipments', [ShippingController::class, 'createShipment'])->name('customer.shipments.store');
     Route::get('customer/cart', [CustomerFeaturesController::class, 'cart'])->name('customer.cart.show');
     Route::post('customer/cart/items', [CustomerFeaturesController::class, 'addCartItem'])->middleware('throttle:cart-mutation')->name('customer.cart.items.store');
     Route::patch('customer/cart/items', [CustomerFeaturesController::class, 'updateCartItem'])->middleware('throttle:cart-mutation')->name('customer.cart.items.update');

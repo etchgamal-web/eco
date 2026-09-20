@@ -118,6 +118,7 @@ class RbacSeeder extends Seeder
             // Shipping
             ['name' => 'View Shipping', 'slug' => 'shipping.view', 'group' => 'shipping'],
             ['name' => 'Manage Shipping', 'slug' => 'shipping.manage', 'group' => 'shipping'],
+            ['name' => 'Create Shipments', 'slug' => 'shipments.create', 'group' => 'shipping'],
 
             // Discounts
             ['name' => 'View Discounts', 'slug' => 'discounts.view', 'group' => 'discounts'],
@@ -176,7 +177,7 @@ class RbacSeeder extends Seeder
             'inventory.view', 'inventory.manage',
         ]);
         $orderManagerPermissions = $allPermissions->whereIn('slug', [
-            'orders.view', 'orders.manage', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel',
+            'orders.view', 'orders.manage', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
             'inventory.view',
         ]);
         $managerPermissions = $allPermissions->whereIn('slug', [
@@ -185,7 +186,7 @@ class RbacSeeder extends Seeder
             'attributes.view', 'attributes.create', 'attributes.update', 'attributes.delete',
             'brands.view', 'brands.create', 'brands.update', 'brands.delete',
             'categories.view', 'categories.create', 'categories.update', 'categories.delete',
-            'orders.view', 'orders.manage', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel',
+            'orders.view', 'orders.manage', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
             'inventory.view', 'inventory.manage',
         ]);
         $supportAgentPermissions = $allPermissions->whereIn('slug', [

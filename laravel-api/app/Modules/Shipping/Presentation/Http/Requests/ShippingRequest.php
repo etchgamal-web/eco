@@ -13,7 +13,7 @@ final class ShippingRequest extends FormRequest
     {
         $permission = match ($this->route()?->getName()) {
             'customer.shipping-methods.index', 'customer.shipments.index' => 'customer.orders.view',
-            'customer.shipments.store' => 'customer.orders.manage',
+            'shipments.store' => 'shipments.create',
             'shipping-methods.index', 'shipping-methods.show' => 'shipping.view',
             'shipping-methods.store', 'shipping-methods.update', 'shipping-methods.destroy', 'shipments.status' => 'shipping.manage',
             default => 'shipping.view',
@@ -31,7 +31,7 @@ final class ShippingRequest extends FormRequest
                 'currency' => ['sometimes', 'string', 'size:3'], 'is_active' => ['sometimes', 'boolean'],
             ];
         }
-        if ($this->route()?->getName() === 'customer.shipments.store') {
+        if ($this->route()?->getName() === 'shipments.store') {
             return ['shipping_method_id' => ['required', 'integer', 'min:1'], 'idempotency_key' => ['required', 'string', 'max:100']];
         }
         if ($this->route()?->getName() === 'shipments.status') {

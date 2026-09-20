@@ -9,5 +9,6 @@ Route::middleware('auth')->group(function (): void {
     Route::post('shipping-methods', [ShippingController::class, 'store'])->name('shipping-methods.store');
     Route::match(['put', 'patch'], 'shipping-methods/{shippingMethodId}', [ShippingController::class, 'update'])->name('shipping-methods.update');
     Route::delete('shipping-methods/{shippingMethodId}', [ShippingController::class, 'destroy'])->name('shipping-methods.destroy');
+    Route::post('orders/{orderId}/shipments', [ShippingController::class, 'createShipment'])->name('shipments.store');
     Route::patch('shipments/{shipmentId}/status', [ShippingController::class, 'status'])->name('shipments.status');
 });

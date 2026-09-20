@@ -18,8 +18,6 @@ final class CheckoutController extends Controller
             addressId: isset($data['address_id']) ? (int) $data['address_id'] : null,
             currency: strtoupper($data['currency'] ?? 'EGP'),
             idempotencyKey: $data['idempotency_key'] ?? null,
-            shippingMethodId: isset($data['shipping_method_id']) ? (int) $data['shipping_method_id'] : null,
-            shippingIdempotencyKey: $data['shipping_idempotency_key'] ?? null,
             paymentMethod: $data['payment_method'] ?? null,
             paymentIdempotencyKey: $data['payment_idempotency_key'] ?? null,
             couponCode: $data['coupon_code'] ?? null,

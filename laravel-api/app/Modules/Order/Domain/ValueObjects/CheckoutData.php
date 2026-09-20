@@ -8,8 +8,6 @@ final readonly class CheckoutData
         public ?int $addressId = null,
         public string $currency = 'EGP',
         public ?string $idempotencyKey = null,
-        public ?int $shippingMethodId = null,
-        public ?string $shippingIdempotencyKey = null,
         public ?string $paymentMethod = null,
         public ?string $paymentIdempotencyKey = null,
         public ?string $couponCode = null,
