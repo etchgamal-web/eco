@@ -6,6 +6,7 @@ use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingWebhookEventRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
+use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 
 final class ProcessBostaWebhook
 {
@@ -13,6 +14,7 @@ final class ProcessBostaWebhook
         private readonly ShipmentRepositoryInterface $shipments,
         private readonly ShipmentOperationRepositoryInterface $operations,
         private readonly ShippingWebhookEventRepositoryInterface $events,
+        private readonly OrderRepositoryInterface $orders,
     )
     {
     }
@@ -61,8 +63,25 @@ final class ProcessBostaWebhook
         }
         $note = (string) ($payload['exceptionReason'] ?? 'Bosta state ' . ($payload['state'] ?? 'unknown'));
         try {
+            if ($reference !== '' && $shipment->creation_status !== 'created') {
+                $shipment = $this->shipments->updateProviderData($shipment, [
+                    'tracking_number' => (string) ($payload['trackingNumber'] ?? $reference),
+                    'metadata' => [
+                        'provider' => 'bosta',
+                        'provider_reference' => (string) ($payload['_id'] ?? $reference),
+                        'bosta_delivery_id' => (string) ($payload['_id'] ?? $reference),
+                        'bosta_webhook_recovery' => true,
+                    ],
+                ]);
+            }
             $updated = $this->shipments->updateProviderStatus($shipment, $status, $note);
             $this->operations->complete((int) $updated->id, 'create', in_array($status, ['delivered', 'cancelled'], true) ? 'confirmed' : $status, $reference, $payload);
+            if ($updated->creation_status === 'created') {
+                $order = $this->orders->find((int) $updated->order_id);
+                if ($order->status === 'processing') {
+                    $this->orders->updateStatus((int) $order->id, 'shipped');
+                }
+            }
             $this->events->markProcessed($event);
             return $updated;
         } catch (\Throwable $exception) {

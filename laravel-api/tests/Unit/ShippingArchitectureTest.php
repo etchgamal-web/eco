@@ -18,6 +18,15 @@ final class ShippingArchitectureTest extends TestCase
         ShipmentStateMachine::assert('pending', 'picked_up');
     }
 
+    public function test_bosta_webhook_is_the_documented_recovery_path(): void
+    {
+        $source = file_get_contents((new \ReflectionClass(ProcessBostaWebhook::class))->getFileName());
+
+        $this->assertIsString($source);
+        $this->assertStringContainsString('businessReference', $source);
+        $this->assertStringContainsString('updateProviderData', $source);
+    }
+
     public function test_bosta_webhook_use_case_depends_on_domain_contracts_not_eloquent_models(): void
     {
         $source = file_get_contents((new \ReflectionClass(ProcessBostaWebhook::class))->getFileName());
