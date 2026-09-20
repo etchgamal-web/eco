@@ -61,7 +61,7 @@ final class ShippingApiTest extends TestCase
             ->assertCreated()->json('data');
 
         $order = CustomerOrder::query()->create(['user_id' => $owner->id, 'status' => 'pending', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
-        $shipment = Shipment::query()->create(['order_id' => $order->id, 'user_id' => $owner->id, 'shipping_method_id' => $method['id'], 'method_code' => 'same-day', 'fee' => 500, 'currency' => 'EGP', 'status' => 'pending', 'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'admin-shipment']);
+        $shipment = Shipment::query()->create(['order_id' => $order->id, 'user_id' => $owner->id, 'shipping_method_id' => $method['id'], 'method_code' => 'same-day', 'provider_code' => 'same-day', 'fee' => 500, 'currency' => 'EGP', 'status' => 'provider_created', 'creation_status' => 'created', 'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'admin-shipment']);
         $this->actingAs($owner)->patchJson("/api/v1/shipments/{$shipment->id}/status", ['status' => 'picked_up'])
             ->assertOk()->assertJsonPath('data.status', 'picked_up');
         $this->actingAs($owner)->deleteJson('/api/v1/shipping-methods/' . $deletable['id'])->assertNoContent();

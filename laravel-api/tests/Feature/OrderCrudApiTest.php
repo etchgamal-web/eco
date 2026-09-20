@@ -87,7 +87,7 @@ final class OrderCrudApiTest extends TestCase
         ]);
         Shipment::query()->create([
             'order_id' => $order->id, 'user_id' => $customer->id, 'shipping_method_id' => $method->id,
-            'method_code' => $method->code, 'fee' => 0, 'currency' => 'EGP', 'status' => 'picked_up',
+            'method_code' => $method->code, 'provider_code' => 'bosta', 'fee' => 0, 'currency' => 'EGP', 'status' => 'picked_up', 'creation_status' => 'created',
             'address_snapshot' => [], 'idempotency_key' => 'test-shipment-' . $order->id,
         ]);
 
@@ -101,6 +101,30 @@ final class OrderCrudApiTest extends TestCase
             'inventory_item_id' => $inventory->id, 'quantity' => -2,
             'on_hand_after' => 3, 'reason' => 'sale',
         ]);
+    }
+
+    public function test_order_cannot_be_shipped_when_provider_creation_is_not_complete(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $manager = $this->userWithRole('order_manager');
+        $customer = User::factory()->create();
+        $order = CustomerOrder::query()->create([
+            'user_id' => $customer->id, 'status' => 'processing',
+            'total_amount' => 100, 'currency' => 'EGP',
+        ]);
+        $method = ShippingMethod::query()->create([
+            'code' => 'test-uncreated', 'name' => 'Test Uncreated', 'base_fee' => 0,
+            'currency' => 'EGP', 'is_active' => true,
+        ]);
+        Shipment::query()->create([
+            'order_id' => $order->id, 'user_id' => $customer->id, 'shipping_method_id' => $method->id,
+            'method_code' => $method->code, 'provider_code' => 'bosta', 'fee' => 0, 'currency' => 'EGP',
+            'status' => 'picked_up', 'creation_status' => 'creation_pending',
+            'address_snapshot' => [], 'idempotency_key' => 'uncreated-shipment-' . $order->id,
+        ]);
+
+        $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/status", ['status' => 'shipped'])
+            ->assertConflict();
     }
 
     private function userWithRole(string $role): User

@@ -68,9 +68,10 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             if ($status === 'shipped') {
                 $hasReadyShipment = Shipment::query()->where('order_id', $order->id)
                     ->whereIn('status', ['picked_up', 'in_transit', 'out_for_delivery', 'delivered'])
+                    ->where('creation_status', 'created')
                     ->exists();
                 if (! $hasReadyShipment) {
-                    throw new OrderActionNotAllowedException('Order cannot be shipped without a picked up or in-transit shipment.');
+                    throw new OrderActionNotAllowedException('Order cannot be shipped without a successfully created shipment.');
                 }
             }
             if ($status === 'delivered' && ! Shipment::query()->where('order_id', $order->id)->where('status', 'delivered')->exists()) {

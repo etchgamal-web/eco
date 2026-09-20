@@ -12,7 +12,7 @@ final class ShipmentStateMachine
             return;
         }
         $allowed = [
-            'pending' => ['processing', 'provider_created', 'picked_up', 'cancelled'],
+            'pending' => ['processing', 'provider_created', 'cancelled'],
             'processing' => ['provider_created', 'failed', 'cancelled'],
             'provider_created' => ['picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'cancelled'],
             'picked_up' => ['in_transit', 'out_for_delivery', 'cancelled'],
