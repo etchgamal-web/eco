@@ -47,4 +47,9 @@ class CustomerOrder extends Model
     {
         return $this->hasOne(OrderReview::class, 'order_id');
     }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(OrderActivity::class, 'order_id');
+    }
 }

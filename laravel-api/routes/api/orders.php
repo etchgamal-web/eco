@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->group(function (): void {
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{orderId}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('orders/{orderId}/timeline', [OrderController::class, 'timeline'])->name('orders.timeline');
     Route::patch('orders/{orderId}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::patch('orders/{orderId}/shipping-charge', [OrderController::class, 'setShippingCharge'])->name('orders.shipping-charge');
     Route::post('orders/{orderId}/review', [OrderController::class, 'review'])->name('orders.review');

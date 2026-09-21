@@ -7,6 +7,7 @@ use App\Modules\Order\Application\UseCases\CancelOrder;
 use App\Modules\Order\Application\UseCases\ConfirmOrder;
 use App\Modules\Order\Application\UseCases\GetCustomerOrder;
 use App\Modules\Order\Application\UseCases\GetOrder;
+use App\Modules\Order\Application\UseCases\GetOrderTimeline;
 use App\Modules\Order\Application\UseCases\ListCustomerOrders;
 use App\Modules\Order\Application\UseCases\ListOrders;
 use App\Modules\Order\Application\UseCases\RecordOrderContact;
@@ -14,6 +15,7 @@ use App\Modules\Order\Application\UseCases\SetOrderShippingCharge;
 use App\Modules\Order\Application\UseCases\StartOrderReview;
 use App\Modules\Order\Application\UseCases\UpdateOrderStatus;
 use App\Modules\Order\Presentation\Http\Requests\OrderRequest;
+use App\Modules\Order\Presentation\Http\Requests\OrderTimelineRequest;
 use App\Modules\Order\Presentation\Http\Requests\OrderWorkflowRequest;
 use Illuminate\Http\JsonResponse;
 
@@ -42,6 +44,11 @@ final class OrderController extends Controller
     public function show(OrderRequest $request, int $id, GetOrder $order): JsonResponse
     {
         return response()->json(['data' => $order->execute($id)]);
+    }
+
+    public function timeline(OrderTimelineRequest $request, int $id, GetOrderTimeline $timeline): JsonResponse
+    {
+        return response()->json(['data' => $timeline->execute($id)]);
     }
 
     public function updateStatus(OrderRequest $request, int $id, UpdateOrderStatus $update): JsonResponse
