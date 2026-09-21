@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class CustomerOrder extends Model
 {
     protected $fillable = [
-        'user_id', 'guest_email', 'guest_phone', 'status', 'total_amount', 'subtotal_amount', 'discount_amount', 'coupon_code',
+        'order_number', 'user_id', 'guest_email', 'guest_phone', 'status', 'total_amount', 'subtotal_amount', 'discount_amount', 'coupon_code',
         'tax_amount', 'tax_rate', 'tax_rule_id', 'shipping_amount', 'shipping_cost', 'shipping_subsidy', 'currency', 'shipping_address', 'idempotency_key',
     ];
 
@@ -51,5 +51,10 @@ class CustomerOrder extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(OrderActivity::class, 'order_id');
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class, 'order_id');
     }
 }

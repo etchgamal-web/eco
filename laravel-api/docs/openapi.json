@@ -7883,7 +7883,6 @@
           "RATE_LIMITED"
         ]
       }
-
     },
     "/customer/preferences": {
       "get": {
@@ -10327,28 +10326,96 @@
     },
     "/orders/{orderId}/shipments": {
       "post": {
-        "tags": ["Shipments"],
+        "tags": [
+          "Shipments"
+        ],
         "summary": "create shipment",
         "operationId": "orders_shipments_post",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"examples": {"default": {"value": {"shipping_method_id": 1, "idempotency_key": "shipment-unique-key"}}}}}},
-        "responses": {"201": {"description": "Created"}, "409": {"description": "Conflict"}},
-        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {
+                    "shipping_method_id": 1,
+                    "idempotency_key": "shipment-unique-key"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "shipments.create"
       }
     },
     "/orders/{orderId}/shipping-charge": {
       "patch": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Set the customer-facing shipping charge",
         "operationId": "orders_shipping_charge_patch",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
-          "content": {"application/json": {"examples": {"default": {"value": {"shipping_amount": 50}}}}}
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {
+                    "shipping_amount": 50
+                  }
+                }
+              }
+            }
+          }
         },
-        "responses": {"200": {"description": "Updated order"}, "409": {"description": "Conflict"}},
-        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Updated order"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "orders.edit"
       }
     },
@@ -20184,70 +20251,351 @@
     },
     "/orders/{orderId}/review": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "start order review",
         "operationId": "orders_review_post",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "responses": {"201": {"description": "Created"}, "409": {"description": "Conflict"}},
-        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "orders.review"
       }
     },
     "/orders/{orderId}/contact": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "record order contact",
         "operationId": "orders_contact_post",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"examples": {"default": {"value": {"contact_result": "confirmed", "notes": "Customer confirmed the order."}}}}}},
-        "responses": {"200": {"description": "Successful response"}, "422": {"description": "Validation failed"}},
-        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {
+                    "contact_result": "confirmed",
+                    "notes": "Customer confirmed the order."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "orders.contact"
       }
     },
     "/orders/{orderId}/confirm": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "confirm order after review",
         "operationId": "orders_confirm_post",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "responses": {"200": {"description": "Successful response"}, "409": {"description": "Conflict"}},
-        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "orders.confirm"
       }
     },
-    "/orders/{orderId}/review": {
-      "post": {
-        "tags": ["Orders"],
-        "summary": "start order review",
-        "operationId": "orders_review_post",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "responses": {"201": {"description": "Created"}, "409": {"description": "Conflict"}},
-        "security": [{"bearerAuth": []}],
-        "x-required-permission": "orders.review"
+    "/operational-alerts": {
+      "get": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
       }
     },
-    "/orders/{orderId}/contact": {
-      "post": {
-        "tags": ["Orders"],
-        "summary": "record order contact",
-        "operationId": "orders_contact_post",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"examples": {"default": {"value": {"contact_result": "confirmed", "notes": "Customer confirmed the order."}}}}}},
-        "responses": {"200": {"description": "Successful response"}, "422": {"description": "Validation failed"}},
-        "security": [{"bearerAuth": []}],
-        "x-required-permission": "orders.contact"
+    "/orders/delayed": {
+      "get": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
       }
     },
-    "/orders/{orderId}/confirm": {
+    "/orders/{orderId}/timeline": {
+      "get": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/settings/order-monitoring": {
+      "get": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "settings.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "put": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "settings.update",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/settings/settlement-import": {
+      "get": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "settings.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "put": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "settings.update",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/shipping/settlements/{id}": {
+      "get": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "shipping.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/shipping/settlements/{id}/items": {
+      "get": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "shipping.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/operational-alerts/{id}/acknowledge": {
+      "patch": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/operational-alerts/{id}/resolve": {
+      "patch": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/shipping/settlements/{id}/finalize": {
+      "patch": {
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "shipping.manage",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/shipping/settlements/import": {
       "post": {
-        "tags": ["Orders"],
-        "summary": "confirm order after review",
-        "operationId": "orders_confirm_post",
-        "parameters": [{"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "responses": {"200": {"description": "Successful response"}, "409": {"description": "Conflict"}},
-        "security": [{"bearerAuth": []}],
-        "x-required-permission": "orders.confirm"
+        "summary": "Operational API operation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "shipping.manage",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "examples": {
+                "default": {
+                  "summary": "Example request",
+                  "value": {
+                    "data": []
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
