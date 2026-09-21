@@ -33,6 +33,7 @@ use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
 use App\Modules\Payment\Domain\Exceptions\PaymentInProgressException;
 use App\Modules\Payment\Domain\Exceptions\PaymentNotFoundException;
 use App\Modules\Settings\Domain\Exceptions\SettingsNotFoundException;
+use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
 use App\Modules\Shipping\Domain\Exceptions\InvalidShipmentTransitionException;
 use App\Modules\Shipping\Domain\Exceptions\InvalidShippingAddressException;
 use App\Modules\Shipping\Domain\Exceptions\ShipmentNotFoundException;
@@ -81,6 +82,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('outbox:dispatch')->everyMinute()->withoutOverlapping();
         $schedule->command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('shipments:reconcile')->everyTenMinutes()->withoutOverlapping();
+        $schedule->command('orders:detect-delays')->hourly()->withoutOverlapping();
         if ($backupEnabled) {
             $schedule->command('backup:database')->dailyAt($backupTime)->withoutOverlapping()->onOneServer();
         }
@@ -123,6 +125,11 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
         $exceptions->render(function (PaymentAmountMismatchException|PaymentFailedException|InvalidShippingAddressException|ShippingException|CartException $e, Request $r) {
+            if ($r->is('api/*')) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+        });
+        $exceptions->render(function (SettlementImportException $e, Request $r) {
             if ($r->is('api/*')) {
                 return response()->json(['message' => $e->getMessage()], 422);
             }
