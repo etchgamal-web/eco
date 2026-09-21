@@ -7,6 +7,8 @@ use App\Models\OrderMonitoringSetting;
 use App\Models\Shipment;
 use App\Models\ShippingMethod;
 use App\Models\ShippingProvider;
+use App\Models\ShippingSettlement;
+use App\Models\ShippingSettlementItem;
 use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
 use App\Modules\Settlement\Infrastructure\Persistence\EloquentSettlementRepository;
 use App\Modules\Monitoring\Infrastructure\Persistence\EloquentMonitoringRepository;
@@ -28,6 +30,8 @@ final class SettlementImportApiTest extends TestCase
         $settlement = app(EloquentSettlementRepository::class)->import($file, 'test-provider', null, null);
         self::assertSame(['matched' => 1, 'mismatched' => 1, 'missing' => 1, 'duplicates' => 1, 'invalid' => 1], array_intersect_key($settlement->metadata, array_flip(['matched', 'mismatched', 'missing', 'duplicates', 'invalid'])));
         self::assertSame(2, $settlement->items()->count());
+        self::assertNull($settlement->period_from);
+        self::assertNull($settlement->period_to);
         self::assertSame(20, $settlement->difference_total);
         self::assertDatabaseHas('shipping_settlement_items', ['shipment_id' => $shipment->id, 'status' => 'mismatched', 'difference' => 20]);
     }
@@ -48,10 +52,21 @@ final class SettlementImportApiTest extends TestCase
         $this->shipment('TRK-AUTO', 100, 'ORD-AUTO'); $repo = app(EloquentSettlementRepository::class); $repo->saveSetting('settlement_import.auto_finalize', true); $file = $this->csv("order_number,tracking_number,order_amount,collected_amount,shipping_cost\nORD-AUTO,TRK-AUTO,1,1,1\n");
         $settlement = $repo->import($file, 'test-provider', null, null); self::assertSame('completed', $settlement->status);
     }
+    public function test_return_refund_and_return_shipping_fee_are_reconciled_as_separate_amounts(): void
+    {
+        $shipment = $this->shipment('TRK-RETURN-FIN', 30, 'ORD-RETURN-FIN'); OrderReturn::query()->create(['order_id' => $shipment->order_id, 'shipment_id' => $shipment->id, 'user_id' => $shipment->user_id, 'status' => 'approved', 'reason' => 'customer_request', 'refund_amount' => 500, 'return_shipping_fee' => 40]);
+        $file = $this->csv("order_number,tracking_number,order_amount,collected_amount,shipping_cost,customer_refund,return_fee\nORD-RETURN-FIN,TRK-RETURN-FIN,100,100,30,500,40\n"); $settlement = app(EloquentSettlementRepository::class)->import($file, 'test-provider', null, null); $item = $settlement->items()->first();
+        self::assertSame(500, $item->expected_customer_refund); self::assertSame(500, $item->actual_customer_refund); self::assertSame(40, $item->expected_return_fee); self::assertSame(40, $item->actual_return_fee); self::assertSame(70, $item->expected_total); self::assertSame('matched', $item->status); self::assertSame(500, $settlement->expected_customer_refund); self::assertSame(40, $settlement->expected_return_fee);
+    }
     public function test_delivered_shipment_without_settlement_creates_settlement_missing_alert(): void
     {
         OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-MISSING', 30, 'ORD-MISSING'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); DB::table('customer_orders')->where('id', $shipment->order_id)->update(['status' => 'delivered', 'updated_at' => $old]);
         app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'open']); self::assertDatabaseMissing('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'delivery_overdue']);
+    }
+    public function test_processing_settlement_item_does_not_clear_settlement_missing_alert(): void
+    {
+        OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-PENDING', 30, 'ORD-PENDING'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); $settlement = ShippingSettlement::query()->create(['shipping_provider_id' => ShippingProvider::query()->first()->id, 'reference' => 'pending', 'period_from' => null, 'period_to' => null, 'status' => 'processing', 'currency' => 'EGP']); ShippingSettlementItem::query()->create(['shipping_settlement_id' => $settlement->id, 'shipment_id' => $shipment->id, 'status' => 'matched']);
+        app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'open']); $settlement->update(['status' => 'completed']); app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'resolved']);
     }
     public function test_approved_return_without_settlement_creates_return_settlement_missing_alert(): void
     {
