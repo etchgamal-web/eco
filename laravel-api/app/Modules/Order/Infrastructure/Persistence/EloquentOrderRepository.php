@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\CheckoutException;
+use App\Modules\Order\Domain\Exceptions\InvalidShippingChargeException;
 use App\Modules\Order\Domain\Exceptions\OrderActionNotAllowedException;
 use App\Modules\Order\Domain\Exceptions\OrderNotFoundException;
 use App\Modules\Order\Domain\StateMachines\OrderStateMachine;
@@ -177,6 +178,10 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
 
     private function applyShippingAmounts(CustomerOrder $order, int $customerShippingAmount, int $shippingCost): void
     {
+        if ($customerShippingAmount > $shippingCost) {
+            throw new InvalidShippingChargeException('Customer shipping amount cannot exceed carrier shipping cost.');
+        }
+
         $subtotal = $order->subtotal_amount ?? ((int) $order->total_amount - (int) $order->shipping_amount);
         $order->update([
             'shipping_amount' => $customerShippingAmount,

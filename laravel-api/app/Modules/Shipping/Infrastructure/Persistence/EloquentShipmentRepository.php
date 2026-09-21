@@ -43,17 +43,19 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
         return DB::transaction(function () use ($attributes): object {
             try {
                 $shipment = Shipment::query()->create($attributes)->load(['order', 'method', 'events']);
-                $this->outbox->record('shipment', (int) $shipment->id, 'shipment.create.requested', 'shipment:create:' . $attributes['idempotency_key'], [
-                    'shipment_id' => $shipment->id,
-                    'idempotency_key' => $attributes['idempotency_key'],
-                    'provider_code' => $attributes['provider_code'],
-                ]);
-                return $shipment;
             } catch (QueryException $exception) {
                 $existing = $this->findByIdempotencyKey((string) $attributes['idempotency_key']);
                 if ($existing !== null) return $existing;
                 throw $exception;
             }
+
+            $this->outbox->record('shipment', (int) $shipment->id, 'shipment.create.requested', 'shipment:create:' . $attributes['idempotency_key'], [
+                'shipment_id' => $shipment->id,
+                'idempotency_key' => $attributes['idempotency_key'],
+                'provider_code' => $attributes['provider_code'],
+            ]);
+
+            return $shipment;
         });
     }
     public function updateProviderData(object $shipment, array $data): object

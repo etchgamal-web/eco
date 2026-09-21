@@ -25,8 +25,10 @@ final class ShippingApiTest extends TestCase
 
         $this->actingAs($customer)->getJson('/api/v1/customer/shipping-methods')->assertOk()->assertJsonCount(1, 'data');
         $this->actingAs($customer)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'idempotency_key' => 'shipment-1'])->assertForbidden();
-        $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'provider_code' => 'bosta', 'idempotency_key' => 'shipment-1'])
-            ->assertCreated()->assertJsonPath('data.fee', 150)->assertJsonPath('data.status', 'pending');
+        $shipment = $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'provider_code' => 'bosta', 'idempotency_key' => 'shipment-1'])
+            ->assertCreated()->assertJsonPath('data.fee', 150)->assertJsonPath('data.status', 'pending')->json('data');
+        $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'shipping_cost' => 150]);
+        $this->assertDatabaseHas('shipment_pricing_snapshots', ['shipment_id' => $shipment['id'], 'total_expected_cost' => 150]);
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$order->id}/shipments")
             ->assertOk()->assertJsonCount(1, 'data');
     }
@@ -55,7 +57,7 @@ final class ShippingApiTest extends TestCase
         $owner = $this->userWithRole('owner');
         $method = $this->actingAs($owner)->postJson('/api/v1/shipping-methods', ['code' => 'same-day', 'name' => 'Same Day', 'base_fee' => 500, 'currency' => 'EGP', 'is_active' => true])
             ->assertCreated()->json('data');
-        $this->actingAs($owner)->patchJson('/api/v1/shipping-methods/' . $method['id'], ['name' => 'Same Day Updated'])
+        $this->actingAs($owner)->patchJson('/api/v1/shipping-methods/'.$method['id'], ['name' => 'Same Day Updated'])
             ->assertOk()->assertJsonPath('data.name', 'Same Day Updated');
         $deletable = $this->actingAs($owner)->postJson('/api/v1/shipping-methods', ['code' => 'temporary', 'name' => 'Temporary', 'base_fee' => 50, 'currency' => 'EGP', 'is_active' => true])
             ->assertCreated()->json('data');
@@ -64,7 +66,7 @@ final class ShippingApiTest extends TestCase
         $shipment = Shipment::query()->create(['order_id' => $order->id, 'user_id' => $owner->id, 'shipping_method_id' => $method['id'], 'method_code' => 'same-day', 'provider_code' => 'same-day', 'fee' => 500, 'currency' => 'EGP', 'status' => 'provider_created', 'creation_status' => 'created', 'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'admin-shipment']);
         $this->actingAs($owner)->patchJson("/api/v1/shipments/{$shipment->id}/status", ['status' => 'picked_up'])
             ->assertOk()->assertJsonPath('data.status', 'picked_up');
-        $this->actingAs($owner)->deleteJson('/api/v1/shipping-methods/' . $deletable['id'])->assertNoContent();
+        $this->actingAs($owner)->deleteJson('/api/v1/shipping-methods/'.$deletable['id'])->assertNoContent();
     }
 
     public function test_delivered_shipment_completes_shipped_order(): void
@@ -80,10 +82,46 @@ final class ShippingApiTest extends TestCase
         $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'delivered']);
     }
 
+    public function test_customer_shipping_charge_cannot_exceed_carrier_cost(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $manager = $this->userWithRole('order_manager');
+        $order = CustomerOrder::query()->create([
+            'user_id' => $manager->id,
+            'status' => 'processing',
+            'total_amount' => 990,
+            'subtotal_amount' => 1000,
+            'discount_amount' => 100,
+            'tax_amount' => 90,
+            'shipping_amount' => 0,
+            'shipping_cost' => 150,
+            'shipping_subsidy' => 150,
+            'currency' => 'EGP',
+            'shipping_address' => ['city' => 'Cairo'],
+        ]);
+
+        $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/shipping-charge", ['shipping_amount' => 200])
+            ->assertUnprocessable();
+        $this->assertDatabaseHas('customer_orders', [
+            'id' => $order->id,
+            'shipping_amount' => 0,
+            'shipping_cost' => 150,
+            'shipping_subsidy' => 150,
+            'total_amount' => 990,
+        ]);
+
+        $this->actingAs($manager)->patchJson("/api/v1/orders/{$order->id}/shipping-charge", ['shipping_amount' => 50])
+            ->assertOk()
+            ->assertJsonPath('data.shipping_amount', 50)
+            ->assertJsonPath('data.shipping_subsidy', 100)
+            ->assertJsonPath('data.total_amount', 1040);
+    }
+
     private function userWithRole(string $role): User
     {
         $user = User::factory()->create();
         $user->roles()->attach(Role::query()->where('slug', $role)->firstOrFail());
+
         return $user;
     }
 }
