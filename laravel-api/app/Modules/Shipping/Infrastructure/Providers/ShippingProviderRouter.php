@@ -10,9 +10,9 @@ final class ShippingProviderRouter implements ShippingProviderInterface
     /** @var list<ShippingProviderInterface> */
     private array $providers;
 
-    public function __construct(BostaShippingProvider $bosta)
+    public function __construct(BostaShippingProvider $bosta, ManualShippingProvider $manual)
     {
-        $this->providers = [$bosta];
+        $this->providers = [$bosta, $manual];
     }
 
     public function supports(object $shipment): bool
@@ -52,7 +52,7 @@ final class ShippingProviderRouter implements ShippingProviderInterface
     {
         $requested = strtolower(trim((string) ($shipment->provider_code ?? '')));
         foreach ($this->providers as $provider) {
-            if ($provider->supports($shipment) && (($provider instanceof BostaShippingProvider) ? $requested === 'bosta' : false)) {
+            if ($provider->supports($shipment) && (($provider instanceof BostaShippingProvider) ? $requested === 'bosta' : $requested === 'manual')) {
                 return $provider;
             }
         }

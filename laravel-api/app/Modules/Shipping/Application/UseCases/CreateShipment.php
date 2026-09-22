@@ -72,7 +72,7 @@ final class CreateShipment
                 'creation_status' => 'creation_pending',
                 'address_snapshot' => $order->shipping_address,
                 'idempotency_key' => $data->idempotencyKey,
-                'metadata' => ['carrier' => $method->carrier, 'provider' => $providerCode],
+                'metadata' => array_filter(['carrier' => $method->carrier, 'provider' => $providerCode, 'manual_tracking_number' => $data->trackingNumber]),
             ]);
             $this->orders->setShippingCost($order->id, $breakdown->total);
             $this->snapshots->create([

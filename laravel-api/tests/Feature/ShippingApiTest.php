@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Shipment;
 use App\Models\ShippingMethod;
 use App\Models\User;
+use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -31,6 +32,14 @@ final class ShippingApiTest extends TestCase
         $this->assertDatabaseHas('shipment_pricing_snapshots', ['shipment_id' => $shipment['id'], 'total_expected_cost' => 150]);
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$order->id}/shipments")
             ->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_manual_provider_accepts_tracking_without_external_api(): void
+    {
+        $shipment = new Shipment(['provider_code' => 'manual', 'metadata' => ['manual_tracking_number' => 'MAN-123']]);
+        $provider = app(ShippingProviderInterface::class);
+        self::assertTrue($provider->supports($shipment));
+        self::assertSame('MAN-123', $provider->create($shipment)['tracking_number']);
     }
 
     public function test_staff_shipment_creation_is_idempotent_and_foreign_order_is_hidden(): void

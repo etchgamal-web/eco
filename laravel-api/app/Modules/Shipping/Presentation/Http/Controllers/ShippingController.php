@@ -23,7 +23,7 @@ final class ShippingController extends Controller
     public function createShipment(ShippingRequest $request, int $orderId, CreateShipment $create): JsonResponse
     {
         $data = $request->validated();
-        return response()->json(['data' => $create->execute($orderId, new CreateShipmentData((int) $data['shipping_method_id'], $data['idempotency_key'], strtolower($data['provider_code'])))], 201);
+        return response()->json(['data' => $create->execute($orderId, new CreateShipmentData((int) $data['shipping_method_id'], $data['idempotency_key'], strtolower($data['provider_code']), $data['tracking_number'] ?? null))], 201);
     }
     public function index(ShippingRequest $request, ListAllShippingMethods $methods): JsonResponse { return response()->json(['data' => $methods->execute()]); }
     public function show(ShippingRequest $request, int $id, GetShippingMethod $method): JsonResponse { return response()->json(['data' => $method->execute($id)]); }

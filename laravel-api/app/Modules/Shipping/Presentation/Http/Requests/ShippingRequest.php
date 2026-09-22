@@ -35,6 +35,7 @@ final class ShippingRequest extends FormRequest
             return [
                 'shipping_method_id' => ['required', 'integer', 'min:1'],
                 'provider_code' => ['required', 'string', 'max:60', 'regex:/^[a-z0-9_-]+$/i'],
+                'tracking_number' => ['required_if:provider_code,manual', 'nullable', 'string', 'max:120'],
                 'idempotency_key' => ['required', 'string', 'max:100'],
             ];
         }

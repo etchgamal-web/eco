@@ -8,5 +8,6 @@ final readonly class CreateShipmentData
         public int $shippingMethodId,
         public string $idempotencyKey,
         public string $providerCode,
+        public ?string $trackingNumber = null,
     ) {}
 }
