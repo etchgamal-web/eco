@@ -74,6 +74,11 @@ final class SettlementImportApiTest extends TestCase
     public function test_out_for_delivery_shipment_creates_delivery_overdue_alert(): void
     {
         OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'delivery_overdue'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-DELIVERY-OVERDUE', 30, 'ORD-DELIVERY-OVERDUE'); $old = Carbon::now()->subDays(3); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'out_for_delivery', 'created_at' => $old, 'updated_at' => $old]); app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'delivery_overdue', 'status' => 'open']);
+        self::assertDatabaseMissing('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'shipment_no_update']);
+    }
+    public function test_monitoring_settings_read_does_not_create_default_rows(): void
+    {
+        $before = OrderMonitoringSetting::query()->count(); $settings = app(EloquentMonitoringRepository::class)->settings(); self::assertCount(6, $settings); self::assertSame($before, OrderMonitoringSetting::query()->count());
     }
     public function test_resolve_rejects_alert_while_underlying_condition_is_active(): void
     {
