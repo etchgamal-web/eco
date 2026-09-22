@@ -42,7 +42,7 @@ final class CreateShipment
                 throw new ShippingException('A shipping provider must be selected.');
             }
             $methodProvider = strtolower(trim((string) ($method->carrier ?? '')));
-            if ($methodProvider !== '' && $methodProvider !== $providerCode) {
+            if ($providerCode !== 'manual' && $methodProvider !== '' && $methodProvider !== $providerCode) {
                 throw new ShippingException('The selected provider is not available for this shipping method.');
             }
 
@@ -72,7 +72,7 @@ final class CreateShipment
                 'creation_status' => 'creation_pending',
                 'address_snapshot' => $order->shipping_address,
                 'idempotency_key' => $data->idempotencyKey,
-                'metadata' => array_filter(['carrier' => $method->carrier, 'provider' => $providerCode, 'manual_tracking_number' => $data->trackingNumber]),
+                'metadata' => array_filter(['carrier' => $method->carrier, 'manual_carrier_name' => $providerCode === 'manual' ? $method->carrier : null, 'provider' => $providerCode, 'manual_tracking_number' => $data->trackingNumber]),
             ]);
             $this->orders->setShippingCost($order->id, $breakdown->total);
             $this->snapshots->create([

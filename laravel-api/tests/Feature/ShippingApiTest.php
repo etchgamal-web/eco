@@ -42,6 +42,18 @@ final class ShippingApiTest extends TestCase
         self::assertSame('MAN-123', $provider->create($shipment)['tracking_number']);
     }
 
+    public function test_manual_shipment_keeps_the_selected_carrier_company(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $manager = $this->userWithRole('order_manager');
+        $method = ShippingMethod::query()->create(['code' => 'manual-company', 'name' => 'شركة النيل للشحن', 'carrier' => 'شركة النيل للشحن', 'base_fee' => 175, 'currency' => 'EGP', 'is_active' => true]);
+        $order = CustomerOrder::query()->create(['user_id' => $manager->id, 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
+
+        $shipment = $this->actingAs($manager)->postJson("/api/v1/orders/{$order->id}/shipments", ['shipping_method_id' => $method->id, 'provider_code' => 'manual', 'tracking_number' => 'NILE-123', 'idempotency_key' => 'manual-company-order'])->assertCreated()->json('data');
+        self::assertSame('شركة النيل للشحن', $shipment['method']['carrier']);
+        self::assertSame('شركة النيل للشحن', $shipment['metadata']['manual_carrier_name']);
+    }
+
     public function test_staff_shipment_creation_is_idempotent_and_foreign_order_is_hidden(): void
     {
         $this->seed(RbacSeeder::class);
