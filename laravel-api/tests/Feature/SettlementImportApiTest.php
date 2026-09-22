@@ -1,9 +1,11 @@
 <?php
 namespace Tests\Feature;
 use App\Models\CustomerOrder;
+use App\Models\CustomerNotification;
 use App\Models\OperationalAlert;
 use App\Models\OrderReturn;
 use App\Models\OrderMonitoringSetting;
+use App\Models\Role;
 use App\Models\Shipment;
 use App\Models\ShippingMethod;
 use App\Models\ShippingProvider;
@@ -60,8 +62,8 @@ final class SettlementImportApiTest extends TestCase
     }
     public function test_delivered_shipment_without_settlement_creates_settlement_missing_alert(): void
     {
-        OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-MISSING', 30, 'ORD-MISSING'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); DB::table('customer_orders')->where('id', $shipment->order_id)->update(['status' => 'delivered', 'updated_at' => $old]);
-        app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'open']); self::assertDatabaseMissing('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'delivery_overdue']);
+        $admin = \App\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->value('id')); OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-MISSING', 30, 'ORD-MISSING'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); DB::table('customer_orders')->where('id', $shipment->order_id)->update(['status' => 'delivered', 'updated_at' => $old]);
+        app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'open']); self::assertDatabaseMissing('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'delivery_overdue']); $notification = CustomerNotification::query()->latest('id')->first(); self::assertNotNull($notification); self::assertSame('Settlement is missing', $notification->title); self::assertStringContainsString('ORD-MISSING', $notification->body); self::assertStringContainsString('completed settlement file', $notification->body);
     }
     public function test_processing_settlement_item_does_not_clear_settlement_missing_alert(): void
     {
