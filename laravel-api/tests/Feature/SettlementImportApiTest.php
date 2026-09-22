@@ -12,6 +12,7 @@ use App\Models\ShippingProvider;
 use App\Models\ShippingSettlement;
 use App\Models\ShippingSettlementItem;
 use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
+use App\Modules\Monitoring\Domain\Exceptions\OperationalAlertException;
 use App\Modules\Settlement\Infrastructure\Persistence\EloquentSettlementRepository;
 use App\Modules\Monitoring\Infrastructure\Persistence\EloquentMonitoringRepository;
 use Carbon\Carbon;
@@ -69,6 +70,14 @@ final class SettlementImportApiTest extends TestCase
     {
         OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-PENDING', 30, 'ORD-PENDING'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); $settlement = ShippingSettlement::query()->create(['shipping_provider_id' => ShippingProvider::query()->first()->id, 'reference' => 'pending', 'period_from' => null, 'period_to' => null, 'status' => 'processing', 'currency' => 'EGP']); ShippingSettlementItem::query()->create(['shipping_settlement_id' => $settlement->id, 'shipment_id' => $shipment->id, 'status' => 'matched']);
         app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'open']); $settlement->update(['status' => 'completed']); app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'resolved']);
+    }
+    public function test_out_for_delivery_shipment_creates_delivery_overdue_alert(): void
+    {
+        OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'delivery_overdue'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-DELIVERY-OVERDUE', 30, 'ORD-DELIVERY-OVERDUE'); $old = Carbon::now()->subDays(3); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'out_for_delivery', 'created_at' => $old, 'updated_at' => $old]); app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'delivery_overdue', 'status' => 'open']);
+    }
+    public function test_resolve_rejects_alert_while_underlying_condition_is_active(): void
+    {
+        OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-RESOLVE-BLOCKED', 30, 'ORD-RESOLVE-BLOCKED'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); app(EloquentMonitoringRepository::class)->detect(); $alert = OperationalAlert::query()->where('order_id', $shipment->order_id)->where('type', 'settlement_missing')->firstOrFail(); self::expectException(OperationalAlertException::class); app(EloquentMonitoringRepository::class)->resolve($alert->id, 1);
     }
     public function test_approved_return_without_settlement_creates_return_settlement_missing_alert(): void
     {

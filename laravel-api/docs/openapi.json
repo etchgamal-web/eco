@@ -20597,6 +20597,26 @@
           }
         }
       }
+    },
+    "/operational-alerts/{id}": {
+      "get": {
+        "summary": "Get operational alert details",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.view",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
     }
   },
   "components": {
