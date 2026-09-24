@@ -55,6 +55,117 @@ final class EloquentSettlementRepository implements SettlementRepositoryInterfac
     private function csvRows(string $path): iterable { $handle = fopen($path, 'rb'); if (! $handle) throw new SettlementImportException('Settlement file could not be opened.'); $headers = fgetcsv($handle); if (! $headers) throw new SettlementImportException('Settlement file is empty.'); $headers = array_map(fn ($value) => strtolower(trim((string) $value)), $headers); while (($values = fgetcsv($handle)) !== false) yield array_combine($headers, array_pad($values, count($headers), null)); fclose($handle); }
     private function xlsxRows(string $path): iterable { $shared = $this->sharedStrings($path); $reader = new \XMLReader(); if (! $reader->open('zip://' . $path . '#xl/worksheets/sheet1.xml')) throw new SettlementImportException('Invalid XLSX worksheet.'); $headers = []; while ($reader->read()) { if ($reader->nodeType !== \XMLReader::ELEMENT || $reader->localName !== 'row') continue; $xml = simplexml_import_dom($reader->expand()); $values = []; foreach ($xml->c as $cell) { $value = (string) $cell->v; $values[] = (string) ($cell['t'] === 's' ? ($shared[(int) $value] ?? $value) : $value); } if (! $headers) $headers = array_map(fn ($value) => strtolower(trim($value)), $values); else yield array_combine($headers, array_pad($values, count($headers), null)); } $reader->close(); }
     private function sharedStrings(string $path): array { $shared = []; $reader = new \XMLReader(); if (! $reader->open('zip://' . $path . '#xl/sharedStrings.xml')) return $shared; while ($reader->read()) { if ($reader->nodeType === \XMLReader::ELEMENT && $reader->localName === 'si') { $xml = simplexml_import_dom($reader->expand()); $shared[] = (string) ($xml->t ?? $xml->r->r->t ?? ''); } } $reader->close(); return $shared; }
+    public function paginate(array $filters = []): mixed
+    {
+        $query = ShippingSettlement::query()->with('provider')->withCount('items');
+
+        $query->when(! empty($filters['provider_code']), fn ($builder) => $builder->whereHas('provider', fn ($provider) => $provider->where('code', $filters['provider_code'])));
+        $query->when(! empty($filters['status']), fn ($builder) => $builder->where('status', $filters['status']));
+        $query->when(! empty($filters['from']), fn ($builder) => $builder->whereDate('period_from', '>=', $filters['from']));
+        $query->when(! empty($filters['to']), fn ($builder) => $builder->whereDate('period_to', '<=', $filters['to']));
+        $query->when(! empty($filters['search']), function ($builder) use ($filters): void {
+            $term = $filters['search'];
+            $builder->where(function ($search) use ($term): void {
+                $search->where('reference', 'like', "%{$term}%")
+                    ->orWhere('currency', 'like', "%{$term}%")
+                    ->orWhereHas('provider', fn ($provider) => $provider->where('name', 'like', "%{$term}%")->orWhere('code', 'like', "%{$term}%"));
+            });
+        });
+        $query->when(array_key_exists('has_discrepancy', $filters), function ($builder) use ($filters): void {
+            $operator = filter_var($filters['has_discrepancy'], FILTER_VALIDATE_BOOLEAN) ? '!=' : '=';
+            $builder->where('difference_total', $operator, 0);
+        });
+
+        $sort = in_array($filters['sort'] ?? null, ['created_at', 'period_from', 'period_to', 'status', 'actual_total', 'difference_total'], true)
+            ? $filters['sort']
+            : 'created_at';
+        $direction = ($filters['direction'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+        $perPage = min(100, max(1, (int) ($filters['per_page'] ?? 25)));
+        $page = max(1, (int) ($filters['page'] ?? 1));
+
+        return $query->orderBy($sort, $direction)->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    public function summary(array $filters = []): array
+    {
+        $settlements = $this->filteredSettlementQuery($filters);
+        $settlementTotals = (clone $settlements)->selectRaw('COUNT(*) AS settlement_count, COALESCE(SUM(shipments_count), 0) AS shipments_count, COALESCE(SUM(total_rows), 0) AS total_rows, COALESCE(SUM(matched_rows), 0) AS matched_rows, COALESCE(SUM(mismatched_rows), 0) AS mismatched_rows, COALESCE(SUM(missing_orders), 0) AS missing_orders, COALESCE(SUM(duplicate_rows), 0) AS duplicate_rows, COALESCE(SUM(invalid_rows), 0) AS invalid_rows')->first();
+        $itemTotals = ShippingSettlementItem::query()->whereIn('shipping_settlement_id', (clone $settlements)->select('shipping_settlements.id'))
+            ->selectRaw('COUNT(*) AS item_count, COALESCE(SUM(expected_order_amount), 0) AS expected_order_amount, COALESCE(SUM(actual_order_amount), 0) AS actual_order_amount, COALESCE(SUM(order_amount_difference), 0) AS order_amount_difference, COALESCE(SUM(expected_collection), 0) AS expected_collection, COALESCE(SUM(actual_collection), 0) AS actual_collection, COALESCE(SUM(collection_difference), 0) AS collection_difference, COALESCE(SUM(expected_shipping_cost), 0) AS expected_shipping_cost, COALESCE(SUM(actual_shipping_cost), 0) AS actual_shipping_cost, COALESCE(SUM(shipping_difference), 0) AS shipping_difference, COALESCE(SUM(expected_return_fee), 0) AS expected_return_fee, COALESCE(SUM(actual_return_fee), 0) AS actual_return_fee, COALESCE(SUM(return_difference), 0) AS return_difference, COALESCE(SUM(expected_customer_refund), 0) AS expected_customer_refund, COALESCE(SUM(actual_customer_refund), 0) AS actual_customer_refund, COALESCE(SUM(customer_refund_difference), 0) AS customer_refund_difference')->first();
+
+        return $this->reportPayload($settlementTotals, $itemTotals, $filters);
+    }
+
+    public function providers(array $filters = []): array
+    {
+        $settlementIds = $this->filteredSettlementQuery($filters)->select('shipping_settlements.id');
+        $rows = ShippingSettlementItem::query()
+            ->join('shipping_settlements', 'shipping_settlements.id', '=', 'shipping_settlement_items.shipping_settlement_id')
+            ->join('shipping_providers', 'shipping_providers.id', '=', 'shipping_settlements.shipping_provider_id')
+            ->whereIn('shipping_settlement_items.shipping_settlement_id', $settlementIds)
+            ->selectRaw('shipping_providers.code AS provider_code, shipping_providers.name AS provider_name, COUNT(DISTINCT shipping_settlements.id) AS settlement_count, COUNT(*) AS item_count, COALESCE(SUM(shipping_settlement_items.expected_order_amount), 0) AS expected_order_amount, COALESCE(SUM(shipping_settlement_items.actual_order_amount), 0) AS actual_order_amount, COALESCE(SUM(shipping_settlement_items.order_amount_difference), 0) AS order_amount_difference, COALESCE(SUM(shipping_settlement_items.expected_collection), 0) AS expected_collection, COALESCE(SUM(shipping_settlement_items.actual_collection), 0) AS actual_collection, COALESCE(SUM(shipping_settlement_items.collection_difference), 0) AS collection_difference, COALESCE(SUM(shipping_settlement_items.expected_shipping_cost), 0) AS expected_shipping_cost, COALESCE(SUM(shipping_settlement_items.actual_shipping_cost), 0) AS actual_shipping_cost, COALESCE(SUM(shipping_settlement_items.shipping_difference), 0) AS shipping_difference, COALESCE(SUM(shipping_settlement_items.expected_return_fee), 0) AS expected_return_fee, COALESCE(SUM(shipping_settlement_items.actual_return_fee), 0) AS actual_return_fee, COALESCE(SUM(shipping_settlement_items.return_difference), 0) AS return_difference, COALESCE(SUM(shipping_settlement_items.expected_customer_refund), 0) AS expected_customer_refund, COALESCE(SUM(shipping_settlement_items.actual_customer_refund), 0) AS actual_customer_refund, COALESCE(SUM(shipping_settlement_items.customer_refund_difference), 0) AS customer_refund_difference')
+            ->groupBy('shipping_providers.code', 'shipping_providers.name')
+            ->orderBy('shipping_providers.name')
+            ->get();
+
+        return ['items' => $rows->map(fn ($row): array => $this->providerReportRow($row))->all(), 'filters' => $filters];
+    }
+
+    private function filteredSettlementQuery(array $filters): mixed
+    {
+        return ShippingSettlement::query()
+            ->when(! empty($filters['provider_code']), fn ($query) => $query->whereHas('provider', fn ($provider) => $provider->where('code', $filters['provider_code'])))
+            ->when(! empty($filters['status']), fn ($query) => $query->where('status', $filters['status']))
+            ->when(! empty($filters['from']), fn ($query) => $query->whereDate('period_from', '>=', $filters['from']))
+            ->when(! empty($filters['to']), fn ($query) => $query->whereDate('period_to', '<=', $filters['to']));
+    }
+
+    private function reportPayload(object $settlements, object $items, array $filters): array
+    {
+        $differenceFields = ['order_amount' => 'order_amount_difference', 'collection' => 'collection_difference', 'shipping_cost' => 'shipping_difference', 'return_fee' => 'return_difference', 'customer_refund' => 'customer_refund_difference'];
+        $financial = fn (string $name): array => ['expected' => (int) $items->{'expected_'.$name}, 'actual' => (int) $items->{'actual_'.$name}, 'difference' => (int) $items->{$differenceFields[$name]}];
+
+        return [
+            'filters' => $filters,
+            'settlement_count' => (int) $settlements->settlement_count,
+            'shipments_count' => (int) $settlements->shipments_count,
+            'total_rows' => (int) $settlements->total_rows,
+            'matched_rows' => (int) $settlements->matched_rows,
+            'mismatched_rows' => (int) $settlements->mismatched_rows,
+            'missing_orders' => (int) $settlements->missing_orders,
+            'duplicate_rows' => (int) $settlements->duplicate_rows,
+            'invalid_rows' => (int) $settlements->invalid_rows,
+            'item_count' => (int) $items->item_count,
+            'financials' => [
+                'order_amount' => $financial('order_amount'),
+                'collection' => $financial('collection'),
+                'shipping_cost' => $financial('shipping_cost'),
+                'return_fee' => $financial('return_fee'),
+                'customer_refund' => $financial('customer_refund'),
+            ],
+        ];
+    }
+
+    private function providerReportRow(object $row): array
+    {
+        $differenceFields = ['order_amount' => 'order_amount_difference', 'collection' => 'collection_difference', 'shipping_cost' => 'shipping_difference', 'return_fee' => 'return_difference', 'customer_refund' => 'customer_refund_difference'];
+        $financial = fn (string $name): array => ['expected' => (int) $row->{'expected_'.$name}, 'actual' => (int) $row->{'actual_'.$name}, 'difference' => (int) $row->{$differenceFields[$name]}];
+
+        return [
+            'provider_code' => $row->provider_code,
+            'provider_name' => $row->provider_name,
+            'settlement_count' => (int) $row->settlement_count,
+            'item_count' => (int) $row->item_count,
+            'financials' => [
+                'order_amount' => $financial('order_amount'),
+                'collection' => $financial('collection'),
+                'shipping_cost' => $financial('shipping_cost'),
+                'return_fee' => $financial('return_fee'),
+                'customer_refund' => $financial('customer_refund'),
+            ],
+        ];
+    }
+
     public function show(int $id): mixed { return ShippingSettlement::query()->with('provider')->findOrFail($id); }
     public function items(int $id): mixed { return ShippingSettlementItem::query()->with('shipment.order')->where('shipping_settlement_id', $id)->paginate(100); }
     public function finalize(int $id): mixed { $settlement = $this->show($id); if ($settlement->status !== 'completed') throw new SettlementImportException('Only completed settlements can be finalized after reconciliation review.'); $settlement->update(['status' => 'finalized']); return $settlement->fresh(['provider', 'items']); }

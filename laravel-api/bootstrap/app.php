@@ -65,6 +65,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $time = '00:30';
+        $monitoringInterval = 60;
         $backupEnabled = (bool) config('backup.enabled', false);
         $backupTime = (string) config('backup.schedule', '02:00');
         try {
@@ -78,12 +79,18 @@ return Application::configure(basePath: dirname(__DIR__))
             if (is_string($backupSchedule) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $backupSchedule)) {
                 $backupTime = $backupSchedule;
             }
+            $configuredMonitoringInterval = (int) (Setting::query()->where('key', 'order_monitoring.scan_interval_minutes')->first()?->getTypedValue() ?? 60);
+            if (in_array($configuredMonitoringInterval, [5, 10, 15, 30, 60], true)) {
+                $monitoringInterval = $configuredMonitoringInterval;
+            }
         } catch (Throwable $e) {
-        }$schedule->command('cart:mark-abandoned')->dailyAt($time)->withoutOverlapping();
+        }
+        $monitoringCron = $monitoringInterval === 60 ? '0 * * * *' : "*/{$monitoringInterval} * * * *";
+        $schedule->command('cart:mark-abandoned')->dailyAt($time)->withoutOverlapping();
         $schedule->command('outbox:dispatch')->everyMinute()->withoutOverlapping();
         $schedule->command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('shipments:reconcile')->everyTenMinutes()->withoutOverlapping();
-        $schedule->command('orders:detect-delays')->hourly()->withoutOverlapping();
+        $schedule->command('orders:detect-delays')->cron($monitoringCron)->withoutOverlapping();
         if ($backupEnabled) {
             $schedule->command('backup:database')->dailyAt($backupTime)->withoutOverlapping()->onOneServer();
         }

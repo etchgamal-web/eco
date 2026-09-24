@@ -33,14 +33,14 @@ class SettingsApiTest extends TestCase
             'group' => 'orders', 'value' => 25, 'type' => 'integer',
         ])->assertOk()->assertJsonPath('data.value', 25);
 
-        $this->getJson('/api/v1/settings')->assertOk()->assertJsonCount(3, 'data');
+        $this->getJson('/api/v1/settings')->assertOk()->assertJsonCount(4, 'data');
         $this->getJson('/api/v1/settings/groups/store')->assertOk()->assertJsonCount(2, 'data');
         $this->getJson('/api/v1/settings/store.enabled')->assertOk()
             ->assertJsonPath('data.type', 'boolean')->assertJsonPath('data.value', true);
         $this->putJson('/api/v1/settings/store.enabled', [
             'group' => 'store', 'value' => false, 'type' => 'boolean', 'description' => null,
         ])->assertOk()->assertJsonPath('data.value', false);
-        $this->assertDatabaseCount('settings', 3);
+        $this->assertDatabaseCount('settings', 4);
     }
 
     public function test_settings_support_json_float_and_nullable_string_values(): void
@@ -105,6 +105,17 @@ class SettingsApiTest extends TestCase
 
         $this->actingAs($this->admin)->putJson('/api/v1/settings/cart.abandoned_scan_time', [
             'group' => 'cart', 'value' => '25:99', 'type' => 'string',
+        ])->assertUnprocessable()->assertJsonValidationErrors('value');
+    }
+
+    public function test_manager_can_configure_monitoring_scan_interval_with_supported_values_only(): void
+    {
+        $this->actingAs($this->admin)->putJson('/api/v1/settings/order_monitoring.scan_interval_minutes', [
+            'group' => 'order_monitoring', 'value' => 15, 'type' => 'integer',
+        ])->assertOk()->assertJsonPath('data.value', 15);
+
+        $this->putJson('/api/v1/settings/order_monitoring.scan_interval_minutes', [
+            'group' => 'order_monitoring', 'value' => 7, 'type' => 'integer',
         ])->assertUnprocessable()->assertJsonValidationErrors('value');
     }
 }

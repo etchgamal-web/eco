@@ -20478,6 +20478,83 @@
         }
       }
     },
+    "/reports/settlements/summary": {
+      "get": {
+        "summary": "Get aggregated financial settlement summary",
+        "security": [{ "bearerAuth": [] }],
+        "x-required-permission": "shipping.view",
+        "x-rate-limit": "api",
+        "parameters": [
+          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": { "200": { "description": "Aggregated financial totals" }, "422": { "description": "Validation failed" } }
+      }
+    },
+    "/reports/settlements/providers/export": {
+      "get": {
+        "summary": "Export settlement provider breakdown as CSV",
+        "security": [{ "bearerAuth": [] }],
+        "x-required-permission": "shipping.view",
+        "x-rate-limit": "api",
+        "parameters": [
+          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": { "200": { "description": "CSV settlement report", "content": { "text/csv": {} } }, "422": { "description": "Validation failed" } }
+      }
+    },
+    "/reports/settlements/providers": {
+      "get": {
+        "summary": "Get financial settlement breakdown by shipping provider",
+        "security": [{ "bearerAuth": [] }],
+        "x-required-permission": "shipping.view",
+        "x-rate-limit": "api",
+        "parameters": [
+          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": { "200": { "description": "Financial totals grouped by provider" }, "422": { "description": "Validation failed" } }
+      }
+    },
+    "/shipping/settlements": {
+      "get": {
+        "summary": "List shipping settlement imports",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "shipping.view",
+        "x-rate-limit": "api",
+        "parameters": [
+          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "has_discrepancy", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["created_at", "period_from", "period_to", "status", "actual_total", "difference_total"] } },
+          { "name": "direction", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated shipping settlements"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
     "/shipping/settlements/{id}": {
       "get": {
         "summary": "Operational API operation",

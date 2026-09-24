@@ -26,6 +26,44 @@ final class SettlementImportApiTest extends TestCase
     private array $files = [];
     protected function setUp(): void { parent::setUp(); $this->seed(RbacSeeder::class); ShippingProvider::query()->create(['code' => 'test-provider', 'name' => 'Test Provider', 'is_active' => true]); }
     protected function tearDown(): void { foreach ($this->files as $file) @unlink($file); parent::tearDown(); }
+    public function test_manager_can_list_settlements_with_filters_and_pagination(): void
+    {
+        $admin = \App\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); $provider = ShippingProvider::query()->firstOrFail();
+        ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'SEP-001', 'period_from' => '2026-09-01', 'period_to' => '2026-09-07', 'status' => 'completed', 'currency' => 'EGP', 'difference_total' => 0]);
+        ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'SEP-002', 'period_from' => '2026-09-08', 'period_to' => '2026-09-14', 'status' => 'finalized', 'currency' => 'EGP', 'difference_total' => 25]);
+        ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'AUG-001', 'period_from' => '2026-08-01', 'period_to' => '2026-08-07', 'status' => 'completed', 'currency' => 'EGP', 'difference_total' => 10]);
+
+        $this->actingAs($admin)->getJson('/api/v1/shipping/settlements?status=completed&from=2026-08-01&per_page=1&page=2&sort=period_from&direction=asc')
+            ->assertOk()->assertJsonPath('data.total', 2)->assertJsonPath('data.current_page', 2)->assertJsonPath('data.data.0.reference', 'SEP-001');
+        $this->actingAs($admin)->getJson('/api/v1/shipping/settlements?has_discrepancy=true')
+            ->assertOk()->assertJsonCount(2, 'data.data');
+    }
+    public function test_customer_cannot_list_shipping_settlements(): void
+    {
+        $customer = \App\Models\User::factory()->create(); $customer->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
+        $this->actingAs($customer)->getJson('/api/v1/shipping/settlements')->assertForbidden();
+    }
+    public function test_manager_can_read_financial_summary_and_provider_breakdown(): void
+    {
+        $admin = \App\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); $provider = ShippingProvider::query()->firstOrFail(); $shipment = $this->shipment('TRK-REPORT', 30, 'ORD-REPORT');
+        $settlement = ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'REPORT-001', 'period_from' => '2026-09-01', 'period_to' => '2026-09-30', 'status' => 'completed', 'currency' => 'EGP', 'shipments_count' => 1, 'total_rows' => 1, 'matched_rows' => 0, 'mismatched_rows' => 1]);
+        ShippingSettlementItem::query()->create(['shipping_settlement_id' => $settlement->id, 'shipment_id' => $shipment->id, 'order_number' => 'ORD-REPORT', 'expected_order_amount' => 100, 'actual_order_amount' => 95, 'order_amount_difference' => -5, 'expected_collection' => 100, 'actual_collection' => 100, 'collection_difference' => 0, 'expected_shipping_cost' => 30, 'actual_shipping_cost' => 35, 'shipping_difference' => 5, 'expected_return_fee' => 10, 'actual_return_fee' => 12, 'return_difference' => 2, 'expected_customer_refund' => 20, 'actual_customer_refund' => 18, 'customer_refund_difference' => -2, 'expected_total' => 40, 'actual_total' => 47, 'difference' => 7, 'status' => 'mismatched']);
+
+        $this->actingAs($admin)->getJson('/api/v1/reports/settlements/summary?provider_code=test-provider&from=2026-09-01&to=2026-09-30')
+            ->assertOk()->assertJsonPath('data.settlement_count', 1)->assertJsonPath('data.item_count', 1)->assertJsonPath('data.financials.order_amount.difference', -5)->assertJsonPath('data.financials.shipping_cost.expected', 30)->assertJsonPath('data.financials.shipping_cost.actual', 35)->assertJsonPath('data.financials.return_fee.difference', 2)->assertJsonPath('data.financials.customer_refund.difference', -2);
+        $this->actingAs($admin)->getJson('/api/v1/reports/settlements/providers?status=completed')
+            ->assertOk()->assertJsonPath('data.items.0.provider_code', 'test-provider')->assertJsonPath('data.items.0.financials.collection.actual', 100);
+        $csv = $this->actingAs($admin)->get('/api/v1/reports/settlements/providers/export?status=completed');
+        $csv->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8')->assertHeader('content-disposition');
+        self::assertStringContainsString('provider_code', $csv->streamedContent());
+        self::assertStringContainsString('test-provider', $csv->streamedContent());
+        self::assertStringContainsString('100', $csv->streamedContent());
+    }
+    public function test_customer_cannot_read_settlement_reports(): void
+    {
+        $customer = \App\Models\User::factory()->create(); $customer->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
+        $this->actingAs($customer)->getJson('/api/v1/reports/settlements/summary')->assertForbidden();
+    }
     public function test_import_counts_invalid_missing_duplicate_and_mismatched_rows(): void
     {
         $shipment = $this->shipment('TRK-1', 100); $this->shipment('TRK-2', 200);

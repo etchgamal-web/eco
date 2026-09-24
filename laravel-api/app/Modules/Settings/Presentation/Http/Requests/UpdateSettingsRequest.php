@@ -29,6 +29,7 @@ class UpdateSettingsRequest extends FormRequest
                 Rule::when($this->input('type') === 'json', ['array']),
                 Rule::when(in_array($this->input('key'), ['cart.abandoned_scan_time', 'backup.schedule'], true), ['date_format:H:i']),
                 Rule::when($this->input('key') === 'backup.retention_days', ['min:1', 'max:3650']),
+                Rule::when($this->input('key') === 'order_monitoring.scan_interval_minutes', [Rule::in([5, 10, 15, 30, 60])]),
             ],
             'type' => ['required', Rule::in(['string', 'boolean', 'integer', 'float', 'json'])],
             'description' => ['nullable', 'string'],
