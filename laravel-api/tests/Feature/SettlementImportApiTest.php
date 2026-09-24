@@ -26,6 +26,19 @@ final class SettlementImportApiTest extends TestCase
     private array $files = [];
     protected function setUp(): void { parent::setUp(); $this->seed(RbacSeeder::class); ShippingProvider::query()->create(['code' => 'test-provider', 'name' => 'Test Provider', 'is_active' => true]); }
     protected function tearDown(): void { foreach ($this->files as $file) @unlink($file); parent::tearDown(); }
+    public function test_authorized_manager_can_run_monitoring_scan_manually(): void
+    {
+        $manager = $this->createUserWithPermissions(['monitoring.run']);
+
+        $this->actingAs($manager)->postJson('/api/v1/orders/delayed/detect')
+            ->assertOk()->assertJsonPath('data.created', 0)->assertJsonPath('data.resolved', 0);
+    }
+    public function test_manual_monitoring_scan_requires_its_explicit_permission(): void
+    {
+        $viewer = $this->createUserWithPermissions(['orders.view']);
+
+        $this->actingAs($viewer)->postJson('/api/v1/orders/delayed/detect')->assertForbidden();
+    }
     public function test_manager_can_list_settlements_with_filters_and_pagination(): void
     {
         $admin = \App\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); $provider = ShippingProvider::query()->firstOrFail();

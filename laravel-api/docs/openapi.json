@@ -20397,6 +20397,26 @@
         }
       }
     },
+    "/orders/delayed/detect": {
+      "post": {
+        "summary": "Run the order delay monitor immediately",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "monitoring.run",
+        "x-rate-limit": "api",
+        "responses": {
+          "200": {
+            "description": "Detection completed"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/orders/{orderId}/timeline": {
       "get": {
         "summary": "Operational API operation",

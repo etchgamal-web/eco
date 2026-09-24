@@ -152,6 +152,7 @@ class RbacSeeder extends Seeder
             // Settings
             ['name' => 'View Settings', 'slug' => 'settings.view', 'group' => 'settings'],
             ['name' => 'Update Settings', 'slug' => 'settings.update', 'group' => 'settings'],
+            ['name' => 'Run Order Monitoring', 'slug' => 'monitoring.run', 'group' => 'monitoring'],
 
             // Inventory
             ['name' => 'View Inventory', 'slug' => 'inventory.view', 'group' => 'inventory'],
@@ -181,7 +182,7 @@ class RbacSeeder extends Seeder
         ]);
         $orderManagerPermissions = $allPermissions->whereIn('slug', [
             'orders.view', 'orders.manage', 'orders.review', 'orders.contact', 'orders.process', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
-            'inventory.view',
+            'inventory.view', 'monitoring.run',
         ]);
         $managerPermissions = $allPermissions->whereIn('slug', [
             'products.view', 'products.create', 'products.update', 'products.delete',
@@ -190,7 +191,7 @@ class RbacSeeder extends Seeder
             'brands.view', 'brands.create', 'brands.update', 'brands.delete',
             'categories.view', 'categories.create', 'categories.update', 'categories.delete',
             'orders.view', 'orders.manage', 'orders.review', 'orders.contact', 'orders.process', 'orders.verify', 'orders.confirm', 'orders.edit', 'orders.cancel', 'shipments.create',
-            'inventory.view', 'inventory.manage',
+            'inventory.view', 'inventory.manage', 'monitoring.run',
         ]);
         $supportAgentPermissions = $allPermissions->whereIn('slug', [
             'customers.view', 'customer.orders.view', 'customer.addresses.view', 'customer.notifications.view', 'orders.view',
