@@ -1,0 +1,53 @@
+name: Backend API
+
+on:
+  push:
+    paths:
+      - 'laravel-api/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'laravel-api/**'
+      - '.github/workflows/backend.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: laravel-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, dom, curl, sqlite3, pdo_sqlite
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: laravel-api
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - run: mkdir -p database && touch database/database.sqlite
+      - run: php artisan migrate --force
+      - run: vendor/bin/pint --test
+      - run: php artisan test --no-coverage
+      - run: php artisan route:list --path=api/v1 --json > /tmp/routes.json
+      - run: php -r '$d=json_decode(file_get_contents("docs/openapi.json"), true, 512, JSON_THROW_ON_ERROR); if (!isset($d["paths"])) { fwrite(STDERR, "OpenAPI document has no paths\n"); exit(1); } echo "OpenAPI JSON valid\n";'
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: laravel-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: composer validate --strict
+      - run: composer audit --no-interaction

@@ -1,7 +1,12 @@
 <?php
 
 use App\Modules\Shipping\Presentation\Http\Controllers\ShippingController;
+use App\Modules\Shipping\Presentation\Http\Controllers\PublicTrackingController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('public/shipments/{tracking_token}', [PublicTrackingController::class, 'show'])
+    ->middleware('throttle:public-tracking')
+    ->name('public.shipments.track');
 
 Route::middleware('auth')->group(function (): void {
     Route::get('shipping-methods', [ShippingController::class, 'index'])->name('shipping-methods.index');

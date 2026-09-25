@@ -11,7 +11,7 @@ class Shipment extends Model
 {
     protected $fillable = [
         'order_id', 'user_id', 'shipping_method_id', 'method_code', 'provider_code', 'weight', 'item_quantity', 'zone_code', 'tracking_number',
-        'fee', 'currency', 'status', 'creation_status', 'creation_error', 'created_at_provider',
+        'fee', 'currency', 'status', 'creation_status', 'creation_error', 'created_at_provider', 'public_tracking_token',
         'address_snapshot', 'idempotency_key', 'metadata',
     ];
 

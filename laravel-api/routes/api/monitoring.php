@@ -10,4 +10,6 @@ Route::middleware('auth')->group(function():void{
  Route::get('operational-alerts/{id}',[MonitoringController::class,'alert'])->name('operational-alerts.show');
  Route::patch('operational-alerts/{id}/acknowledge',[MonitoringController::class,'acknowledge'])->name('operational-alerts.acknowledge');
  Route::patch('operational-alerts/{id}/resolve',[MonitoringController::class,'resolve'])->name('operational-alerts.resolve');
-});
+ Route::patch('operational-alerts/bulk-acknowledge',[MonitoringController::class,'bulkAcknowledge'])->name('operational-alerts.bulk-acknowledge');
+ Route::patch('operational-alerts/bulk-resolve',[MonitoringController::class,'bulkResolve'])->name('operational-alerts.bulk-resolve');
+ });

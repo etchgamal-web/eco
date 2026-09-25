@@ -8,5 +8,7 @@ final class ManageReturns
     public function customerList(int $userId): iterable { return $this->returns->listForCustomer($userId); }
     public function adminList(): iterable { return $this->returns->listAll(); }
     public function approve(int $id): object { return $this->returns->approve($id); }
+    public function receive(int $id): object { return $this->returns->receive($id); }
+    public function inspect(int $id, bool $accepted, ?string $notes = null): object { return $this->returns->inspect($id, $accepted, $notes); }
     public function reject(int $id, string $reason): object { return $this->returns->reject($id, $reason); }
 }

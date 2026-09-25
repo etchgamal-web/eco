@@ -6,5 +6,7 @@ interface ReturnRepositoryInterface
     public function listForCustomer(int $userId): iterable;
     public function listAll(): iterable;
     public function approve(int $returnId): object;
+    public function receive(int $returnId): object;
+    public function inspect(int $returnId, bool $accepted, ?string $notes = null): object;
     public function reject(int $returnId, string $reason): object;
 }

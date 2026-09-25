@@ -18,6 +18,7 @@ use App\Modules\Order\Presentation\Http\Requests\OrderRequest;
 use App\Modules\Order\Presentation\Http\Requests\OrderTimelineRequest;
 use App\Modules\Order\Presentation\Http\Requests\OrderWorkflowRequest;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class OrderController extends Controller
 {
@@ -39,6 +40,18 @@ final class OrderController extends Controller
     public function index(OrderRequest $request, ListOrders $orders): JsonResponse
     {
         return response()->json(['data' => $orders->execute()]);
+    }
+
+    public function export(OrderRequest $request, ListOrders $orders): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($orders): void {
+            $output = fopen('php://output', 'wb');
+            fputcsv($output, ['id', 'order_number', 'user_id', 'status', 'total_amount', 'currency', 'created_at']);
+            foreach ($orders->execute() as $order) {
+                fputcsv($output, [$order->id, $order->order_number, $order->user_id, $order->status, $order->total_amount, $order->currency, $order->created_at]);
+            }
+            fclose($output);
+        }, 'orders-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function show(OrderRequest $request, int $id, GetOrder $order): JsonResponse

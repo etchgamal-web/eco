@@ -52,4 +52,28 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
         $return->update(['status' => 'rejected', 'rejection_reason' => $reason]);
         return $return->fresh('items');
     }
+
+    public function receive(int $returnId): object
+    {
+        return DB::transaction(function () use ($returnId): object {
+            $return = OrderReturn::query()->lockForUpdate()->find($returnId);
+            if ($return === null || $return->status !== 'approved') throw ReturnException::invalidTransition();
+            $return->update(['status' => 'received', 'received_at' => now()]);
+            AuditLog::query()->create(['actor_id' => auth()->id(), 'action' => 'order.return.received', 'target_type' => OrderReturn::class, 'target_id' => $return->id]);
+            return $return->fresh('items');
+        });
+    }
+
+    public function inspect(int $returnId, bool $accepted, ?string $notes = null): object
+    {
+        return DB::transaction(function () use ($returnId, $accepted, $notes): object {
+            $return = OrderReturn::query()->lockForUpdate()->find($returnId);
+            if ($return === null || $return->status !== 'received') throw ReturnException::invalidTransition();
+            $return->update(['status' => $accepted ? 'inspected_accepted' : 'inspected_rejected', 'inspected_at' => now(), 'inspection_notes' => $notes]);
+            $event = $accepted ? 'order.return.inspection.accepted' : 'order.return.inspection.rejected';
+            $this->outbox->record('order_return', (int) $return->id, $event, 'return:inspection:' . $return->id, ['return_id' => $return->id, 'order_id' => $return->order_id, 'refund_amount' => $return->refund_amount]);
+            AuditLog::query()->create(['actor_id' => auth()->id(), 'action' => $event, 'target_type' => OrderReturn::class, 'target_id' => $return->id, 'metadata' => ['notes' => $notes]]);
+            return $return->fresh('items');
+        });
+    }
 }

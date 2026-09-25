@@ -10,6 +10,7 @@ use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingPricingCalculatorInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
 use App\Modules\Shipping\Domain\ValueObjects\CreateShipmentData;
+use Illuminate\Support\Str;
 
 final class CreateShipment
 {
@@ -72,6 +73,7 @@ final class CreateShipment
                 'creation_status' => 'creation_pending',
                 'address_snapshot' => $order->shipping_address,
                 'idempotency_key' => $data->idempotencyKey,
+                'public_tracking_token' => Str::random(48),
                 'metadata' => array_filter(['carrier' => $method->carrier, 'manual_carrier_name' => $providerCode === 'manual' ? $method->carrier : null, 'provider' => $providerCode, 'manual_tracking_number' => $data->trackingNumber]),
             ]);
             $this->orders->setShippingCost($order->id, $breakdown->total);

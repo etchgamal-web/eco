@@ -26,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
             ->by((string) ($request->user()?->id ?? $request->ip())));
         RateLimiter::for('auth-register', static fn (Request $request): Limit => Limit::perMinute(3)->by($request->ip()));
         RateLimiter::for('password-change', static fn (Request $request): Limit => Limit::perMinute(5)->by((string) ($request->user()?->id ?? $request->ip())));
+        RateLimiter::for('password-reset', static fn (Request $request): Limit => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('public-tracking', static fn (Request $request): Limit => Limit::perMinute(30)->by($request->ip()));
         RateLimiter::for('checkout', static fn (Request $request): Limit => Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip())));
         RateLimiter::for('payment-create', static fn (Request $request): Limit => Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip())));
         RateLimiter::for('return-create', static fn (Request $request): Limit => Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip())));

@@ -11,6 +11,7 @@ final class ReturnRequest extends FormRequest
         return match ($this->route()?->getName()) {
             'customer.returns.store' => ['reason' => ['required','string','max:120'], 'notes' => ['nullable','string','max:2000'], 'items' => ['required','array','min:1'], 'items.*.order_item_id' => ['required','integer','min:1'], 'items.*.quantity' => ['required','integer','min:1']],
             'returns.reject' => ['reason' => ['required','string','max:2000']],
+            'returns.inspect' => ['accepted' => ['required','boolean'], 'notes' => ['nullable','string','max:2000']],
             default => [],
         };
     }

@@ -2,6 +2,7 @@
 namespace App\Modules\Monitoring\Infrastructure\Persistence;
 use App\Models\CustomerNotification;
 use App\Models\CustomerOrder;
+use App\Models\AuditLog;
 use App\Models\OperationalAlert;
 use App\Models\OperationalAlertNotification;
 use App\Models\OrderMonitoringSetting;
@@ -32,4 +33,27 @@ final class EloquentMonitoringRepository implements MonitoringRepositoryInterfac
     public function findAlert(int $id):mixed{return OperationalAlert::query()->with(['order.user','order.shipments.events','order.activities','order.review','acknowledgedBy','resolvedBy'])->findOrFail($id);}
     public function acknowledge(int $id,int $userId):mixed{$a=$this->findAlert($id);if($a->status==='open')$a->update(['status'=>'acknowledged','acknowledged_at'=>now(),'acknowledged_by'=>$userId]);return $a->fresh('order');}
     public function resolve(int $id,int $userId):mixed{$a=$this->findAlert($id);$order=$a->order()->with(['review','shipments.events'])->firstOrFail();$settings=collect($this->settings())->keyBy('rule_type');if(collect($this->candidates($order,$settings))->contains('type',$a->type))throw new \App\Modules\Monitoring\Domain\Exceptions\OperationalAlertException('The alert cannot be resolved while its underlying condition is still active.');$a->update(['status'=>'resolved','resolved_at'=>now(),'resolved_by'=>$userId]);return $a->fresh('order');}
+    public function bulkAcknowledge(array $ids,int $userId,?string $reason=null):array
+    {
+        $updated=[];
+        foreach (array_values(array_unique(array_map('intval',$ids))) as $id) {
+            $alert=$this->findAlert($id);
+            if ($alert->status==='open') {
+                $alert->update(['status'=>'acknowledged','acknowledged_at'=>now(),'acknowledged_by'=>$userId]);
+                AuditLog::query()->create(['actor_id'=>$userId,'action'=>'operational_alert.bulk_acknowledged','target_type'=>OperationalAlert::class,'target_id'=>$id,'metadata'=>['reason'=>$reason]]);
+            }
+            $updated[]=$alert->fresh('order');
+        }
+        return $updated;
+    }
+    public function bulkResolve(array $ids,int $userId,?string $reason=null):array
+    {
+        $updated=[];
+        foreach (array_values(array_unique(array_map('intval',$ids))) as $id) {
+            $alert=$this->resolve($id,$userId);
+            AuditLog::query()->create(['actor_id'=>$userId,'action'=>'operational_alert.bulk_resolved','target_type'=>OperationalAlert::class,'target_id'=>$id,'metadata'=>['reason'=>$reason]]);
+            $updated[]=$alert;
+        }
+        return $updated;
+    }
 }

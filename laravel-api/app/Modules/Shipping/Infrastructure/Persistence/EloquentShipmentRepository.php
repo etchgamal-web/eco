@@ -37,6 +37,10 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
             ->orWhereJsonContains('metadata->bosta_delivery_id', $reference)
             ->first();
     }
+    public function findByPublicTrackingToken(string $token): ?object
+    {
+        return Shipment::query()->with(['events' => fn ($query) => $query->latest()->limit(20)])->where('public_tracking_token', $token)->first();
+    }
     public function listForUserOrder(int $userId, int $orderId): iterable { return Shipment::query()->with(['method', 'events'])->where('user_id', $userId)->where('order_id', $orderId)->latest()->get(); }
     public function create(array $attributes): object
     {

@@ -9,6 +9,12 @@ Route::post('auth/register', [AuthController::class, 'register'])
 Route::post('auth/login', [AuthController::class, 'login'])
     ->middleware(['guest', 'throttle:auth-login'])
     ->name('auth.login');
+Route::post('auth/password/forgot', [AuthController::class, 'forgotPassword'])
+    ->middleware('throttle:password-reset')
+    ->name('auth.password.forgot');
+Route::post('auth/password/reset', [AuthController::class, 'resetPassword'])
+    ->middleware('throttle:password-reset')
+    ->name('auth.password.reset');
 
 Route::middleware('auth')->group(function (): void {
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');

@@ -1,8 +1,8 @@
 <?php
 namespace App\Modules\Monitoring\Presentation\Http\Controllers;
 use App\Http\Controllers\Controller;
-use App\Modules\Monitoring\Application\UseCases\{AcknowledgeOperationalAlert,DetectDelayedOrders,GetDelayedOrders,GetMonitoringSettings,GetOperationalAlert,GetOperationalAlerts,ResolveOperationalAlert,UpdateMonitoringSetting};
-use App\Modules\Monitoring\Presentation\Http\Requests\{AlertActionRequest,MonitoringRequest,RunMonitoringRequest};
+use App\Modules\Monitoring\Application\UseCases\{AcknowledgeOperationalAlert,BulkUpdateOperationalAlerts,DetectDelayedOrders,GetDelayedOrders,GetMonitoringSettings,GetOperationalAlert,GetOperationalAlerts,ResolveOperationalAlert,UpdateMonitoringSetting};
+use App\Modules\Monitoring\Presentation\Http\Requests\{AlertActionRequest,BulkAlertActionRequest,MonitoringRequest,RunMonitoringRequest};
 use Illuminate\Http\JsonResponse;
 final class MonitoringController extends Controller {
  public function settings(MonitoringRequest $r,GetMonitoringSettings $u):JsonResponse{return response()->json(['data'=>$u->execute()]);}
@@ -13,4 +13,6 @@ final class MonitoringController extends Controller {
  public function alert(MonitoringRequest $r,int $id,GetOperationalAlert $u):JsonResponse{return response()->json(['data'=>$u->execute($id)]);}
  public function acknowledge(AlertActionRequest $r,int $id,AcknowledgeOperationalAlert $u):JsonResponse{return response()->json(['data'=>$u->execute($id,(int)$r->user()->id)]);}
  public function resolve(AlertActionRequest $r,int $id,ResolveOperationalAlert $u):JsonResponse{return response()->json(['data'=>$u->execute($id,(int)$r->user()->id)]);}
+ public function bulkAcknowledge(BulkAlertActionRequest $r,BulkUpdateOperationalAlerts $u):JsonResponse{$d=$r->validated();return response()->json(['data'=>$u->acknowledge($d['alert_ids'],(int)$r->user()->id,$d['reason']??null)]);}
+ public function bulkResolve(BulkAlertActionRequest $r,BulkUpdateOperationalAlerts $u):JsonResponse{$d=$r->validated();return response()->json(['data'=>$u->resolve($d['alert_ids'],(int)$r->user()->id,$d['reason']??null)]);}
 }

@@ -18679,7 +18679,8 @@
           }
         },
         "x-rate-limit": "120 requests per minute",
-        "security": []
+        "security": [],
+        "x-required-permission": "orders.view"
       },
       "post": {
         "tags": [
@@ -18708,7 +18709,8 @@
           }
         },
         "x-rate-limit": "120 requests per minute",
-        "security": []
+        "security": [],
+        "x-required-permission": "orders.view"
       }
     },
     "/admin/social/templates": {
@@ -19302,7 +19304,8 @@
           }
         },
         "x-rate-limit": "api",
-        "security": []
+        "security": [],
+        "x-required-permission": "orders.view"
       }
     },
     "/landing-pages/{slug}/leads": {
@@ -19360,7 +19363,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "orders.view"
       }
     },
     "/admin/landing-pages": {
@@ -19757,7 +19761,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "orders.view"
       }
     },
     "/admin/landing-leads": {
@@ -20501,46 +20506,178 @@
     "/reports/settlements/summary": {
       "get": {
         "summary": "Get aggregated financial settlement summary",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "shipping.view",
         "x-rate-limit": "api",
         "parameters": [
-          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
+          {
+            "name": "provider_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "processing",
+                "completed",
+                "finalized"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Aggregated financial totals" }, "422": { "description": "Validation failed" } }
+        "responses": {
+          "200": {
+            "description": "Aggregated financial totals"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
       }
     },
     "/reports/settlements/providers/export": {
       "get": {
         "summary": "Export settlement provider breakdown as CSV",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "shipping.view",
         "x-rate-limit": "api",
         "parameters": [
-          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
+          {
+            "name": "provider_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "processing",
+                "completed",
+                "finalized"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
         ],
-        "responses": { "200": { "description": "CSV settlement report", "content": { "text/csv": {} } }, "422": { "description": "Validation failed" } }
+        "responses": {
+          "200": {
+            "description": "CSV settlement report",
+            "content": {
+              "text/csv": {}
+            }
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
       }
     },
     "/reports/settlements/providers": {
       "get": {
         "summary": "Get financial settlement breakdown by shipping provider",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "x-required-permission": "shipping.view",
         "x-rate-limit": "api",
         "parameters": [
-          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
+          {
+            "name": "provider_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "processing",
+                "completed",
+                "finalized"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Financial totals grouped by provider" }, "422": { "description": "Validation failed" } }
+        "responses": {
+          "200": {
+            "description": "Financial totals grouped by provider"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
       }
     },
     "/shipping/settlements": {
@@ -20554,16 +20691,102 @@
         "x-required-permission": "shipping.view",
         "x-rate-limit": "api",
         "parameters": [
-          { "name": "provider_code", "in": "query", "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "processing", "completed", "finalized"] } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "search", "in": "query", "schema": { "type": "string" } },
-          { "name": "has_discrepancy", "in": "query", "schema": { "type": "boolean" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
-          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 } },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["created_at", "period_from", "period_to", "status", "actual_total", "difference_total"] } },
-          { "name": "direction", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
+          {
+            "name": "provider_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "processing",
+                "completed",
+                "finalized"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "has_discrepancy",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "created_at",
+                "period_from",
+                "period_to",
+                "status",
+                "actual_total",
+                "difference_total"
+              ]
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -20713,6 +20936,317 @@
             "description": "Not found"
           }
         }
+      }
+    },
+    "/auth/password/forgot": {
+      "post": {
+        "summary": "Request a password reset link",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "summary": "Example request",
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generic response"
+          }
+        },
+        "x-rate-limit": {
+          "requests": "5 per minute",
+          "key": "ip"
+        }
+      }
+    },
+    "/auth/password/reset": {
+      "post": {
+        "summary": "Reset a password with a single-use token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "token",
+                  "password",
+                  "password_confirmation"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "token": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "password_confirmation": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "summary": "Example request",
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset"
+          },
+          "422": {
+            "description": "Invalid or expired token"
+          }
+        },
+        "x-rate-limit": {
+          "requests": "5 per minute",
+          "key": "ip"
+        }
+      }
+    },
+    "/public/shipments/{tracking_token}": {
+      "get": {
+        "summary": "Public shipment tracking",
+        "parameters": [
+          {
+            "name": "tracking_token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 48,
+              "maxLength": 48
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe tracking data"
+          },
+          "404": {
+            "description": "Shipment not found"
+          }
+        },
+        "x-rate-limit": {
+          "requests": "30 per minute",
+          "key": "ip"
+        }
+      }
+    },
+    "/returns/{returnId}/receive": {
+      "patch": {
+        "summary": "Mark an approved return as received",
+        "responses": {
+          "200": {
+            "description": "Return received"
+          },
+          "409": {
+            "description": "Invalid transition"
+          }
+        },
+        "x-required-permission": "orders.view"
+      }
+    },
+    "/returns/{returnId}/inspect": {
+      "patch": {
+        "summary": "Inspect a received return",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "accepted"
+                ],
+                "properties": {
+                  "accepted": {
+                    "type": "boolean"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "summary": "Example request",
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return inspection recorded"
+          },
+          "409": {
+            "description": "Invalid transition"
+          }
+        },
+        "x-required-permission": "orders.view"
+      }
+    },
+    "/operational-alerts/bulk-acknowledge": {
+      "patch": {
+        "summary": "Acknowledge multiple operational alerts",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "alert_ids"
+                ],
+                "properties": {
+                  "alert_ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "summary": "Example request",
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Alerts acknowledged"
+          }
+        },
+        "x-required-permission": "orders.manage"
+      }
+    },
+    "/operational-alerts/bulk-resolve": {
+      "patch": {
+        "summary": "Resolve multiple operational alerts",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "alert_ids"
+                ],
+                "properties": {
+                  "alert_ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "summary": "Example request",
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Alerts resolved"
+          }
+        },
+        "x-required-permission": "orders.manage"
+      }
+    },
+    "/orders/export": {
+      "get": {
+        "summary": "Stream orders as CSV",
+        "responses": {
+          "200": {
+            "description": "CSV export",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "orders.view"
+      }
+    },
+    "/shipping/settlements/{id}/export": {
+      "get": {
+        "summary": "Stream settlement items as CSV",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV export",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "orders.view"
       }
     }
   },

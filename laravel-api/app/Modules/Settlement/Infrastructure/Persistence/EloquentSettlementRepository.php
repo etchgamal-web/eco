@@ -168,5 +168,6 @@ final class EloquentSettlementRepository implements SettlementRepositoryInterfac
 
     public function show(int $id): mixed { return ShippingSettlement::query()->with('provider')->findOrFail($id); }
     public function items(int $id): mixed { return ShippingSettlementItem::query()->with('shipment.order')->where('shipping_settlement_id', $id)->paginate(100); }
+    public function exportItems(int $id): iterable { $this->show($id); return ShippingSettlementItem::query()->with('shipment.order')->where('shipping_settlement_id', $id)->orderBy('id')->cursor(); }
     public function finalize(int $id): mixed { $settlement = $this->show($id); if ($settlement->status !== 'completed') throw new SettlementImportException('Only completed settlements can be finalized after reconciliation review.'); $settlement->update(['status' => 'finalized']); return $settlement->fresh(['provider', 'items']); }
 }
