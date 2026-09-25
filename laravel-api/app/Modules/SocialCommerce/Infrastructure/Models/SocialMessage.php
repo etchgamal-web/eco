@@ -2,9 +2,8 @@
 
 namespace App\Modules\SocialCommerce\Infrastructure\Models;
 
-
-use Illuminate\Database\Eloquent\Model;
 use App\Modules\SocialCommerce\Infrastructure\Persistence\Concerns\SocialResponderAttributes;
+use Illuminate\Database\Eloquent\Model;
 
 class SocialMessage extends Model
 {

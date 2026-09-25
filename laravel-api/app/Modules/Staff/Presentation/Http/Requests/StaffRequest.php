@@ -3,9 +3,9 @@
 namespace App\Modules\Staff\Presentation\Http\Requests;
 
 use App\Modules\Auth\Presentation\Http\Concerns\AuthorizesRequest;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\Query\Builder;
 
 final class StaffRequest extends FormRequest
 {

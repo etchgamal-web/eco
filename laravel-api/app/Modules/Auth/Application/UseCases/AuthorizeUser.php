@@ -7,13 +7,11 @@ use App\Modules\Auth\Domain\Exceptions\AuthorizationException;
 
 final class AuthorizeUser
 {
-    public function __construct(private readonly AuthorizationServiceInterface $authorization)
-    {
-    }
+    public function __construct(private readonly AuthorizationServiceInterface $authorization) {}
 
     public function execute(object $user, string $permission): bool
     {
-        if (!$this->authorization->allows($user, $permission)) {
+        if (! $this->authorization->allows($user, $permission)) {
             throw new AuthorizationException("Missing permission: {$permission}.");
         }
 

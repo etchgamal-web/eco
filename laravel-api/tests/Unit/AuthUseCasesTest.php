@@ -2,12 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Modules\Auth\Infrastructure\Models\User;
-use App\Modules\Auth\Domain\ValueObjects\ChangePasswordData;
-use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
-use App\Modules\Auth\Application\UseCases\ChangePassword;
-use App\Modules\Auth\Application\UseCases\AuthorizeUser;
 use App\Modules\Auth\Application\UseCases\AuthenticateUser;
+use App\Modules\Auth\Application\UseCases\AuthorizeUser;
+use App\Modules\Auth\Application\UseCases\ChangePassword;
 use App\Modules\Auth\Application\UseCases\LoginUser;
 use App\Modules\Auth\Application\UseCases\LogoutUser;
 use App\Modules\Auth\Application\UseCases\RegisterUser;
@@ -16,6 +13,9 @@ use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PasswordServiceInterface;
 use App\Modules\Auth\Domain\Contracts\UserRepositoryInterface;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
+use App\Modules\Auth\Domain\ValueObjects\ChangePasswordData;
+use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
+use App\Modules\Auth\Infrastructure\Models\User;
 use PHPUnit\Framework\TestCase;
 
 class AuthUseCasesTest extends TestCase
@@ -76,7 +76,7 @@ class AuthUseCasesTest extends TestCase
 
     public function test_change_password_requires_current_password(): void
     {
-        $user = new User();
+        $user = new User;
         $user->setRawAttributes(['password' => 'hashed']);
         $passwords = $this->createMock(PasswordServiceInterface::class);
         $passwords->method('check')->willReturn(false);

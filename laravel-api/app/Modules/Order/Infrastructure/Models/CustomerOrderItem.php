@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Modules\Order\Infrastructure\Models;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class CustomerOrderItem extends Model
 {
     protected $fillable = [
@@ -21,7 +23,18 @@ class CustomerOrderItem extends Model
         ];
     }
 
-    public function order(): BelongsTo { return $this->belongsTo(CustomerOrder::class, 'order_id'); }
-    public function product(): BelongsTo { return $this->belongsTo(Product::class); }
-    public function variant(): BelongsTo { return $this->belongsTo(ProductVariant::class, 'variant_id'); }
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(CustomerOrder::class, 'order_id');
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
 }

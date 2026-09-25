@@ -2,6 +2,4 @@
 
 namespace App\Modules\Shipping\Domain\Exceptions;
 
-final class ShipmentNotFoundException extends ShippingException
-{
-}
+final class ShipmentNotFoundException extends ShippingException {}

@@ -3,9 +3,9 @@
 namespace App\Modules\Order\Infrastructure\Persistence;
 
 use App\Modules\Catalog\Domain\Contracts\ProductReaderInterface;
-use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Domain\Contracts\CheckoutGatewayInterface;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
 
 final class EloquentCheckoutGateway implements CheckoutGatewayInterface
 {
@@ -38,5 +38,4 @@ final class EloquentCheckoutGateway implements CheckoutGatewayInterface
     {
         $this->coupons->recordUsage($code, $userId, $orderId, $discount);
     }
-
 }

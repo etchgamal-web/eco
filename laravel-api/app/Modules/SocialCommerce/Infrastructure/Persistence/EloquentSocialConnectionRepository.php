@@ -2,8 +2,8 @@
 
 namespace App\Modules\SocialCommerce\Infrastructure\Persistence;
 
-use App\Modules\SocialCommerce\Infrastructure\Models\SocialConnection;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialConnection;
 
 final class EloquentSocialConnectionRepository implements SocialConnectionRepositoryInterface
 {

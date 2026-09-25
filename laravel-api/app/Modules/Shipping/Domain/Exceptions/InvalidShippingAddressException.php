@@ -2,6 +2,4 @@
 
 namespace App\Modules\Shipping\Domain\Exceptions;
 
-final class InvalidShippingAddressException extends ShippingException
-{
-}
+final class InvalidShippingAddressException extends ShippingException {}

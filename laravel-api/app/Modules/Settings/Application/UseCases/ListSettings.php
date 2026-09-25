@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Modules\Settings\Application\UseCases;
 
 use App\Modules\Settings\Domain\Contracts\SettingsRepositoryInterface;

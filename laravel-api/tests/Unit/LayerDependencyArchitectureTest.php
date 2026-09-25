@@ -34,14 +34,15 @@ final class LayerDependencyArchitectureTest extends TestCase
     /** @return list<string> */
     private function phpFilesIn(string $suffix): array
     {
-        $root = dirname(__DIR__, 2) . '/app/Modules';
+        $root = dirname(__DIR__, 2).'/app/Modules';
         $files = [];
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
         foreach ($iterator as $file) {
-            if ($file->isFile() && $file->getExtension() === 'php' && str_ends_with($file->getPathname(), '/' . $suffix . '/' . $file->getFilename()) || ($file->isFile() && $file->getExtension() === 'php' && str_contains($file->getPathname(), '/' . $suffix . '/'))) {
+            if ($file->isFile() && $file->getExtension() === 'php' && str_ends_with($file->getPathname(), '/'.$suffix.'/'.$file->getFilename()) || ($file->isFile() && $file->getExtension() === 'php' && str_contains($file->getPathname(), '/'.$suffix.'/'))) {
                 $files[] = $file->getPathname();
             }
         }
+
         return $files;
     }
 }

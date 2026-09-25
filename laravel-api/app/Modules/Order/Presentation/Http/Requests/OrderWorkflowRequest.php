@@ -17,6 +17,7 @@ final class OrderWorkflowRequest extends FormRequest
             'orders.confirm' => 'orders.confirm',
             default => 'orders.manage',
         };
+
         return $this->authorizePermission($permission);
     }
 
@@ -25,10 +26,10 @@ final class OrderWorkflowRequest extends FormRequest
         if ($this->route()?->getName() !== 'orders.contact') {
             return [];
         }
+
         return [
             'contact_result' => ['required', 'string', 'in:confirmed,modified,no_answer,rejected,unavailable'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }
-

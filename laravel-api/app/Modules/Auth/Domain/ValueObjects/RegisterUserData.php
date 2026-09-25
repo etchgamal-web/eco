@@ -9,8 +9,7 @@ final readonly class RegisterUserData
         public ?string $email,
         public ?string $phone,
         public string $password,
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $data): self
     {

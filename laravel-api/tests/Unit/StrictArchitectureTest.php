@@ -150,27 +150,20 @@ final class StrictArchitectureTest extends TestCase
         self::assertStringNotContainsString('App\\Modules\\Promotion\\Infrastructure\\Models\\', $gateway);
     }
 
-    public function test_order_models_are_owned_by_order_infrastructure_with_legacy_wrappers_only(): void
+    public function test_order_models_are_owned_by_order_infrastructure_without_legacy_wrappers(): void
     {
         $root = dirname(__DIR__, 2);
         foreach (['CustomerOrder', 'CustomerOrderItem', 'OrderActivity', 'OrderReview'] as $model) {
             $infrastructure = $this->source($root.'/app/Modules/Order/Infrastructure/Models/'.$model.'.php');
-            $legacy = $this->source($root.'/app/Models/'.$model.'.php');
 
-            self::assertStringContainsString('namespace App\\Modules\\Order\\Infrastructure\\Models;', $infrastructure);
-            self::assertStringContainsString('extends \\App\\Modules\\Order\\Infrastructure\\Models\\'.$model, $legacy);
+            self::assertStringContainsString('namespace App\Modules\Order\Infrastructure\Models;', $infrastructure);
+            self::assertFileDoesNotExist($root.'/app/Models/'.$model.'.php');
         }
     }
 
-    public function test_app_models_contains_compatibility_wrappers_only(): void
+    public function test_legacy_app_models_directory_is_removed(): void
     {
-        foreach (glob(dirname(__DIR__, 2).'/app/Models/*.php') ?: [] as $file) {
-            $source = $this->source($file);
-
-            self::assertStringContainsString('@deprecated Use the ', $source, $file);
-            self::assertMatchesRegularExpression('~class\s+\w+\s+extends\s+\\\\App\\\\Modules\\\\[A-Za-z0-9_]+\\\\Infrastructure\\\\Models\\\\[A-Za-z0-9_]+~', $source, $file);
-            self::assertStringNotContainsString('use Illuminate\\Database\\Eloquent\\Model;', $source, $file);
-        }
+        self::assertDirectoryDoesNotExist(dirname(__DIR__, 2).'/app/Models');
     }
 
     public function test_every_controller_is_thin_and_uses_form_request_and_use_case(): void
@@ -204,8 +197,33 @@ final class StrictArchitectureTest extends TestCase
         foreach ($this->filesIn('Presentation/Http/Requests') as $file) {
             $source = $this->source($file);
             self::assertMatchesRegularExpression('/extends\s+FormRequest\b/', $source, $file);
-            self::assertStringContainsString('Illuminate\\Foundation\\Http\\FormRequest', $source, $file);
+            self::assertStringContainsString('Illuminate\Foundation\Http\FormRequest', $source, $file);
         }
+    }
+
+    public function test_form_requests_do_not_execute_application_use_cases_or_build_http_responses(): void
+    {
+        foreach ($this->filesIn('Presentation/Http/Requests') as $file) {
+            $source = $this->source($file);
+            $this->assertNone($source, [
+                'Application\\UseCases\\',
+                'app(',
+                'HttpResponseException',
+                'response()->',
+            ], $file);
+        }
+    }
+
+    public function test_checkout_guest_policy_is_reached_through_a_domain_port(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $request = $this->source($root.'/app/Modules/Order/Presentation/Http/Requests/CheckoutRequest.php');
+        $useCase = $this->source($root.'/app/Modules/Order/Application/UseCases/Checkout.php');
+        $provider = $this->source($root.'/app/Modules/Order/OrderServiceProvider.php');
+
+        self::assertStringNotContainsString('GetSetting', $request);
+        self::assertStringContainsString('CheckoutPolicyInterface', $useCase);
+        self::assertStringContainsString('CheckoutPolicyInterface::class => EloquentCheckoutPolicy::class', $provider);
     }
 
     public function test_domain_contracts_are_interfaces_and_infrastructure_implements_them(): void

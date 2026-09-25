@@ -2,9 +2,9 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
 use App\Modules\Customer\Domain\Contracts\CustomerNotificationRepositoryInterface;
 use App\Modules\Customer\Domain\Exceptions\CustomerFeatureNotFoundException;
+use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 final class EloquentCustomerNotificationRepository implements CustomerNotificationRepositoryInterface

@@ -1,13 +1,14 @@
 <?php
+
 namespace Tests\Feature;
 
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Catalog\Infrastructure\Models\Attribute;
 use App\Modules\Catalog\Infrastructure\Models\AttributeValue;
 use App\Modules\Catalog\Infrastructure\Models\Brand;
 use App\Modules\Catalog\Infrastructure\Models\Category;
 use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
-use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

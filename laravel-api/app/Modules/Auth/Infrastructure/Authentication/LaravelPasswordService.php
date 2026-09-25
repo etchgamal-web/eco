@@ -13,7 +13,13 @@ final class LaravelPasswordService implements PasswordServiceInterface
         return Hash::check($plain, $hashed);
     }
 
-    public function sendResetLink(array $credentials): string { return (string) Password::sendResetLink($credentials); }
+    public function sendResetLink(array $credentials): string
+    {
+        return (string) Password::sendResetLink($credentials);
+    }
 
-    public function reset(array $credentials, callable $callback): string { return (string) Password::reset($credentials, $callback); }
+    public function reset(array $credentials, callable $callback): string
+    {
+        return (string) Password::reset($credentials, $callback);
+    }
 }

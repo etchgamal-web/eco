@@ -2,8 +2,8 @@
 
 namespace App\Modules\Payment\Infrastructure\Persistence;
 
-use App\Modules\Payment\Infrastructure\Models\PaymentWebhookEvent;
 use App\Modules\Payment\Domain\Contracts\PaymentWebhookEventRepositoryInterface;
+use App\Modules\Payment\Infrastructure\Models\PaymentWebhookEvent;
 
 final class EloquentPaymentWebhookEventRepository implements PaymentWebhookEventRepositoryInterface
 {

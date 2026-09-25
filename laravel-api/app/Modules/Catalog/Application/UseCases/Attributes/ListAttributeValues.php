@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Modules\Catalog\Application\UseCases\Attributes;
 
 use App\Modules\Catalog\Domain\Contracts\AttributeRepositoryInterface;

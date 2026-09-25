@@ -1,11 +1,9 @@
 <?php
 
 namespace App\Modules\Payment\Infrastructure\Models;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
+
 use App\Modules\Auth\Infrastructure\Models\User;
-
-
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,6 +29,7 @@ class Payment extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
     public function operations(): HasMany
     {
         return $this->hasMany(PaymentOperation::class);

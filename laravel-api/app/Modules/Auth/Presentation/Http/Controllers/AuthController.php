@@ -3,21 +3,21 @@
 namespace App\Modules\Auth\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Auth\Domain\ValueObjects\ChangePasswordData;
-use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
 use App\Modules\Auth\Application\UseCases\ChangePassword;
+use App\Modules\Auth\Application\UseCases\ConfirmPasswordReset;
 use App\Modules\Auth\Application\UseCases\GetCurrentUser;
 use App\Modules\Auth\Application\UseCases\LoginUser;
 use App\Modules\Auth\Application\UseCases\LogoutUser;
 use App\Modules\Auth\Application\UseCases\RegisterUser;
 use App\Modules\Auth\Application\UseCases\RequestPasswordReset;
-use App\Modules\Auth\Application\UseCases\ConfirmPasswordReset;
+use App\Modules\Auth\Domain\ValueObjects\ChangePasswordData;
+use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
 use App\Modules\Auth\Presentation\Http\Requests\AuthRequest;
 use App\Modules\Auth\Presentation\Http\Requests\ChangePasswordRequest;
 use App\Modules\Auth\Presentation\Http\Requests\LoginRequest;
-use App\Modules\Auth\Presentation\Http\Requests\RegisterRequest;
-use App\Modules\Auth\Presentation\Http\Requests\PasswordResetRequest;
 use App\Modules\Auth\Presentation\Http\Requests\PasswordResetConfirmRequest;
+use App\Modules\Auth\Presentation\Http\Requests\PasswordResetRequest;
+use App\Modules\Auth\Presentation\Http\Requests\RegisterRequest;
 use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
@@ -63,6 +63,7 @@ class AuthController extends Controller
     public function forgotPassword(PasswordResetRequest $request, RequestPasswordReset $useCase): JsonResponse
     {
         $useCase->execute((string) $request->validated('email'));
+
         return response()->json(['message' => 'If the account exists, a password reset link has been sent.']);
     }
 

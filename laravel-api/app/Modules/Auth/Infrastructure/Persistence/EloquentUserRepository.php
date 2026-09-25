@@ -2,10 +2,10 @@
 
 namespace App\Modules\Auth\Infrastructure\Persistence;
 
-use App\Modules\Auth\Infrastructure\Models\User;
-use App\Modules\Auth\Infrastructure\Models\Role;
-use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
 use App\Modules\Auth\Domain\Contracts\UserRepositoryInterface;
+use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 final class EloquentUserRepository implements UserRepositoryInterface

@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use App\Modules\AI\Domain\Contracts\AiProviderInterface;
 use App\Modules\AI\Domain\Exceptions\AiAllProvidersFailedException;
 use App\Modules\AI\Domain\Exceptions\AiConfigurationException;
 use App\Modules\AI\Domain\Exceptions\AiResponseException;
@@ -32,7 +31,7 @@ class AiProviderFailureTest extends TestCase
         config(['services.ai.providers.openai' => []]);
 
         $this->expectException(AiConfigurationException::class);
-        (new OpenAiProvider())->generate($this->request());
+        (new OpenAiProvider)->generate($this->request());
     }
 
     public function test_invalid_json_response_is_typed(): void
@@ -41,7 +40,7 @@ class AiProviderFailureTest extends TestCase
         Http::fake(['https://ai.test/*' => Http::response(['choices' => [['message' => ['content' => 'not-json']]]], 200)]);
 
         $this->expectException(AiResponseException::class);
-        (new OpenAiProvider())->generate($this->request());
+        (new OpenAiProvider)->generate($this->request());
     }
 
     public function test_gateway_reports_exhausted_fallback_without_provider_details(): void
@@ -49,7 +48,7 @@ class AiProviderFailureTest extends TestCase
         config(['services.ai.provider_order' => ['openai', 'groq'], 'services.ai.model' => 'test-model']);
         $settings = Mockery::mock(SettingsRepositoryInterface::class);
         $settings->shouldReceive('getByGroup')->with('ai')->once()->andReturn(collect());
-        $gateway = new AiGateway($settings, new GeminiProvider(), new OpenAiProvider(), new GroqProvider(), new OpenRouterProvider());
+        $gateway = new AiGateway($settings, new GeminiProvider, new OpenAiProvider, new GroqProvider, new OpenRouterProvider);
 
         try {
             $gateway->generate($this->request());

@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Modules\Payment\Infrastructure\Models;
-use App\Modules\Payment\Infrastructure\Models\Payment;
-
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

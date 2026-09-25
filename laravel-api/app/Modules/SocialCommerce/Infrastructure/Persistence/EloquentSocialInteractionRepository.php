@@ -2,11 +2,11 @@
 
 namespace App\Modules\SocialCommerce\Infrastructure\Persistence;
 
+use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialInteraction;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialMessage;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialWebhookEvent;
-use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 
 final class EloquentSocialInteractionRepository implements SocialInteractionRepositoryInterface
 {

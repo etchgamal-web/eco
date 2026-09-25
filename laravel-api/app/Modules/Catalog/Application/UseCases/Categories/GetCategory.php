@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Modules\Catalog\Application\UseCases\Categories;
 
 use App\Modules\Catalog\Domain\Contracts\CategoryRepositoryInterface;

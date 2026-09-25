@@ -3,8 +3,8 @@
 namespace App\Modules\AI\Infrastructure\Providers;
 
 use App\Modules\AI\Domain\Contracts\AiProviderInterface;
-use App\Modules\AI\Domain\Exceptions\AiProviderException;
 use App\Modules\AI\Domain\Exceptions\AiConfigurationException;
+use App\Modules\AI\Domain\Exceptions\AiProviderException;
 use App\Modules\AI\Domain\Exceptions\AiResponseException;
 use App\Modules\AI\Domain\ValueObjects\AiRequest;
 use App\Modules\AI\Domain\ValueObjects\AiResponse;

@@ -2,11 +2,14 @@
 
 namespace App\Modules\Promotion\Infrastructure\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 
 class CouponUsage extends Model
 {
     protected $fillable = ['coupon_id', 'user_id', 'order_id', 'discount_amount'];
-    protected function casts(): array { return ['discount_amount' => 'integer']; }
+
+    protected function casts(): array
+    {
+        return ['discount_amount' => 'integer'];
+    }
 }

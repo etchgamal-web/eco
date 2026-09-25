@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Modules\Catalog\Application\UseCases\Brands;
 
 use App\Modules\Catalog\Domain\Contracts\BrandRepositoryInterface;

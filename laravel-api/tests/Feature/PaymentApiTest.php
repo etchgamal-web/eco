@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Payment\Infrastructure\Models\Payment;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

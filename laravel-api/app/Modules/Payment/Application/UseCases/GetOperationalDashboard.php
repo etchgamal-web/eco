@@ -6,9 +6,7 @@ use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
 
 final class GetOperationalDashboard
 {
-    public function __construct(private readonly OperationalDashboardReaderInterface $reader)
-    {
-    }
+    public function __construct(private readonly OperationalDashboardReaderInterface $reader) {}
 
     public function execute(): array
     {

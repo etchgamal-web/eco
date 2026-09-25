@@ -1,9 +1,6 @@
 <?php
 
 namespace App\Modules\Auth\Infrastructure\Models;
-use App\Modules\Auth\Infrastructure\Models\Role;
-use App\Modules\Auth\Infrastructure\Models\User;
-
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -18,7 +18,7 @@ Route::get('/ready', function () {
     try {
         DB::select('select 1');
         $checks['database'] = true;
-    } catch (\Throwable) {
+    } catch (Throwable) {
         // Keep the response generic; dependency details belong in server logs.
     }
 
@@ -27,7 +27,7 @@ Route::get('/ready', function () {
         Cache::put($key, true, 5);
         $checks['cache'] = Cache::get($key) === true;
         Cache::forget($key);
-    } catch (\Throwable) {
+    } catch (Throwable) {
         // Keep the response generic; dependency details belong in server logs.
     }
 

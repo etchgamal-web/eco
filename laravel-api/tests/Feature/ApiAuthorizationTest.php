@@ -1,14 +1,15 @@
 <?php
+
 namespace Tests\Feature;
 
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Catalog\Infrastructure\Models\Attribute;
 use App\Modules\Catalog\Infrastructure\Models\AttributeValue;
 use App\Modules\Catalog\Infrastructure\Models\Brand;
 use App\Modules\Catalog\Infrastructure\Models\Category;
 use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
-use App\Modules\Auth\Infrastructure\Models\Role;
-use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
@@ -19,11 +20,17 @@ class ApiAuthorizationTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Product $product;
+
     private ProductVariant $variant;
+
     private Attribute $attribute;
+
     private AttributeValue $value;
+
     private Brand $brand;
+
     private Category $category;
 
     protected function setUp(): void

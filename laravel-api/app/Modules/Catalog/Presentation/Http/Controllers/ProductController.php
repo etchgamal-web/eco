@@ -1,21 +1,24 @@
 <?php
+
 namespace App\Modules\Catalog\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Catalog\Domain\ValueObjects\ProductData;
-use App\Modules\Catalog\Domain\ValueObjects\ProductVariantData;
-use App\Modules\Catalog\Domain\ValueObjects\ProductListCriteria;
 use App\Modules\Catalog\Application\UseCases\Products\CreateProduct;
 use App\Modules\Catalog\Application\UseCases\Products\CreateProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\DeleteProduct;
 use App\Modules\Catalog\Application\UseCases\Products\DeleteProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\GetProduct;
 use App\Modules\Catalog\Application\UseCases\Products\GetProductVariant;
+use App\Modules\Catalog\Application\UseCases\Products\ImportProducts;
 use App\Modules\Catalog\Application\UseCases\Products\ListProducts;
 use App\Modules\Catalog\Application\UseCases\Products\ListProductVariants;
 use App\Modules\Catalog\Application\UseCases\Products\UpdateProduct;
 use App\Modules\Catalog\Application\UseCases\Products\UpdateProductVariant;
+use App\Modules\Catalog\Domain\ValueObjects\ProductData;
+use App\Modules\Catalog\Domain\ValueObjects\ProductListCriteria;
+use App\Modules\Catalog\Domain\ValueObjects\ProductVariantData;
 use App\Modules\Catalog\Presentation\Http\Requests\CatalogActionRequest;
+use App\Modules\Catalog\Presentation\Http\Requests\ImportProductsRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\StoreProductRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\StoreProductVariantRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\UpdateProductRequest;
@@ -28,12 +31,20 @@ class ProductController extends Controller
     {
         $filters = $request->validated();
         $products = $filters === [] ? $useCase->execute() : $useCase->execute(ProductListCriteria::fromArray($filters));
+
         return response()->json(['data' => $products]);
     }
 
     public function store(StoreProductRequest $request, CreateProduct $useCase): JsonResponse
     {
         return response()->json(['data' => $useCase->execute(ProductData::fromArray($request->validated()))], 201);
+    }
+
+    public function import(ImportProductsRequest $request, ImportProducts $useCase): JsonResponse
+    {
+        $file = $request->file('file');
+
+        return response()->json(['data' => $useCase->execute((string) $file->getRealPath(), $file->getClientOriginalExtension())], 201);
     }
 
     public function show(CatalogActionRequest $request, int $product, GetProduct $useCase): JsonResponse

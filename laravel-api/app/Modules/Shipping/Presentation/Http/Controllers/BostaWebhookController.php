@@ -3,8 +3,8 @@
 namespace App\Modules\Shipping\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Shipping\Application\UseCases\ProcessBostaWebhook;
 use App\Modules\Shipping\Application\UseCases\AuthenticateShippingWebhook;
+use App\Modules\Shipping\Application\UseCases\ProcessBostaWebhook;
 use App\Modules\Shipping\Presentation\Http\Requests\WebhookRequest;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +18,7 @@ final class BostaWebhookController extends Controller
         }
 
         $process->execute($request->all());
+
         return response()->json(['received' => true]);
     }
 }

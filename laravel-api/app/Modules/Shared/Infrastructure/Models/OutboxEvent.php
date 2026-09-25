@@ -2,7 +2,6 @@
 
 namespace App\Modules\Shared\Infrastructure\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 
 class OutboxEvent extends Model

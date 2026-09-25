@@ -2,8 +2,8 @@
 
 namespace App\Modules\Shared\Infrastructure\Persistence;
 
-use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
 
 final class EloquentOutboxEventRepository implements OutboxEventRepositoryInterface
 {
@@ -65,7 +65,9 @@ final class EloquentOutboxEventRepository implements OutboxEventRepositoryInterf
             ->where('deduplication_key', $deduplicationKey)
             ->whereIn('status', ['pending', 'processing'])
             ->first();
-        if ($event === null) return false;
+        if ($event === null) {
+            return false;
+        }
 
         $attempts = (int) $event->attempt_count + 1;
         $exhausted = $attempts >= (int) config('outbox.max_attempts', 5);

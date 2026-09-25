@@ -1,9 +1,8 @@
 <?php
+
 namespace App\Modules\Catalog\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Catalog\Domain\ValueObjects\AttributeData;
-use App\Modules\Catalog\Domain\ValueObjects\AttributeValueData;
 use App\Modules\Catalog\Application\UseCases\Attributes\CreateAttribute;
 use App\Modules\Catalog\Application\UseCases\Attributes\CreateAttributeValue;
 use App\Modules\Catalog\Application\UseCases\Attributes\DeleteAttribute;
@@ -14,6 +13,8 @@ use App\Modules\Catalog\Application\UseCases\Attributes\ListAttributes;
 use App\Modules\Catalog\Application\UseCases\Attributes\ListAttributeValues;
 use App\Modules\Catalog\Application\UseCases\Attributes\UpdateAttribute;
 use App\Modules\Catalog\Application\UseCases\Attributes\UpdateAttributeValue;
+use App\Modules\Catalog\Domain\ValueObjects\AttributeData;
+use App\Modules\Catalog\Domain\ValueObjects\AttributeValueData;
 use App\Modules\Catalog\Presentation\Http\Requests\CatalogActionRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\StoreAttributeRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\StoreAttributeValueRequest;

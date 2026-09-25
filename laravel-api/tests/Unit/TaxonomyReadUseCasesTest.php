@@ -1,14 +1,15 @@
 <?php
+
 namespace Tests\Unit;
 
-use App\Modules\Catalog\Infrastructure\Models\Brand;
-use App\Modules\Catalog\Infrastructure\Models\Category;
 use App\Modules\Catalog\Application\UseCases\Brands\GetBrand;
 use App\Modules\Catalog\Application\UseCases\Brands\ListBrands;
 use App\Modules\Catalog\Application\UseCases\Categories\GetCategory;
 use App\Modules\Catalog\Application\UseCases\Categories\ListCategories;
 use App\Modules\Catalog\Domain\Contracts\BrandRepositoryInterface;
 use App\Modules\Catalog\Domain\Contracts\CategoryRepositoryInterface;
+use App\Modules\Catalog\Infrastructure\Models\Brand;
+use App\Modules\Catalog\Infrastructure\Models\Category;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 

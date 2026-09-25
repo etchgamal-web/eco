@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Payment\Presentation\Http\Controllers\PaymobWebhookController;
 use App\Modules\Payment\Presentation\Http\Controllers\KashierWebhookController;
+use App\Modules\Payment\Presentation\Http\Controllers\PaymobWebhookController;
 use App\Modules\Shipping\Presentation\Http\Controllers\BostaWebhookController;
 use Illuminate\Support\Facades\Route;
 

@@ -2,11 +2,11 @@
 
 namespace App\Modules\Shipping\Application\UseCases;
 
-use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
+use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
+use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingWebhookEventRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
-use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 
 final class ProcessBostaWebhook
 {
@@ -15,9 +15,7 @@ final class ProcessBostaWebhook
         private readonly ShipmentOperationRepositoryInterface $operations,
         private readonly ShippingWebhookEventRepositoryInterface $events,
         private readonly OrderRepositoryInterface $orders,
-    )
-    {
-    }
+    ) {}
 
     public function execute(array $payload): ?object
     {
@@ -59,9 +57,10 @@ final class ProcessBostaWebhook
         $rank = ['pending' => 0, 'processing' => 0, 'provider_created' => 1, 'picked_up' => 2, 'in_transit' => 3, 'out_for_delivery' => 4, 'delivered' => 5, 'cancelled' => 5];
         if (($rank[$shipment->status] ?? 0) > ($rank[$status] ?? 0) || (in_array($shipment->status, ['delivered', 'cancelled'], true) && $shipment->status !== $status)) {
             $this->events->markProcessed($event);
+
             return $shipment;
         }
-        $note = (string) ($payload['exceptionReason'] ?? 'Bosta state ' . ($payload['state'] ?? 'unknown'));
+        $note = (string) ($payload['exceptionReason'] ?? 'Bosta state '.($payload['state'] ?? 'unknown'));
         try {
             if ($reference !== '' && $shipment->creation_status !== 'created') {
                 $shipment = $this->shipments->updateProviderData($shipment, [
@@ -83,6 +82,7 @@ final class ProcessBostaWebhook
                 }
             }
             $this->events->markProcessed($event);
+
             return $updated;
         } catch (\Throwable $exception) {
             $this->events->markFailed($event, $exception->getMessage());

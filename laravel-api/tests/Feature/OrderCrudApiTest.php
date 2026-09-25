@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
-use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
-use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('customer_orders', function (Blueprint $table): void {
@@ -13,6 +14,7 @@ return new class extends Migration {
             $table->foreignId('tax_rule_id')->nullable()->after('tax_rate')->constrained('tax_rules')->nullOnDelete();
         });
     }
+
     public function down(): void
     {
         Schema::table('customer_orders', function (Blueprint $table): void {

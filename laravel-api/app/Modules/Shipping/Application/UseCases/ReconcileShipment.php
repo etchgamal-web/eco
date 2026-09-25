@@ -4,15 +4,13 @@ namespace App\Modules\Shipping\Application\UseCases;
 
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
-use App\Modules\Shipping\Domain\Exceptions\ShippingException;
 
 final class ReconcileShipment
 {
     public function __construct(
         private readonly ShipmentRepositoryInterface $shipments,
         private readonly ShippingProviderInterface $providers,
-    ) {
-    }
+    ) {}
 
     public function execute(int $shipmentId): object
     {
@@ -37,6 +35,7 @@ final class ReconcileShipment
         if ($status === $shipment->status) {
             return $shipment;
         }
-        return $this->shipments->updateProviderStatus($shipment, $status, 'Carrier reconciliation state ' . (string) $state);
+
+        return $this->shipments->updateProviderStatus($shipment, $status, 'Carrier reconciliation state '.(string) $state);
     }
 }

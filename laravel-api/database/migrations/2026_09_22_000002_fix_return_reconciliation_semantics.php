@@ -1,8 +1,11 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-return new class extends Migration {
+
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('shipping_settlements', function (Blueprint $table): void {
@@ -24,11 +27,19 @@ return new class extends Migration {
             $table->bigInteger('customer_refund_difference')->default(0)->after('actual_customer_refund');
         });
     }
+
     public function down(): void
     {
-        Schema::table('shipping_settlement_items', function (Blueprint $table): void { $table->dropColumn(['expected_customer_refund','actual_customer_refund','customer_refund_difference']); });
-        Schema::table('shipping_settlements', function (Blueprint $table): void { $table->dropColumn(['expected_customer_refund','actual_customer_refund','customer_refund_difference']); });
-        Schema::table('order_returns', function (Blueprint $table): void { $table->dropForeign(['shipment_id']); $table->dropColumn(['shipment_id','return_shipping_fee']); });
+        Schema::table('shipping_settlement_items', function (Blueprint $table): void {
+            $table->dropColumn(['expected_customer_refund', 'actual_customer_refund', 'customer_refund_difference']);
+        });
+        Schema::table('shipping_settlements', function (Blueprint $table): void {
+            $table->dropColumn(['expected_customer_refund', 'actual_customer_refund', 'customer_refund_difference']);
+        });
+        Schema::table('order_returns', function (Blueprint $table): void {
+            $table->dropForeign(['shipment_id']);
+            $table->dropColumn(['shipment_id', 'return_shipping_fee']);
+        });
         Schema::table('shipping_settlements', function (Blueprint $table): void {
             $table->date('period_from')->nullable(false)->change();
             $table->date('period_to')->nullable(false)->change();

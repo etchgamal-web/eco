@@ -2,9 +2,9 @@
 
 namespace App\Modules\SocialCommerce\Infrastructure\Persistence;
 
+use App\Modules\SocialCommerce\Domain\Contracts\AutomationRuleRepositoryInterface;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialAutomationExecution;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialAutomationRule;
-use App\Modules\SocialCommerce\Domain\Contracts\AutomationRuleRepositoryInterface;
 
 final class EloquentAutomationRuleRepository implements AutomationRuleRepositoryInterface
 {

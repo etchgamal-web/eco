@@ -13,6 +13,7 @@ final readonly class SettingsData
         foreach ($settings as $setting) {
             $items[] = SettingData::fromModel($setting);
         }
+
         return new self($items);
     }
 

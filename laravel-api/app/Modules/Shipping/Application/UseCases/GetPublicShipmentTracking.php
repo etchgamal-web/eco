@@ -11,7 +11,10 @@ final class GetPublicShipmentTracking
     public function execute(string $token): ?array
     {
         $shipment = $this->shipments->findByPublicTrackingToken($token);
-        if ($shipment === null) return null;
+        if ($shipment === null) {
+            return null;
+        }
+
         return [
             'status' => $shipment->status,
             'tracking_number' => $shipment->tracking_number,

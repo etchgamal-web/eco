@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
-use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;
+use App\Modules\Catalog\Infrastructure\Models\Product;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Modules\Catalog\Application\UseCases\Products;
 
 use App\Modules\Catalog\Domain\Contracts\ProductRepositoryInterface;
 use App\Modules\Catalog\Domain\ValueObjects\ProductListCriteria;
-use Illuminate\Support\Collection;
 
 final class ListProducts
 {

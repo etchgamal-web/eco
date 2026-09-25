@@ -1,13 +1,14 @@
 <?php
+
 namespace App\Modules\Catalog\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Catalog\Domain\ValueObjects\BrandData;
 use App\Modules\Catalog\Application\UseCases\Brands\CreateBrand;
 use App\Modules\Catalog\Application\UseCases\Brands\DeleteBrand;
 use App\Modules\Catalog\Application\UseCases\Brands\GetBrand;
 use App\Modules\Catalog\Application\UseCases\Brands\ListBrands;
 use App\Modules\Catalog\Application\UseCases\Brands\UpdateBrand;
+use App\Modules\Catalog\Domain\ValueObjects\BrandData;
 use App\Modules\Catalog\Presentation\Http\Requests\CatalogActionRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\StoreBrandRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\UpdateBrandRequest;

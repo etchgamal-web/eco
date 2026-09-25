@@ -2,8 +2,8 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Modules\Customer\Infrastructure\Models\CustomerPreference;
 use App\Modules\Customer\Domain\Contracts\CustomerPreferencesRepositoryInterface;
+use App\Modules\Customer\Infrastructure\Models\CustomerPreference;
 
 final class EloquentCustomerPreferencesRepository implements CustomerPreferencesRepositoryInterface
 {

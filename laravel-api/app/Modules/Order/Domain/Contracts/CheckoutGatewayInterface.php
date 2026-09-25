@@ -13,5 +13,4 @@ interface CheckoutGatewayInterface
     public function createOrderItems(object $order, array $items): void;
 
     public function recordCouponUsage(string $code, int $userId, int $orderId, int $discount): void;
-
 }

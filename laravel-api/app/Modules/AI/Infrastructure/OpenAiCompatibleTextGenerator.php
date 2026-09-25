@@ -2,9 +2,9 @@
 
 namespace App\Modules\AI\Infrastructure;
 
-use App\Modules\AI\Infrastructure\Models\AiGeneration;
 use App\Modules\AI\Domain\Contracts\AiTextGeneratorInterface;
 use App\Modules\AI\Domain\Exceptions\AiProviderException;
+use App\Modules\AI\Infrastructure\Models\AiGeneration;
 use Illuminate\Support\Facades\Http;
 
 final class OpenAiCompatibleTextGenerator implements AiTextGeneratorInterface

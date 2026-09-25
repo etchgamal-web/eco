@@ -31,4 +31,3 @@ final class OrderStateMachineTest extends TestCase
         OrderStateMachine::assert('confirmed', 'shipped');
     }
 }
-

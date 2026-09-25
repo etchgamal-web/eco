@@ -1,14 +1,9 @@
 <?php
 
 namespace App\Modules\Shipping\Infrastructure\Models;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Shipping\Infrastructure\Models\ShipmentEvent;
-use App\Modules\Shipping\Infrastructure\Models\ShipmentOperation;
-use App\Modules\Shipping\Infrastructure\Models\ShipmentPricingSnapshot;
-use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
+
 use App\Modules\Auth\Infrastructure\Models\User;
-
-
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;

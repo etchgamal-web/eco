@@ -5,6 +5,7 @@ namespace App\Modules\Customer\Infrastructure\Persistence;
 use App\Modules\Customer\Domain\Contracts\CheckoutCustomerContextInterface;
 use App\Modules\Customer\Infrastructure\Models\CustomerAddress;
 use App\Modules\Customer\Infrastructure\Models\CustomerCart;
+use Illuminate\Support\Str;
 
 final class EloquentCheckoutCustomerContext implements CheckoutCustomerContextInterface
 {
@@ -15,7 +16,7 @@ final class EloquentCheckoutCustomerContext implements CheckoutCustomerContextIn
             ->where('user_id', $userId)
             ->firstOrCreate(
                 ['user_id' => $userId],
-                ['last_activity_at' => now(), 'recovery_token' => \Illuminate\Support\Str::random(64)]
+                ['last_activity_at' => now(), 'recovery_token' => Str::random(64)]
             );
     }
 

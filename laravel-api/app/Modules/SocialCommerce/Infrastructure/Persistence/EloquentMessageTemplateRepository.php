@@ -2,8 +2,8 @@
 
 namespace App\Modules\SocialCommerce\Infrastructure\Persistence;
 
-use App\Modules\SocialCommerce\Infrastructure\Models\SocialMessageTemplate;
 use App\Modules\SocialCommerce\Domain\Contracts\MessageTemplateRepositoryInterface;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialMessageTemplate;
 
 final class EloquentMessageTemplateRepository implements MessageTemplateRepositoryInterface
 {
@@ -21,6 +21,7 @@ final class EloquentMessageTemplateRepository implements MessageTemplateReposito
     {
         $template->fill($data);
         $template->save();
+
         return $template;
     }
 

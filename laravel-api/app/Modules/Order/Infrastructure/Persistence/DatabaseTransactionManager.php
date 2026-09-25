@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Modules\Order\Infrastructure\Persistence;
 
 use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
@@ -12,4 +13,3 @@ final class DatabaseTransactionManager implements TransactionManagerInterface
         return DB::transaction($operation);
     }
 }
-

@@ -16,7 +16,7 @@ final class ManageAiSettings
             $out[$s->key] = $s->is_secret ? '********' : $s->getTypedValue();
         }
 
-return $out;
+        return $out;
     }
 
     public function update(array $data): array
@@ -26,6 +26,6 @@ return $out;
             $this->settings->save(new SettingData('ai', $key, $value, $type, 'AI Gateway setting', $key === 'api_key', $key === 'api_key'));
         }
 
-return $this->view();
+        return $this->view();
     }
 }

@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Modules\Order\Infrastructure\Models;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Model;
 use App\Modules\Auth\Infrastructure\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderActivity extends Model
 {

@@ -13,6 +13,7 @@ Route::get('products/{productId}', [ProductController::class, 'show'])->name('pr
 Route::get('products/{productId}/variants', [ProductController::class, 'variants'])->name('products.variants.index');
 Route::get('products/{productId}/variants/{variantId}', [ProductController::class, 'showVariant'])->name('products.variants.show');
 Route::middleware('auth')->group(function (): void {
+    Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
     Route::post('products', [ProductController::class, 'store'])->name('products.store');
     Route::match(['put', 'patch'], 'products/{productId}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('products/{productId}', [ProductController::class, 'destroy'])->name('products.destroy');

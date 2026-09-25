@@ -1,18 +1,15 @@
 <?php
 
 namespace App\Modules\Auth\Infrastructure\Models;
-use App\Modules\Auth\Infrastructure\Models\Permission;
-use App\Modules\Auth\Infrastructure\Models\Role;
-
 
 use Database\Factories\UserFactory;
+use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Contracts\Auth\CanResetPassword;
-use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -29,7 +26,7 @@ use Illuminate\Notifications\Notifiable;
 ])]
 class User extends Authenticatable implements CanResetPassword
 {
-    use HasFactory, Notifiable, CanResetPasswordTrait;
+    use CanResetPasswordTrait, HasFactory, Notifiable;
 
     protected static function newFactory(): Factory
     {

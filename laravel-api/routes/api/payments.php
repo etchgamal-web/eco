@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Payment\Presentation\Http\Controllers\PaymentController;
 use App\Modules\Payment\Presentation\Http\Controllers\OperationalDashboardController;
+use App\Modules\Payment\Presentation\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function (): void {

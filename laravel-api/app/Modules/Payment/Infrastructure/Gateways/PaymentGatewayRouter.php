@@ -23,6 +23,7 @@ final class PaymentGatewayRouter implements PaymentGatewayInterface
                 return true;
             }
         }
+
         return false;
     }
 

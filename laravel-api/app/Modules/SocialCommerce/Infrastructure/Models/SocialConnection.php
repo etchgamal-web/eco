@@ -2,7 +2,6 @@
 
 namespace App\Modules\SocialCommerce\Infrastructure\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 
 class SocialConnection extends Model

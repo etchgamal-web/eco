@@ -5,6 +5,7 @@ namespace App\Modules\Customer\Application\UseCases;
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
 use App\Modules\Customer\Domain\Contracts\AddressRepositoryInterface;
+use App\Modules\Customer\Domain\Exceptions\AddressNotFoundException;
 use App\Modules\Customer\Domain\Exceptions\CustomerFeatureNotFoundException;
 
 final class ManageCustomerAddress
@@ -14,7 +15,10 @@ final class ManageCustomerAddress
     private function user(): object
     {
         $user = $this->auth->user();
-        if (!$user) throw new AuthenticationException('Unauthenticated.');
+        if (! $user) {
+            throw new AuthenticationException('Unauthenticated.');
+        }
+
         return $user;
     }
 
@@ -26,6 +30,7 @@ final class ManageCustomerAddress
     public function update(int $id, array $data): object
     {
         $address = $this->find($id);
+
         return $this->addresses->update($address, $data);
     }
 
@@ -39,7 +44,7 @@ final class ManageCustomerAddress
         try {
             return $this->addresses->findForUser($this->user()->id, $id);
         } catch (\Throwable $exception) {
-            if ($exception instanceof \App\Modules\Customer\Domain\Exceptions\AddressNotFoundException) {
+            if ($exception instanceof AddressNotFoundException) {
                 throw new CustomerFeatureNotFoundException('Address', $id);
             }
             throw $exception;

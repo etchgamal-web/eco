@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Http;
 
 final class PaymobGateway implements PaymentGatewayInterface
 {
-    public function __construct(private readonly PaymentGatewaySettings $settings)
-    {
-    }
+    public function __construct(private readonly PaymentGatewaySettings $settings) {}
 
     public function supports(string $method): bool
     {
@@ -72,7 +70,7 @@ final class PaymobGateway implements PaymentGatewayInterface
             'metadata' => [
                 'provider' => 'paymob',
                 'client_secret' => $clientSecret,
-                'checkout_url' => rtrim((string) config('services.paymob.base_url'), '/') . '/unifiedcheckout/?publicKey=' . urlencode($publicKey) . '&clientSecret=' . urlencode($clientSecret),
+                'checkout_url' => rtrim((string) config('services.paymob.base_url'), '/').'/unifiedcheckout/?publicKey='.urlencode($publicKey).'&clientSecret='.urlencode($clientSecret),
                 'idempotency_key' => $idempotencyKey,
             ],
         ];
@@ -90,8 +88,9 @@ final class PaymobGateway implements PaymentGatewayInterface
             throw new PaymentException('Paymob reconciliation reference is missing.');
         }
         $response = $this->client((string) $this->settings->value('paymob', 'secret_key', config('services.paymob.secret_key')))
-            ->get('/api/acceptance/transactions/' . rawurlencode($reference))->throw()->json();
+            ->get('/api/acceptance/transactions/'.rawurlencode($reference))->throw()->json();
         $status = (bool) ($response['success'] ?? false) ? 'confirmed' : ((bool) ($response['pending'] ?? false) ? 'pending' : 'failed');
+
         return ['status' => $status, 'provider_reference' => $reference, 'metadata' => ['provider' => 'paymob', 'reconciliation' => $response]];
     }
 

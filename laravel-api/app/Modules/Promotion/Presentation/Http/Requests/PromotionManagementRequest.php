@@ -1,12 +1,20 @@
 <?php
+
 namespace App\Modules\Promotion\Presentation\Http\Requests;
+
 use App\Modules\Auth\Presentation\Http\Concerns\AuthorizesRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+
 final class PromotionManagementRequest extends FormRequest
 {
     use AuthorizesRequest;
-    public function authorize(): bool { return $this->authorizePermission(str_ends_with((string) $this->route()?->getName(), '.index') || str_ends_with((string) $this->route()?->getName(), '.show') ? 'promotions.view' : (str_ends_with((string) $this->route()?->getName(), '.destroy') ? 'promotions.delete' : (str_ends_with((string) $this->route()?->getName(), '.update') ? 'promotions.update' : 'promotions.create'))); }
+
+    public function authorize(): bool
+    {
+        return $this->authorizePermission(str_ends_with((string) $this->route()?->getName(), '.index') || str_ends_with((string) $this->route()?->getName(), '.show') ? 'promotions.view' : (str_ends_with((string) $this->route()?->getName(), '.destroy') ? 'promotions.delete' : (str_ends_with((string) $this->route()?->getName(), '.update') ? 'promotions.update' : 'promotions.create')));
+    }
+
     public function rules(): array
     {
         $required = $this->isMethod('post') || $this->isMethod('put') ? 'required' : 'sometimes';

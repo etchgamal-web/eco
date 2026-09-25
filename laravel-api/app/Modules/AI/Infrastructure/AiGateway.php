@@ -2,14 +2,14 @@
 
 namespace App\Modules\AI\Infrastructure;
 
-use App\Modules\AI\Infrastructure\Models\AiGeneration;
 use App\Modules\AI\Domain\Contracts\AiGatewayInterface;
 use App\Modules\AI\Domain\Contracts\AiProviderInterface;
 use App\Modules\AI\Domain\Contracts\AiTextGeneratorInterface;
-use App\Modules\AI\Domain\Exceptions\AiProviderException;
 use App\Modules\AI\Domain\Exceptions\AiAllProvidersFailedException;
+use App\Modules\AI\Domain\Exceptions\AiProviderException;
 use App\Modules\AI\Domain\ValueObjects\AiRequest;
 use App\Modules\AI\Domain\ValueObjects\AiResponse;
+use App\Modules\AI\Infrastructure\Models\AiGeneration;
 use App\Modules\AI\Infrastructure\Providers\GeminiProvider;
 use App\Modules\AI\Infrastructure\Providers\GroqProvider;
 use App\Modules\AI\Infrastructure\Providers\OpenAiProvider;

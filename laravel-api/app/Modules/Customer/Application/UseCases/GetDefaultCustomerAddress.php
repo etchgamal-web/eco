@@ -14,9 +14,14 @@ final class GetDefaultCustomerAddress
     public function execute(): object
     {
         $user = $this->auth->user();
-        if (!$user) throw new AuthenticationException('Unauthenticated.');
+        if (! $user) {
+            throw new AuthenticationException('Unauthenticated.');
+        }
         $address = $this->addresses->defaultForUser($user->id);
-        if (!$address) throw new CustomerFeatureNotFoundException('Default address', 0);
+        if (! $address) {
+            throw new CustomerFeatureNotFoundException('Default address', 0);
+        }
+
         return $address;
     }
 }

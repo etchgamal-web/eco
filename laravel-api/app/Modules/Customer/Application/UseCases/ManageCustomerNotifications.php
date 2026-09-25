@@ -11,8 +11,7 @@ final class ManageCustomerNotifications
     public function __construct(
         private readonly AuthenticationServiceInterface $auth,
         private readonly CustomerNotificationRepositoryInterface $repo,
-    ) {
-    }
+    ) {}
 
     private function id(): int
     {

@@ -2,11 +2,11 @@
 
 namespace App\Modules\Payment\Infrastructure\Persistence;
 
-use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
+use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
 use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Payment\Infrastructure\Models\PaymentWebhookEvent;
 use App\Modules\Payment\Infrastructure\Models\ProviderCircuitBreaker;
-use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
+use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentOperationalDashboardReader implements OperationalDashboardReaderInterface

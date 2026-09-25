@@ -1,18 +1,14 @@
 <?php
 
 namespace App\Modules\Order\Infrastructure\Models;
-use App\Modules\Order\Infrastructure\Models\CustomerOrderItem;
-use App\Modules\Order\Infrastructure\Models\OrderActivity;
-use App\Modules\Order\Infrastructure\Models\OrderReview;
 
+use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Payment\Infrastructure\Models\Payment;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Modules\Auth\Infrastructure\Models\User;
-use App\Modules\Payment\Infrastructure\Models\Payment;
-use App\Modules\Shipping\Infrastructure\Models\Shipment;
-use App\Modules\Order\Infrastructure\Models\OrderReturn;
 
 class CustomerOrder extends Model
 {

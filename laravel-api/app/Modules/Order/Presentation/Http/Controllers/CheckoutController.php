@@ -3,8 +3,8 @@
 namespace App\Modules\Order\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Order\Domain\ValueObjects\CheckoutData;
 use App\Modules\Order\Application\UseCases\Checkout;
+use App\Modules\Order\Domain\ValueObjects\CheckoutData;
 use App\Modules\Order\Presentation\Http\Requests\CheckoutRequest;
 use Illuminate\Http\JsonResponse;
 

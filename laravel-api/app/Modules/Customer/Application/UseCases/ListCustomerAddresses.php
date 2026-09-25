@@ -13,7 +13,10 @@ final class ListCustomerAddresses
     public function execute(): iterable
     {
         $user = $this->auth->user();
-        if (!$user) throw new AuthenticationException('Unauthenticated.');
+        if (! $user) {
+            throw new AuthenticationException('Unauthenticated.');
+        }
+
         return $this->addresses->listForUser($user->id);
     }
 }

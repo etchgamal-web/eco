@@ -2,14 +2,12 @@
 
 namespace App\Modules\Payment\Infrastructure\Webhooks;
 
-use App\Modules\Payment\Infrastructure\Configuration\PaymentGatewaySettings;
 use App\Modules\Payment\Domain\Contracts\PaymobWebhookVerifierInterface;
+use App\Modules\Payment\Infrastructure\Configuration\PaymentGatewaySettings;
 
 final class PaymobWebhookVerifier implements PaymobWebhookVerifierInterface
 {
-    public function __construct(private readonly PaymentGatewaySettings $settings)
-    {
-    }
+    public function __construct(private readonly PaymentGatewaySettings $settings) {}
 
     public function verify(array $payload, string $providedHmac): bool
     {

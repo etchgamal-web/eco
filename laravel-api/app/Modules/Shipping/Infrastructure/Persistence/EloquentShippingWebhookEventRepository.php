@@ -2,8 +2,8 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Modules\Shipping\Infrastructure\Models\ShippingWebhookEvent;
 use App\Modules\Shipping\Domain\Contracts\ShippingWebhookEventRepositoryInterface;
+use App\Modules\Shipping\Infrastructure\Models\ShippingWebhookEvent;
 use Illuminate\Database\QueryException;
 
 final class EloquentShippingWebhookEventRepository implements ShippingWebhookEventRepositoryInterface

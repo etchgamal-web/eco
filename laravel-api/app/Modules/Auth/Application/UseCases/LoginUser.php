@@ -7,9 +7,7 @@ use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
 
 final class LoginUser
 {
-    public function __construct(private readonly AuthenticationServiceInterface $authentication)
-    {
-    }
+    public function __construct(private readonly AuthenticationServiceInterface $authentication) {}
 
     public function execute(string $identifier, string $password, bool $remember = false): object
     {

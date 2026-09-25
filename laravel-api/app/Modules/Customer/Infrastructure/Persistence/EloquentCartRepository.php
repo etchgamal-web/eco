@@ -2,13 +2,13 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Modules\Customer\Infrastructure\Models\CustomerCart;
-use App\Modules\Customer\Infrastructure\Models\CustomerCartItem;
 use App\Modules\Catalog\Domain\Contracts\ProductReaderInterface;
 use App\Modules\Customer\Domain\Contracts\CartRepositoryInterface;
 use App\Modules\Customer\Domain\Exceptions\CartItemNotFoundException;
 use App\Modules\Customer\Domain\Exceptions\CartItemOutOfStockException;
 use App\Modules\Customer\Domain\Exceptions\ProductNotPurchasableException;
+use App\Modules\Customer\Infrastructure\Models\CustomerCart;
+use App\Modules\Customer\Infrastructure\Models\CustomerCartItem;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -26,7 +26,10 @@ final class EloquentCartRepository implements CartRepositoryInterface
             ['user_id' => $userId],
             ['last_activity_at' => now(), 'recovery_token' => Str::random(64)]
         );
-        if ($cart->recovery_token === null) $cart->update(['recovery_token' => Str::random(64)]);
+        if ($cart->recovery_token === null) {
+            $cart->update(['recovery_token' => Str::random(64)]);
+        }
+
         return $this->withTotals($cart->fresh(['items.product', 'items.variant']));
     }
 
@@ -34,11 +37,15 @@ final class EloquentCartRepository implements CartRepositoryInterface
     {
         return DB::transaction(function () use ($userId, $productId, $variantId, $quantity): CustomerCart {
             $product = $this->products->findForCheckout($productId);
-            if ($product === null || $product->status !== 'active') throw new ProductNotPurchasableException('Product is not available for purchase.');
+            if ($product === null || $product->status !== 'active') {
+                throw new ProductNotPurchasableException('Product is not available for purchase.');
+            }
             $variant = null;
             if ($variantId !== null) {
                 $variant = $this->products->findVariantForProduct($productId, $variantId);
-                if ($variant === null || $variant->status !== 'active') throw new ProductNotPurchasableException('Product variant is not available for purchase.');
+                if ($variant === null || $variant->status !== 'active') {
+                    throw new ProductNotPurchasableException('Product variant is not available for purchase.');
+                }
             } elseif ($product->type === 'variable') {
                 throw new ProductNotPurchasableException('A product variant is required.');
             }
@@ -46,9 +53,12 @@ final class EloquentCartRepository implements CartRepositoryInterface
             $item = CustomerCartItem::query()->where('cart_id', $cart->id)->where('product_id', $productId)->where('variant_id', $variantId)->first();
             $newQuantity = ($item?->quantity ?? 0) + $quantity;
             $this->assertAvailable($productId, $variantId, $newQuantity, $product->name);
-            if ($item === null) $item = new CustomerCartItem(['cart_id' => $cart->id, 'product_id' => $productId, 'variant_id' => $variantId]);
+            if ($item === null) {
+                $item = new CustomerCartItem(['cart_id' => $cart->id, 'product_id' => $productId, 'variant_id' => $variantId]);
+            }
             $item->quantity = $newQuantity;
             $item->save();
+
             return $this->touch($cart);
         });
     }
@@ -57,9 +67,12 @@ final class EloquentCartRepository implements CartRepositoryInterface
     {
         $cart = $this->get($userId);
         $item = CustomerCartItem::query()->where('cart_id', $cart->id)->where('product_id', $productId)->where('variant_id', $variantId)->first();
-        if ($item === null) throw new CartItemNotFoundException('Cart item not found.');
+        if ($item === null) {
+            throw new CartItemNotFoundException('Cart item not found.');
+        }
         $this->assertAvailable($productId, $variantId, $quantity, $item->product?->name ?? 'product');
         $item->update(['quantity' => $quantity]);
+
         return $this->touch($cart);
     }
 
@@ -67,7 +80,10 @@ final class EloquentCartRepository implements CartRepositoryInterface
     {
         $cart = $this->get($userId);
         $deleted = CustomerCartItem::query()->where('cart_id', $cart->id)->where('product_id', $productId)->where('variant_id', $variantId)->delete();
-        if ($deleted === 0) throw new CartItemNotFoundException('Cart item not found.');
+        if ($deleted === 0) {
+            throw new CartItemNotFoundException('Cart item not found.');
+        }
+
         return $this->touch($cart);
     }
 
@@ -75,17 +91,21 @@ final class EloquentCartRepository implements CartRepositoryInterface
     {
         $cart = $this->get($userId);
         $cart->items()->delete();
+
         return $this->touch($cart);
     }
 
     private function assertAvailable(int $productId, ?int $variantId, int $quantity, string $name): void
     {
-        if (! $this->inventory->isAvailable($productId, $variantId, $quantity)) throw new CartItemOutOfStockException("Insufficient stock for [{$name}].");
+        if (! $this->inventory->isAvailable($productId, $variantId, $quantity)) {
+            throw new CartItemOutOfStockException("Insufficient stock for [{$name}].");
+        }
     }
 
     private function touch(object $cart): CustomerCart
     {
         $cart->update(['last_activity_at' => now(), 'abandoned_at' => null, 'recovered_at' => now(), 'recovery_reminder_count' => 0]);
+
         return $this->withTotals($cart->fresh(['items.product', 'items.variant']));
     }
 

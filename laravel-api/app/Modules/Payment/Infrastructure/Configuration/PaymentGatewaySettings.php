@@ -6,17 +6,16 @@ use App\Modules\Settings\Domain\Contracts\SettingsRepositoryInterface;
 
 final class PaymentGatewaySettings
 {
-    public function __construct(private readonly SettingsRepositoryInterface $settings)
-    {
-    }
+    public function __construct(private readonly SettingsRepositoryInterface $settings) {}
 
     public function value(string $provider, string $key, mixed $fallback = null): mixed
     {
-        $setting = $this->settings->findByKey('payment_gateways.' . $provider . '.' . $key);
+        $setting = $this->settings->findByKey('payment_gateways.'.$provider.'.'.$key);
         if ($setting === null) {
             return $fallback;
         }
         $value = $setting->getTypedValue();
+
         return $value === null || $value === '' ? $fallback : $value;
     }
 

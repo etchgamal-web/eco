@@ -3,9 +3,8 @@
 namespace App\Modules\Order\Presentation\Http\Requests;
 
 use App\Modules\Auth\Presentation\Http\Concerns\AuthorizesRequest;
-use App\Modules\Settings\Application\UseCases\GetSetting;
+use App\Modules\Order\Domain\Contracts\CheckoutPolicyInterface;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
 final class CheckoutRequest extends FormRequest
 {
@@ -14,13 +13,18 @@ final class CheckoutRequest extends FormRequest
     public function authorize(): bool
     {
         if ($this->user() === null) {
-            return (bool) app(GetSetting::class)->execute('checkout.require_authentication', true) === false;
+            return true;
         }
+
         return $this->authorizePermission('customer.orders.manage');
     }
 
-    public function rules(): array
+    public function rules(CheckoutPolicyInterface $policy): array
     {
+        if ($this->user() === null && ! $policy->allowsGuestCheckout()) {
+            return [];
+        }
+
         $rules = [
             'address_id' => ['nullable', 'integer', 'min:1'],
             'currency' => ['sometimes', 'string', 'size:3'],
@@ -58,14 +62,5 @@ final class CheckoutRequest extends FormRequest
         if (! $this->filled('idempotency_key') && $this->header('Idempotency-Key') !== null) {
             $this->merge(['idempotency_key' => $this->header('Idempotency-Key')]);
         }
-    }
-
-    protected function failedAuthorization(): void
-    {
-        if ($this->user() === null) {
-            throw new HttpResponseException(response()->json(['message' => 'Unauthenticated.'], 401));
-        }
-
-        parent::failedAuthorization();
     }
 }

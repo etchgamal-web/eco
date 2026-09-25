@@ -1,13 +1,14 @@
 <?php
+
 namespace Tests\Unit;
 
-use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\Settings\Application\UseCases\GetSetting;
 use App\Modules\Settings\Application\UseCases\GetSettingRecord;
 use App\Modules\Settings\Application\UseCases\GetSettingsByGroup;
 use App\Modules\Settings\Application\UseCases\ListSettings;
 use App\Modules\Settings\Domain\Contracts\SettingsRepositoryInterface;
 use App\Modules\Settings\Domain\Exceptions\SettingsNotFoundException;
+use App\Modules\Settings\Infrastructure\Models\Setting;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 

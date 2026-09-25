@@ -16,7 +16,9 @@ final class TrackLandingEvent
             : null);
         if ($key) {
             $existing = $this->pages->eventByKey($page->id, $key);
-            if ($existing) return $existing;
+            if ($existing) {
+                return $existing;
+            }
             $data['dedupe_key'] = $key;
         }
 

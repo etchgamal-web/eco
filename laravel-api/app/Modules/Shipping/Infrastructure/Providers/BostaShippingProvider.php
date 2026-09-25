@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Http;
 
 final class BostaShippingProvider implements ShippingProviderInterface
 {
-    public function __construct(private readonly ShippingProviderSettings $settings)
-    {
-    }
+    public function __construct(private readonly ShippingProviderSettings $settings) {}
 
     public function supports(object $shipment): bool
     {
@@ -57,7 +55,7 @@ final class BostaShippingProvider implements ShippingProviderInterface
             ],
             'specs' => [
                 'packageDetails' => [
-                    'description' => 'Order ' . $shipment->order_id,
+                    'description' => 'Order '.$shipment->order_id,
                     'itemsCount' => (int) ($shipment->order->items->sum('quantity') ?: 1),
                 ],
                 'packageType' => (string) $this->settings->value('bosta', 'package_type', 'Small'),
@@ -93,6 +91,7 @@ final class BostaShippingProvider implements ShippingProviderInterface
         if ($tracking === '') {
             throw new ShippingException('Bosta tracking number is missing.');
         }
+
         return $this->client((string) $this->settings->value('bosta', 'api_key', config('services.bosta.api_key')))
             ->post('/api/v2/deliveries/search', ['trackingNumbers' => $tracking])->throw()->json();
     }
@@ -103,8 +102,9 @@ final class BostaShippingProvider implements ShippingProviderInterface
         if ($deliveryId === '') {
             throw new ShippingException('Bosta delivery reference is missing.');
         }
+
         return $this->client((string) $this->settings->value('bosta', 'api_key', config('services.bosta.api_key')))
-            ->delete('/api/v2/deliveries/business/' . rawurlencode($deliveryId) . '/terminate')->throw()->json();
+            ->delete('/api/v2/deliveries/business/'.rawurlencode($deliveryId).'/terminate')->throw()->json();
     }
 
     private function client(string $apiKey): PendingRequest

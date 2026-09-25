@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\LandingPage\Infrastructure\Models\LandingPage;
 use App\Modules\LandingPage\Infrastructure\Models\LandingPageEvent;
 use App\Modules\LandingPage\Infrastructure\Models\LandingPageLead;
-use App\Modules\Auth\Infrastructure\Models\Role;
-use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -107,6 +107,7 @@ final class LandingPagesFeatureTest extends TestCase
     {
         $user = User::factory()->create();
         $user->roles()->attach(Role::query()->where('slug', $role)->firstOrFail());
+
         return $user;
     }
 }

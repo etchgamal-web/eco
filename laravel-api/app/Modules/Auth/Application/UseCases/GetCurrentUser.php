@@ -7,9 +7,7 @@ use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
 
 final class GetCurrentUser
 {
-    public function __construct(private readonly AuthenticationServiceInterface $authentication)
-    {
-    }
+    public function __construct(private readonly AuthenticationServiceInterface $authentication) {}
 
     public function execute(): object
     {

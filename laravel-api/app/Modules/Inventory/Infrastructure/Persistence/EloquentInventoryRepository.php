@@ -2,8 +2,6 @@
 
 namespace App\Modules\Inventory\Infrastructure\Persistence;
 
-use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
-use App\Modules\Inventory\Infrastructure\Models\InventoryMovement;
 use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
@@ -11,6 +9,8 @@ use App\Modules\Inventory\Domain\Exceptions\InsufficientStockException;
 use App\Modules\Inventory\Domain\Exceptions\InvalidStockAdjustmentException;
 use App\Modules\Inventory\Domain\Exceptions\InventoryNotFoundException;
 use App\Modules\Inventory\Domain\ValueObjects\StockAdjustmentData;
+use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
+use App\Modules\Inventory\Infrastructure\Models\InventoryMovement;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentInventoryRepository implements InventoryRepositoryInterface

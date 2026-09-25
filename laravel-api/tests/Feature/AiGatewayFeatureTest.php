@@ -131,6 +131,7 @@ final class AiGatewayFeatureTest extends TestCase
     {
         $user = User::factory()->create();
         $user->roles()->attach(Role::query()->where('slug', $role)->firstOrFail());
+
         return $user;
     }
 }

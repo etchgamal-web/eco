@@ -1,13 +1,14 @@
 <?php
+
 namespace App\Modules\Catalog\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Catalog\Domain\ValueObjects\CategoryData;
 use App\Modules\Catalog\Application\UseCases\Categories\CreateCategory;
 use App\Modules\Catalog\Application\UseCases\Categories\DeleteCategory;
 use App\Modules\Catalog\Application\UseCases\Categories\GetCategory;
 use App\Modules\Catalog\Application\UseCases\Categories\ListCategories;
 use App\Modules\Catalog\Application\UseCases\Categories\UpdateCategory;
+use App\Modules\Catalog\Domain\ValueObjects\CategoryData;
 use App\Modules\Catalog\Presentation\Http\Requests\CatalogActionRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\StoreCategoryRequest;
 use App\Modules\Catalog\Presentation\Http\Requests\UpdateCategoryRequest;

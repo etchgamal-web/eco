@@ -8,8 +8,7 @@ final readonly class UpdateCustomerData
         public string $name,
         public ?string $email,
         public ?string $phone,
-    ) {
-    }
+    ) {}
 
     /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self

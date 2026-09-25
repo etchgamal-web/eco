@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Shipping\Presentation\Http\Controllers\ShippingController;
 use App\Modules\Shipping\Presentation\Http\Controllers\PublicTrackingController;
+use App\Modules\Shipping\Presentation\Http\Controllers\ShippingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('public/shipments/{tracking_token}', [PublicTrackingController::class, 'show'])

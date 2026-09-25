@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Modules\Catalog\Application\UseCases\Products;
 
 use App\Modules\Catalog\Domain\Contracts\ProductRepositoryInterface;
-use Illuminate\Support\Collection;
 
 final class ListProductVariants
 {

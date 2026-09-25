@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
 use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Shipping\Application\UseCases\CreateShipment;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;
 use App\Modules\Shipping\Domain\ValueObjects\CreateShipmentData;
+use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
 use Tests\TestCase;

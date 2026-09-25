@@ -1,14 +1,15 @@
 <?php
+
 namespace Tests\Unit;
 
-use App\Modules\Catalog\Infrastructure\Models\Attribute;
-use App\Modules\Catalog\Infrastructure\Models\AttributeValue;
 use App\Modules\Catalog\Application\UseCases\Attributes\GetAttribute;
 use App\Modules\Catalog\Application\UseCases\Attributes\GetAttributeValue;
 use App\Modules\Catalog\Application\UseCases\Attributes\ListAttributes;
 use App\Modules\Catalog\Application\UseCases\Attributes\ListAttributeValues;
 use App\Modules\Catalog\Domain\Contracts\AttributeRepositoryInterface;
 use App\Modules\Catalog\Domain\Contracts\AttributeValueRepositoryInterface;
+use App\Modules\Catalog\Infrastructure\Models\Attribute;
+use App\Modules\Catalog\Infrastructure\Models\AttributeValue;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 

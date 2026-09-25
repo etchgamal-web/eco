@@ -1,16 +1,20 @@
 <?php
+
 namespace Tests\Feature;
-use App\Modules\Catalog\Infrastructure\Models\Product;
+
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Catalog\Infrastructure\Models\Product;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+
 final class ProductMediaApiTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_admin_can_upload_list_reorder_and_delete_product_media(): void
     {
         Storage::fake('public');
@@ -24,6 +28,7 @@ final class ProductMediaApiTest extends TestCase
         $this->actingAs($admin)->deleteJson('/api/v1/products/'.$product->id.'/media/'.$first)->assertNoContent();
         $this->assertDatabaseCount('product_media', 1);
     }
+
     public function test_media_validation_rejects_non_images_and_customers_cannot_upload(): void
     {
         Storage::fake('public');
@@ -34,6 +39,17 @@ final class ProductMediaApiTest extends TestCase
         $customer->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
         $this->actingAs($customer)->getJson('/api/v1/products/'.$product->id.'/media')->assertForbidden();
     }
-    private function admin(): User { $user = User::factory()->create(); $user->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); return $user; }
-    private function png(string $name): UploadedFile { return UploadedFile::fake()->createWithContent($name, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=')); }
+
+    private function admin(): User
+    {
+        $user = User::factory()->create();
+        $user->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
+
+        return $user;
+    }
+
+    private function png(string $name): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent($name, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
+    }
 }

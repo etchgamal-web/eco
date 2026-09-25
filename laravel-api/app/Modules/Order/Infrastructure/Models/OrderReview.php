@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Modules\Order\Infrastructure\Models;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 
+use App\Modules\Auth\Infrastructure\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Modules\Auth\Infrastructure\Models\User;
 
 class OrderReview extends Model
 {
@@ -38,4 +37,3 @@ class OrderReview extends Model
         return $this->belongsTo(User::class, 'confirmed_by');
     }
 }
-

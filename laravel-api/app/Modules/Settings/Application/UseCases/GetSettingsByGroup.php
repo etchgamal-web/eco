@@ -9,18 +9,14 @@ final class GetSettingsByGroup
 {
     /**
      * Create a new GetSettingsByGroup use case instance.
-     *
-     * @param SettingsRepositoryInterface $settings
      */
     public function __construct(
         private readonly SettingsRepositoryInterface $settings,
-    ) {
-    }
+    ) {}
 
     /**
      * Execute the use case to retrieve settings by group.
      *
-     * @param string $group
      * @return Collection<int, Setting>
      */
     public function execute(string $group): Collection

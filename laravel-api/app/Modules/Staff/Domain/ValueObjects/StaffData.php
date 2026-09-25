@@ -12,8 +12,7 @@ final readonly class StaffData
         public array $roleSlugs = [],
         public ?string $password = null,
         public bool $rolesProvided = false,
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $data): self
     {

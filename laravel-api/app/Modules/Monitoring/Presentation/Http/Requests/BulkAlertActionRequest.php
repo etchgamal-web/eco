@@ -9,7 +9,10 @@ final class BulkAlertActionRequest extends FormRequest
 {
     use AuthorizesRequest;
 
-    public function authorize(): bool { return $this->authorizePermission('orders.manage'); }
+    public function authorize(): bool
+    {
+        return $this->authorizePermission('orders.manage');
+    }
 
     public function rules(): array
     {

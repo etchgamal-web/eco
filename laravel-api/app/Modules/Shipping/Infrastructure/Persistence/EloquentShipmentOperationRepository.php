@@ -2,8 +2,8 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Modules\Shipping\Infrastructure\Models\ShipmentOperation;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
+use App\Modules\Shipping\Infrastructure\Models\ShipmentOperation;
 
 final class EloquentShipmentOperationRepository implements ShipmentOperationRepositoryInterface
 {
@@ -26,6 +26,7 @@ final class EloquentShipmentOperationRepository implements ShipmentOperationRepo
         if ($record?->status !== 'provider_created') {
             return null;
         }
+
         return (array) $record->response_payload;
     }
 

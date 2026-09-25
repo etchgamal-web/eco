@@ -2,8 +2,8 @@
 
 namespace App\Modules\Payment\Infrastructure\Persistence;
 
-use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 
 final class EloquentPaymentOperationRepository implements PaymentOperationRepositoryInterface
 {
@@ -23,6 +23,7 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
     public function acquireLease(int $paymentId, string $operation, string $token, int $seconds = 300): bool
     {
         $now = now();
+
         return PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)
             ->where(function ($query) use ($token, $now): void {
                 $query->whereNull('lease_token')->orWhere('lease_expires_at', '<=', $now)->orWhere('lease_token', $token);
@@ -41,6 +42,7 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         if (! in_array($record?->status, ['provider_created', 'confirmed'], true)) {
             return null;
         }
+
         return array_merge((array) $record->response_payload, ['_operation_status' => $record->status]);
     }
 

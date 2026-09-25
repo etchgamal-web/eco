@@ -1,10 +1,6 @@
 <?php
 
 namespace App\Modules\Shipping\Infrastructure\Models;
-use App\Modules\Shipping\Infrastructure\Models\Shipment;
-use App\Modules\Shipping\Infrastructure\Models\ShippingPricingPlan;
-use App\Modules\Shipping\Infrastructure\Models\ShippingProvider;
-
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

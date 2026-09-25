@@ -2,7 +2,6 @@
 
 namespace App\Modules\AI\Infrastructure\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 
 class AiGeneration extends Model

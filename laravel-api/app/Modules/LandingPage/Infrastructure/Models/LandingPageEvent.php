@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Modules\LandingPage\Infrastructure\Models;
-use App\Modules\LandingPage\Infrastructure\Models\LandingPage;
-
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

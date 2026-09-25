@@ -1,3 +1,31 @@
 <?php
-use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
-return new class extends Migration { public function up():void { Schema::create('ai_generations',function(Blueprint $t){$t->id();$t->string('kind',40);$t->string('model',120);$t->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();$t->json('input');$t->json('output')->nullable();$t->string('status',20)->default('completed');$t->text('error')->nullable();$t->unsignedInteger('prompt_tokens')->nullable();$t->unsignedInteger('completion_tokens')->nullable();$t->timestamps();$t->index(['kind','status']);});} public function down():void{Schema::dropIfExists('ai_generations');}};
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('ai_generations', function (Blueprint $t) {
+            $t->id();
+            $t->string('kind', 40);
+            $t->string('model', 120);
+            $t->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $t->json('input');
+            $t->json('output')->nullable();
+            $t->string('status', 20)->default('completed');
+            $t->text('error')->nullable();
+            $t->unsignedInteger('prompt_tokens')->nullable();
+            $t->unsignedInteger('completion_tokens')->nullable();
+            $t->timestamps();
+            $t->index(['kind', 'status']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('ai_generations');
+    }
+};

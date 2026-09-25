@@ -7,15 +7,15 @@ use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PasswordServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PermissionRepositoryInterface;
 use App\Modules\Auth\Domain\Contracts\UserRepositoryInterface;
-use App\Modules\Auth\Infrastructure\Authorization\LaravelAuthorizationService;
 use App\Modules\Auth\Infrastructure\Authentication\LaravelPasswordService;
 use App\Modules\Auth\Infrastructure\Authentication\LaravelSessionAuthenticationService;
+use App\Modules\Auth\Infrastructure\Authorization\LaravelAuthorizationService;
 use App\Modules\Auth\Infrastructure\Persistence\EloquentPermissionRepository;
 use App\Modules\Auth\Infrastructure\Persistence\EloquentUserRepository;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {

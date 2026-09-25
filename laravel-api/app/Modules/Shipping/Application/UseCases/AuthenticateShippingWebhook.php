@@ -6,9 +6,7 @@ use App\Modules\Shipping\Domain\Contracts\ShippingWebhookAuthenticatorInterface;
 
 final class AuthenticateShippingWebhook
 {
-    public function __construct(private readonly ShippingWebhookAuthenticatorInterface $authenticator)
-    {
-    }
+    public function __construct(private readonly ShippingWebhookAuthenticatorInterface $authenticator) {}
 
     public function execute(string $header, string $value): bool
     {

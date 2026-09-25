@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Modules\Customer\Infrastructure\Models\CustomerCart;
-use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
-use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
-use App\Modules\Catalog\Infrastructure\Models\Product;
-use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
+use App\Modules\Customer\Infrastructure\Models\CustomerCart;
+use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -58,13 +57,14 @@ final class CartLifecycleApiTest extends TestCase
 
     private function product(array $overrides = []): Product
     {
-        return Product::query()->create(array_merge(['name' => 'Cart Product', 'slug' => 'cart-product-' . uniqid(), 'type' => 'simple', 'status' => 'active', 'price' => 100], $overrides));
+        return Product::query()->create(array_merge(['name' => 'Cart Product', 'slug' => 'cart-product-'.uniqid(), 'type' => 'simple', 'status' => 'active', 'price' => 100], $overrides));
     }
 
     private function userWithRole(string $role): User
     {
         $user = User::factory()->create();
         $user->roles()->attach(Role::query()->where('slug', $role)->firstOrFail());
+
         return $user;
     }
 }

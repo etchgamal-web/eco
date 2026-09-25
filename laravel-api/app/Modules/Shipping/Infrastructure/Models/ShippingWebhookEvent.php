@@ -2,7 +2,6 @@
 
 namespace App\Modules\Shipping\Infrastructure\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 
 class ShippingWebhookEvent extends Model

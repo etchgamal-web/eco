@@ -1,8 +1,11 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-return new class extends Migration {
+
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('product_media', function (Blueprint $table): void {
@@ -21,5 +24,9 @@ return new class extends Migration {
             $table->index(['product_id', 'variant_id', 'sort_order']);
         });
     }
-    public function down(): void { Schema::dropIfExists('product_media'); }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('product_media');
+    }
 };

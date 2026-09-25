@@ -10,11 +10,15 @@ use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 final class ListOrderShipments
 {
     public function __construct(private readonly AuthenticationServiceInterface $authentication, private readonly OrderRepositoryInterface $orders, private readonly ShipmentRepositoryInterface $shipments) {}
+
     public function execute(int $orderId): iterable
     {
         $user = $this->authentication->user();
-        if ($user === null) throw new AuthenticationException('Unauthenticated.');
+        if ($user === null) {
+            throw new AuthenticationException('Unauthenticated.');
+        }
         $this->orders->findForUser($user->id, $orderId);
+
         return $this->shipments->listForUserOrder($user->id, $orderId);
     }
 }

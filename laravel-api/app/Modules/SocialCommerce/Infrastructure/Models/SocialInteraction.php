@@ -1,12 +1,11 @@
 <?php
 
 namespace App\Modules\SocialCommerce\Infrastructure\Models;
-use App\Modules\Catalog\Infrastructure\Models\Product;
+
 use App\Modules\Auth\Infrastructure\Models\User;
-
-
-use Illuminate\Database\Eloquent\Model;
+use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\SocialCommerce\Infrastructure\Persistence\Concerns\SocialResponderAttributes;
+use Illuminate\Database\Eloquent\Model;
 
 class SocialInteraction extends Model
 {

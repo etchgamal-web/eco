@@ -34,6 +34,18 @@ jobs:
       - run: mkdir -p database && touch database/database.sqlite
       - run: php artisan migrate --force
       - run: vendor/bin/pint --test
+      - name: Check for committed secrets
+        run: |
+          if git grep -n -I -E 'sk_live_|AKIA[0-9A-Z]{16}|APP_KEY=base64:[A-Za-z0-9+/=]{40,}' -- ':!composer.lock' ':!package-lock.json' ':!phpunit.xml' ':!.github/workflows/backend.yml'; then
+            echo 'Potential secret detected in tracked files' >&2
+            exit 1
+          fi
+      - name: Check legacy model isolation
+        run: |
+          if git grep -n -I -E 'App\\Models\\(Product|CustomerOrder|Payment|Setting|Shipment|User)([^A-Za-z]|$)' app database routes tests; then
+            echo 'Direct legacy model usage detected' >&2
+            exit 1
+          fi
       - run: php artisan test --no-coverage
       - run: php artisan route:list --path=api/v1 --json > /tmp/routes.json
       - run: php -r '$d=json_decode(file_get_contents("docs/openapi.json"), true, 512, JSON_THROW_ON_ERROR); if (!isset($d["paths"])) { fwrite(STDERR, "OpenAPI document has no paths\n"); exit(1); } echo "OpenAPI JSON valid\n";'

@@ -2,14 +2,14 @@
 
 namespace App\Modules\Order\Infrastructure\Persistence;
 
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\InvalidShippingChargeException;
 use App\Modules\Order\Domain\Exceptions\OrderActionNotAllowedException;
 use App\Modules\Order\Domain\Exceptions\OrderNotFoundException;
 use App\Modules\Order\Domain\StateMachines\OrderStateMachine;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentOrderRepository implements OrderRepositoryInterface
@@ -196,6 +196,4 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             return $order->fresh(['items.product']);
         });
     }
-
-
 }

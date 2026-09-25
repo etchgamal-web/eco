@@ -4,10 +4,10 @@ namespace App\Modules\Staff\Infrastructure\Persistence;
 
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
-use App\Modules\Staff\Domain\ValueObjects\StaffData;
 use App\Modules\Staff\Domain\Contracts\StaffRepositoryInterface;
 use App\Modules\Staff\Domain\Exceptions\StaffActionNotAllowedException;
 use App\Modules\Staff\Domain\Exceptions\StaffNotFoundException;
+use App\Modules\Staff\Domain\ValueObjects\StaffData;
 use Illuminate\Support\Facades\Hash;
 
 final class EloquentStaffRepository implements StaffRepositoryInterface
@@ -24,6 +24,7 @@ final class EloquentStaffRepository implements StaffRepositoryInterface
             'status' => $data->status, 'password' => Hash::make((string) $data->password),
         ]);
         $this->syncRoles($user, $data->roleSlugs);
+
         return $user->load('roles');
     }
 
@@ -36,19 +37,25 @@ final class EloquentStaffRepository implements StaffRepositoryInterface
         if ($data->rolesProvided) {
             $this->syncRoles($staff, $data->roleSlugs);
         }
+
         return $staff->fresh()->load('roles');
     }
 
     public function delete(object $staff): void
     {
-        if (! $staff->exists) throw new StaffNotFoundException('Staff user not found.');
+        if (! $staff->exists) {
+            throw new StaffNotFoundException('Staff user not found.');
+        }
         $staff->delete();
     }
 
     public function find(int $id): User
     {
         $user = User::query()->whereKey($id)->whereDoesntHave('roles', fn ($q) => $q->where('slug', 'customer'))->first();
-        if ($user === null) throw new StaffNotFoundException('Staff user not found.');
+        if ($user === null) {
+            throw new StaffNotFoundException('Staff user not found.');
+        }
+
         return $user;
     }
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Modules\Auth\Infrastructure\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -20,7 +21,7 @@ final class BackendGapClosureTest extends TestCase
             ->assertOk()
             ->assertJsonPath('message', 'If the account exists, a password reset link has been sent.');
 
-        Notification::assertSentTo($user, \Illuminate\Auth\Notifications\ResetPassword::class);
+        Notification::assertSentTo($user, ResetPassword::class);
     }
 
     public function test_public_tracking_does_not_require_authentication_and_hides_unknown_tokens(): void

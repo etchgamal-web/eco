@@ -2,11 +2,11 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Modules\Shipping\Infrastructure\Models\ShippingProvider;
 use App\Modules\Shipping\Domain\Contracts\ShippingPricingCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingRateCalculatorInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
 use App\Modules\Shipping\Domain\ValueObjects\ShippingPricingBreakdown;
+use App\Modules\Shipping\Infrastructure\Models\ShippingProvider;
 use Illuminate\Support\Carbon;
 
 final class DatabaseShippingRateCalculator implements ShippingPricingCalculatorInterface, ShippingRateCalculatorInterface

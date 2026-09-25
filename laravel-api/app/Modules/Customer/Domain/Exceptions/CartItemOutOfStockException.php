@@ -2,6 +2,4 @@
 
 namespace App\Modules\Customer\Domain\Exceptions;
 
-final class CartItemOutOfStockException extends CartException
-{
-}
+final class CartItemOutOfStockException extends CartException {}

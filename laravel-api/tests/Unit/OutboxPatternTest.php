@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
 use App\Modules\Shared\Application\Jobs\ProcessOutboxEvent;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
 use App\Modules\Shared\Infrastructure\Persistence\EloquentOutboxEventRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

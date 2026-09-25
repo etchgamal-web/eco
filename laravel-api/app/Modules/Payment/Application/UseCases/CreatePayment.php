@@ -6,8 +6,8 @@ use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
 use App\Modules\Payment\Domain\Exceptions\PaymentException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
@@ -85,10 +85,10 @@ final class CreatePayment
             }
             $paymentStatus = ($result['status'] ?? null) === 'paid' ? 'confirmed' : (($result['status'] ?? null) === 'pending' ? 'pending' : (($result['provider_reference'] ?? null) !== null ? 'provider_created' : 'pending'));
             $this->operations->complete((int) $claim->payment->id, 'create', $paymentStatus, $result['provider_reference'] ?? null, $result);
-            $this->outbox->markDispatched('payment:create:' . $data->idempotencyKey);
+            $this->outbox->markDispatched('payment:create:'.$data->idempotencyKey);
         } catch (\Throwable $exception) {
             $this->operations->fail((int) $claim->payment->id, 'create', $exception->getMessage(), ! ($exception instanceof PaymentFailedException));
-            $this->outbox->markFailed('payment:create:' . $data->idempotencyKey, $exception->getMessage());
+            $this->outbox->markFailed('payment:create:'.$data->idempotencyKey, $exception->getMessage());
             $this->payments->updateStatus($claim->payment, $exception instanceof PaymentFailedException ? 'failed' : 'processing', [
                 'metadata' => [
                     'failure' => $exception->getMessage(),

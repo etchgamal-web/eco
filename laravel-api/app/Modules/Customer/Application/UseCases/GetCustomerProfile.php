@@ -4,16 +4,15 @@ namespace App\Modules\Customer\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
-use App\Modules\Customer\Domain\Exceptions\CustomerNotFoundException;
 use App\Modules\Customer\Domain\Contracts\CustomerRepositoryInterface;
+use App\Modules\Customer\Domain\Exceptions\CustomerNotFoundException;
 
 final class GetCustomerProfile
 {
     public function __construct(
         private readonly AuthenticationServiceInterface $authentication,
         private readonly CustomerRepositoryInterface $customers,
-    ) {
-    }
+    ) {}
 
     public function execute(): object
     {

@@ -26,7 +26,7 @@ final class ManageLandingPage
 
     public function publish(int $id): object
     {
-        return $this->pages->save(['status' => 'published', 'published_at' => new DateTimeImmutable()], $id);
+        return $this->pages->save(['status' => 'published', 'published_at' => new DateTimeImmutable], $id);
     }
 
     public function unpublish(int $id): object

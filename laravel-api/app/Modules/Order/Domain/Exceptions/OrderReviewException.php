@@ -16,4 +16,3 @@ final class OrderReviewException extends RuntimeException
         return new self('Order review not found.');
     }
 }
-

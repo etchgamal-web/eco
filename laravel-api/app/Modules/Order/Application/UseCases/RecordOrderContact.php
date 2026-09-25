@@ -13,4 +13,3 @@ final class RecordOrderContact
         return $this->reviews->recordContact($orderId, $contactResult, $notes);
     }
 }
-

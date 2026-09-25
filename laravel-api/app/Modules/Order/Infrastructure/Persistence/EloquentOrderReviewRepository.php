@@ -2,13 +2,13 @@
 
 namespace App\Modules\Order\Infrastructure\Persistence;
 
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Order\Infrastructure\Models\OrderReview;
 use App\Modules\Order\Domain\Contracts\OrderReviewRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\OrderActionNotAllowedException;
 use App\Modules\Order\Domain\Exceptions\OrderNotFoundException;
 use App\Modules\Order\Domain\Exceptions\OrderReviewException;
 use App\Modules\Order\Domain\StateMachines\OrderStateMachine;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\OrderReview;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentOrderReviewRepository implements OrderReviewRepositoryInterface
@@ -30,6 +30,7 @@ final class EloquentOrderReviewRepository implements OrderReviewRepositoryInterf
                 throw new OrderActionNotAllowedException('This order has already entered review.');
             }
             $order->update(['status' => 'reviewing']);
+
             return OrderReview::query()->create([
                 'order_id' => $orderId,
                 'reviewer_id' => $reviewerId,
@@ -53,6 +54,7 @@ final class EloquentOrderReviewRepository implements OrderReviewRepositoryInterf
                 throw OrderReviewException::notFound();
             }
             $review->update(['contacted_at' => now(), 'contact_result' => $contactResult, 'notes' => $notes]);
+
             return $review->fresh(['reviewer', 'confirmer', 'order']);
         });
     }
@@ -71,8 +73,8 @@ final class EloquentOrderReviewRepository implements OrderReviewRepositoryInterf
             }
             $order->update(['status' => 'confirmed']);
             $review->update(['confirmed_at' => now(), 'confirmed_by' => $confirmedBy]);
+
             return $review->fresh(['reviewer', 'confirmer', 'order']);
         });
     }
 }
-

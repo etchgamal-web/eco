@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Customer\Infrastructure\Models\CustomerAddress;
-use App\Modules\Promotion\Infrastructure\Models\Coupon;
 use App\Modules\Customer\Infrastructure\Models\CustomerCart;
 use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
-use App\Modules\Catalog\Infrastructure\Models\Product;
-use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Promotion\Infrastructure\Models\Coupon;
 use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\Tax\Infrastructure\Models\TaxRule;
-use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

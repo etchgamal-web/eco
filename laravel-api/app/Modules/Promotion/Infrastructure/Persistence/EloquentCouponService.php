@@ -2,9 +2,9 @@
 
 namespace App\Modules\Promotion\Infrastructure\Persistence;
 
-use App\Modules\Promotion\Infrastructure\Models\Coupon;
 use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
 use App\Modules\Promotion\Domain\Exceptions\CouponInvalidException;
+use App\Modules\Promotion\Infrastructure\Models\Coupon;
 
 final class EloquentCouponService implements CouponServiceInterface
 {
@@ -27,6 +27,7 @@ final class EloquentCouponService implements CouponServiceInterface
         $discount = $coupon->type === 'percent'
             ? (int) round($subtotal * min(100, $coupon->value) / 100)
             : min($subtotal, $coupon->value);
+
         return ['code' => $coupon->code, 'discount' => $discount];
     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Modules\Payment\Infrastructure\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentWebhookEvent extends Model

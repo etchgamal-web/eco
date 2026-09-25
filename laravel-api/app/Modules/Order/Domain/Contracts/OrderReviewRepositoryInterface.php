@@ -12,4 +12,3 @@ interface OrderReviewRepositoryInterface
 
     public function confirm(int $orderId, int $confirmedBy): object;
 }
-

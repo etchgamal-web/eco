@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Modules\Shipping\Infrastructure\Models;
-use App\Modules\Shipping\Infrastructure\Models\Shipment;
-
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

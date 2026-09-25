@@ -15,8 +15,7 @@ final readonly class ProductListCriteria
         public string $sort = 'newest',
         public int $perPage = 20,
         public int $page = 1,
-    ) {
-    }
+    ) {}
 
     /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self

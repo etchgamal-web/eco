@@ -13,4 +13,3 @@ final class ConfirmOrder
         return $this->reviews->confirm($orderId, $confirmedBy);
     }
 }
-

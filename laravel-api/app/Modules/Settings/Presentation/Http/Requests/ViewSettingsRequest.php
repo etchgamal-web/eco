@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Modules\Settings\Presentation\Http\Requests;
 
 use App\Modules\Auth\Presentation\Http\Concerns\AuthorizesRequest;

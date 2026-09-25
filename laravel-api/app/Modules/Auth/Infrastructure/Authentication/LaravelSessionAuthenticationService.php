@@ -2,10 +2,10 @@
 
 namespace App\Modules\Auth\Infrastructure\Authentication;
 
-use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PasswordServiceInterface;
 use App\Modules\Auth\Domain\Contracts\UserRepositoryInterface;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,8 +14,7 @@ final class LaravelSessionAuthenticationService implements AuthenticationService
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly PasswordServiceInterface $passwords,
-    ) {
-    }
+    ) {}
 
     private function guard(): StatefulGuard
     {
@@ -30,8 +29,8 @@ final class LaravelSessionAuthenticationService implements AuthenticationService
         $user = $this->users->findByIdentifier($identifier);
 
         if ($user === null
-            || !$user->isActive()
-            || !$this->passwords->check($password, (string) $user->getAuthPassword())) {
+            || ! $user->isActive()
+            || ! $this->passwords->check($password, (string) $user->getAuthPassword())) {
             return null;
         }
 

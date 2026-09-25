@@ -1,14 +1,12 @@
 <?php
 
 use App\Http\Middleware\AssignCorrelationId;
-use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\AI\Domain\Exceptions\AiProviderException;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException as DomainAuthenticationException;
 use App\Modules\Auth\Domain\Exceptions\AuthorizationException as DomainAuthorizationException;
 use App\Modules\Catalog\Domain\Exceptions\AttributeNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\AttributeValueNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\BrandNotFoundException;
-use App\Modules\Shared\Domain\Exceptions\BusinessRuleException;
 use App\Modules\Catalog\Domain\Exceptions\CategoryNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\ProductNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\VariantNotFoundException;
@@ -34,7 +32,9 @@ use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
 use App\Modules\Payment\Domain\Exceptions\PaymentInProgressException;
 use App\Modules\Payment\Domain\Exceptions\PaymentNotFoundException;
 use App\Modules\Settings\Domain\Exceptions\SettingsNotFoundException;
+use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
+use App\Modules\Shared\Domain\Exceptions\BusinessRuleException;
 use App\Modules\Shipping\Domain\Exceptions\InvalidShipmentTransitionException;
 use App\Modules\Shipping\Domain\Exceptions\InvalidShippingAddressException;
 use App\Modules\Shipping\Domain\Exceptions\ShipmentNotFoundException;

@@ -1,10 +1,6 @@
 <?php
 
 namespace App\Modules\Catalog\Infrastructure\Models;
-use App\Modules\Catalog\Infrastructure\Models\Brand;
-use App\Modules\Catalog\Infrastructure\Models\Category;
-use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
-
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -1,59 +1,241 @@
 <?php
+
 namespace App\Modules\Monitoring\Infrastructure\Persistence;
+
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Staff\Infrastructure\Models\AuditLog;
+use App\Modules\Monitoring\Domain\Contracts\MonitoringRepositoryInterface;
+use App\Modules\Monitoring\Domain\Exceptions\OperationalAlertException;
 use App\Modules\Monitoring\Infrastructure\Models\OperationalAlert;
 use App\Modules\Monitoring\Infrastructure\Models\OperationalAlertNotification;
 use App\Modules\Monitoring\Infrastructure\Models\OrderMonitoringSetting;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReturn;
 use App\Modules\Shipping\Infrastructure\Models\ShippingSettlementItem;
-use App\Modules\Monitoring\Domain\Contracts\MonitoringRepositoryInterface;
+use App\Modules\Staff\Infrastructure\Models\AuditLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+
 final class EloquentMonitoringRepository implements MonitoringRepositoryInterface
 {
-    private const DEFAULTS=['review_overdue'=>1,'processing_overdue'=>2,'shipment_no_update'=>5,'delivery_overdue'=>2,'settlement_missing'=>3,'return_settlement_missing'=>3];
-    public function settings(): array { $stored=OrderMonitoringSetting::query()->orderBy('id')->get()->keyBy('rule_type'); return collect(self::DEFAULTS)->map(function(int $days,string $type)use($stored):array{$setting=$stored->get($type);return $setting?->toArray()??['id'=>null,'rule_type'=>$type,'days'=>$days,'is_enabled'=>true,'created_at'=>null,'updated_at'=>null];})->values()->all(); }
-    public function saveSetting(string $type,int $days,bool $enabled): array { $setting=OrderMonitoringSetting::query()->updateOrCreate(['rule_type'=>$type],['days'=>$days,'is_enabled'=>$enabled]); DB::table('audit_logs')->insert(['actor_id'=>auth()->id(),'action'=>'order_monitoring_setting_updated','target_type'=>OrderMonitoringSetting::class,'target_id'=>$setting->id,'metadata'=>json_encode(['rule_type'=>$type,'days'=>$days,'is_enabled'=>$enabled]),'created_at'=>now(),'updated_at'=>now()]); return $setting->toArray(); }
-    public function detect(): array {
-        $settings=collect($this->settings())->keyBy('rule_type'); $created=0; $resolved=0;
-        CustomerOrder::query()->with(['review','shipments.events'])->chunkById(100,function($orders)use($settings,&$created,&$resolved):void{ foreach($orders as $order){ $candidates=$this->candidates($order,$settings); $active=OperationalAlert::query()->where('order_id',$order->id)->where('status','!=','resolved')->get(); foreach($candidates as $candidate){ $alert=$active->firstWhere('type',$candidate['type']); if(!$alert){$alert=OperationalAlert::query()->create(['order_id'=>$order->id,'type'=>$candidate['type'],'severity'=>$candidate['severity'],'status'=>'open','detected_at'=>now(),'metadata'=>$candidate['metadata']]);$created++;$this->notify($alert,$order);} else {$alert->update(['severity'=>$candidate['severity'],'metadata'=>$candidate['metadata']]);} } foreach($active as $alert){if(!collect($candidates)->contains('type',$alert->type)){ $alert->update(['status'=>'resolved','resolved_at'=>now()]);$resolved++; }} } }); return ['created'=>$created,'resolved'=>$resolved];
+    private const DEFAULTS = ['review_overdue' => 1, 'processing_overdue' => 2, 'shipment_no_update' => 5, 'delivery_overdue' => 2, 'settlement_missing' => 3, 'return_settlement_missing' => 3];
+
+    public function settings(): array
+    {
+        $stored = OrderMonitoringSetting::query()->orderBy('id')->get()->keyBy('rule_type');
+
+        return collect(self::DEFAULTS)->map(function (int $days, string $type) use ($stored): array {
+            $setting = $stored->get($type);
+
+            return $setting?->toArray() ?? ['id' => null, 'rule_type' => $type, 'days' => $days, 'is_enabled' => true, 'created_at' => null, 'updated_at' => null];
+        })->values()->all();
     }
-    private function candidates(CustomerOrder $order,$settings):array { $out=[]; $now=now(); $add=function(string $type,Carbon $since,string $severity='medium',array $metadata=[])use(&$out,$settings,$now):void{$rule=$settings->get($type);if(!$rule||!$rule['is_enabled']||$since->copy()->addDays((int)$rule['days'])->isFuture())return;$out[]=['type'=>$type,'severity'=>$now->diffInDays($since)>((int)$rule['days']*2)?'high':$severity,'metadata'=>array_merge($metadata,['since'=>$since->toISOString(),'threshold_days'=>(int)$rule['days'],'days_overdue'=>max(0,$now->diffInDays($since)-(int)$rule['days'])])];};
-        if($order->status==='reviewing'&&$order->review?->started_at)$add('review_overdue',$order->review->started_at,'high');
-        if($order->status==='processing'&&$order->shipments->isEmpty())$add('processing_overdue',$order->updated_at,'high');
-        foreach($order->shipments as $shipment){$status=(string)$shipment->getAttribute('status');$last=$shipment->events->sortByDesc('created_at')->first();$since=$last?->created_at??$shipment->created_at;if(in_array($status,['picked_up','in_transit'],true))$add('shipment_no_update',$since,'high',['shipment_id'=>$shipment->id,'shipment_status'=>$status]);if($status==='out_for_delivery')$add('delivery_overdue',$since,'high',['shipment_id'=>$shipment->id,'shipment_status'=>$status]);$hasSettlement=ShippingSettlementItem::query()->where('shipment_id',$shipment->id)->whereHas('settlement',fn($query)=>$query->whereIn('status',['completed','finalized']))->exists();if(in_array($status,['delivered','completed'],true)&&!$hasSettlement)$add('settlement_missing',$last?->created_at??$shipment->updated_at,'high',['shipment_id'=>$shipment->id,'shipment_status'=>$status]);$return=OrderReturn::query()->where('order_id',(int)$order->getKey())->whereIn('status',['approved','completed','returned'])->where(function($query)use($shipment):void{$query->where('shipment_id',$shipment->id)->orWhereNull('shipment_id');})->orderByRaw('shipment_id IS NULL')->latest('updated_at')->first();if($return&&!$hasSettlement)$add('return_settlement_missing',$return->updated_at,'high',['shipment_id'=>$shipment->id,'return_id'=>$return->id]);}
+
+    public function saveSetting(string $type, int $days, bool $enabled): array
+    {
+        $setting = OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => $type], ['days' => $days, 'is_enabled' => $enabled]);
+        DB::table('audit_logs')->insert(['actor_id' => auth()->id(), 'action' => 'order_monitoring_setting_updated', 'target_type' => OrderMonitoringSetting::class, 'target_id' => $setting->id, 'metadata' => json_encode(['rule_type' => $type, 'days' => $days, 'is_enabled' => $enabled]), 'created_at' => now(), 'updated_at' => now()]);
+
+        return $setting->toArray();
+    }
+
+    public function detect(): array
+    {
+        $settings = collect($this->settings())->keyBy('rule_type');
+        $created = 0;
+        $resolved = 0;
+        CustomerOrder::query()->with(['review', 'shipments.events'])->chunkById(100, function ($orders) use ($settings, &$created, &$resolved): void {
+            foreach ($orders as $order) {
+                $candidates = $this->candidates($order, $settings);
+                $active = OperationalAlert::query()->where('order_id', $order->id)->where('status', '!=', 'resolved')->get();
+                foreach ($candidates as $candidate) {
+                    $alert = $active->firstWhere('type', $candidate['type']);
+                    if (! $alert) {
+                        $alert = OperationalAlert::query()->create(['order_id' => $order->id, 'type' => $candidate['type'], 'severity' => $candidate['severity'], 'status' => 'open', 'detected_at' => now(), 'metadata' => $candidate['metadata']]);
+                        $created++;
+                        $this->notify($alert, $order);
+                    } else {
+                        $alert->update(['severity' => $candidate['severity'], 'metadata' => $candidate['metadata']]);
+                    }
+                } foreach ($active as $alert) {
+                    if (! collect($candidates)->contains('type', $alert->type)) {
+                        $alert->update(['status' => 'resolved', 'resolved_at' => now()]);
+                        $resolved++;
+                    }
+                }
+            }
+        });
+
+        return ['created' => $created, 'resolved' => $resolved];
+    }
+
+    private function candidates(CustomerOrder $order, $settings): array
+    {
+        $out = [];
+        $now = now();
+        $add = function (string $type, Carbon $since, string $severity = 'medium', array $metadata = []) use (&$out, $settings, $now): void {
+            $rule = $settings->get($type);
+            if (! $rule || ! $rule['is_enabled'] || $since->copy()->addDays((int) $rule['days'])->isFuture()) {
+                return;
+            }$out[] = ['type' => $type, 'severity' => $now->diffInDays($since) > ((int) $rule['days'] * 2) ? 'high' : $severity, 'metadata' => array_merge($metadata, ['since' => $since->toISOString(), 'threshold_days' => (int) $rule['days'], 'days_overdue' => max(0, $now->diffInDays($since) - (int) $rule['days'])])];
+        };
+        if ($order->status === 'reviewing' && $order->review?->started_at) {
+            $add('review_overdue', $order->review->started_at, 'high');
+        }
+        if ($order->status === 'processing' && $order->shipments->isEmpty()) {
+            $add('processing_overdue', $order->updated_at, 'high');
+        }
+        foreach ($order->shipments as $shipment) {
+            $status = (string) $shipment->getAttribute('status');
+            $last = $shipment->events->sortByDesc('created_at')->first();
+            $since = $last?->created_at ?? $shipment->created_at;
+            if (in_array($status, ['picked_up', 'in_transit'], true)) {
+                $add('shipment_no_update', $since, 'high', ['shipment_id' => $shipment->id, 'shipment_status' => $status]);
+            }if ($status === 'out_for_delivery') {
+                $add('delivery_overdue', $since, 'high', ['shipment_id' => $shipment->id, 'shipment_status' => $status]);
+            }$hasSettlement = ShippingSettlementItem::query()->where('shipment_id', $shipment->id)->whereHas('settlement', fn ($query) => $query->whereIn('status', ['completed', 'finalized']))->exists();
+            if (in_array($status, ['delivered', 'completed'], true) && ! $hasSettlement) {
+                $add('settlement_missing', $last?->created_at ?? $shipment->updated_at, 'high', ['shipment_id' => $shipment->id, 'shipment_status' => $status]);
+            }$return = OrderReturn::query()->where('order_id', (int) $order->getKey())->whereIn('status', ['approved', 'completed', 'returned'])->where(function ($query) use ($shipment): void {
+                $query->where('shipment_id', $shipment->id)->orWhereNull('shipment_id');
+            })->orderByRaw('shipment_id IS NULL')->latest('updated_at')->first();
+            if ($return && ! $hasSettlement) {
+                $add('return_settlement_missing', $return->updated_at, 'high', ['shipment_id' => $shipment->id, 'return_id' => $return->id]);
+            }
+        }
+
         return $out;
     }
-    private function notify(OperationalAlert $alert,CustomerOrder $order):void { $users=\App\Modules\Auth\Infrastructure\Models\User::query()->whereHas('roles',fn($q)=>$q->whereIn('slug',['admin','owner','manager','order_manager']))->pluck('id'); $reference=$order->order_number?:$order->id; $metadata=$alert->metadata??[]; $threshold=(int)($metadata['threshold_days']??0); $overdue=(int)($metadata['days_overdue']??0); $elapsed=$threshold+$overdue; $since=isset($metadata['since'])?Carbon::parse($metadata['since'])->toDateString():'unknown'; $title=match($alert->type){'settlement_missing'=>'Settlement is missing','return_settlement_missing'=>'Return settlement is missing',default=>'Delayed order requires review'}; $body=match($alert->type){'settlement_missing'=>"Order #{$reference} was delivered on {$since} ({$elapsed} days ago) and is overdue for settlement by {$overdue} days. It has not appeared in a completed settlement file yet.",'return_settlement_missing'=>"Order #{$reference} has a return awaiting settlement since {$since}. The return is overdue by {$overdue} days and has not appeared in a completed settlement file.",default=>"Order #{$reference} has an open {$alert->type} alert; last measured activity was {$since}, {$overdue} days beyond the configured threshold."}; foreach($users as $userId){if(OperationalAlertNotification::query()->where(['operational_alert_id'=>$alert->id,'user_id'=>$userId])->exists())continue; CustomerNotification::query()->create(['user_id'=>$userId,'type'=>'operational_alert','title'=>$title,'body'=>$body]); OperationalAlertNotification::query()->create(['operational_alert_id'=>$alert->id,'user_id'=>$userId,'sent_at'=>now()]);}}
-    public function delayed(array $filters):array { $q=OperationalAlert::query()->with(['order.user','order.shipments.events','order.activities','order.review'])->where('status','!=','resolved'); if(!empty($filters['delay_type']))$q->where('type',$filters['delay_type']);if(!empty($filters['severity']))$q->where('severity',$filters['severity']);if(!empty($filters['status']))$q->where('status',$filters['status']);if(!empty($filters['search'])){$term=$filters['search'];$q->where(function($outer)use($term):void{$outer->whereHas('order',fn($x)=>$x->where('id',$term)->orWhere('order_number',$term)->orWhere('status','like','%'.$term.'%')->orWhere('guest_phone','like','%'.$term.'%')->orWhereHas('user',fn($u)=>$u->where('name','like','%'.$term.'%')->orWhere('email','like','%'.$term.'%')->orWhere('phone','like','%'.$term.'%')))->orWhereHas('order.shipments',fn($x)=>$x->where('tracking_number',$term)->orWhere('provider_code','like','%'.$term.'%'));});}if(!empty($filters['provider']))$q->whereHas('order.shipments',fn($x)=>$x->where('provider_code',$filters['provider']));$per=min(100,max(1,(int)($filters['per_page']??25)));$page=max(1,(int)($filters['page']??1));$result=$q->latest('detected_at')->paginate($per,['*'],'page',$page);$items=collect($result->items())->map(function(OperationalAlert $alert):OperationalAlert{$alert->setAttribute('latest_activity',$alert->order?->activities?->sortByDesc('occurred_at')->first());$alert->setAttribute('last_customer_contact',$alert->order?->review?->contacted_at);$alert->setAttribute('last_provider_update',$alert->order?->shipments?->flatMap->events?->sortByDesc('created_at')->first()?->created_at);$alert->setAttribute('last_settlement',ShippingSettlementItem::query()->whereIn('shipment_id',$alert->order?->shipments?->pluck('id')??[])->latest()->first());return $alert;})->all();return ['items'=>$items,'meta'=>['current_page'=>$result->currentPage(),'per_page'=>$result->perPage(),'total'=>$result->total(),'last_page'=>$result->lastPage()]]; }
-    public function alerts(array $filters):array { $q=OperationalAlert::query()->with(['order.user','acknowledgedBy','resolvedBy'])->when(!empty($filters['delay_type']),fn($query)=>$query->where('type',$filters['delay_type']))->when(!empty($filters['severity']),fn($query)=>$query->where('severity',$filters['severity']))->when(isset($filters['status'])&&$filters['status']!=='',fn($query)=>$query->where('status',$filters['status'])); if(!empty($filters['search'])){$term=$filters['search'];$q->whereHas('order',fn($order)=>$order->where('id',$term)->orWhere('order_number',$term));} $per=min(100,max(1,(int)($filters['per_page']??25)));$page=max(1,(int)($filters['page']??1));$result=$q->latest('detected_at')->paginate($per,['*'],'page',$page);return ['items'=>$result->items(),'meta'=>['current_page'=>$result->currentPage(),'per_page'=>$result->perPage(),'total'=>$result->total(),'last_page'=>$result->lastPage()]]; }
-    public function alert(int $id):mixed { $alert=$this->findAlert($id); $alert->setAttribute('latest_activity',$alert->order?->activities?->sortByDesc('occurred_at')->first()); $alert->setAttribute('last_customer_contact',$alert->order?->review?->contacted_at); $alert->setAttribute('last_provider_update',$alert->order?->shipments?->flatMap->events?->sortByDesc('created_at')->first()?->created_at); $alert->setAttribute('last_settlement',ShippingSettlementItem::query()->whereIn('shipment_id',$alert->order?->shipments?->pluck('id')??[])->latest()->first()); return $alert; }
-    public function findAlert(int $id):mixed{return OperationalAlert::query()->with(['order.user','order.shipments.events','order.activities','order.review','acknowledgedBy','resolvedBy'])->findOrFail($id);}
-    public function acknowledge(int $id,int $userId):mixed{$a=$this->findAlert($id);if($a->status==='open')$a->update(['status'=>'acknowledged','acknowledged_at'=>now(),'acknowledged_by'=>$userId]);return $a->fresh('order');}
-    public function resolve(int $id,int $userId):mixed{$a=$this->findAlert($id);$order=$a->order()->with(['review','shipments.events'])->firstOrFail();$settings=collect($this->settings())->keyBy('rule_type');if(collect($this->candidates($order,$settings))->contains('type',$a->type))throw new \App\Modules\Monitoring\Domain\Exceptions\OperationalAlertException('The alert cannot be resolved while its underlying condition is still active.');$a->update(['status'=>'resolved','resolved_at'=>now(),'resolved_by'=>$userId]);return $a->fresh('order');}
-    public function bulkAcknowledge(array $ids,int $userId,?string $reason=null):array
+
+    private function notify(OperationalAlert $alert, CustomerOrder $order): void
     {
-        $updated=[];
-        foreach (array_values(array_unique(array_map('intval',$ids))) as $id) {
-            $alert=$this->findAlert($id);
-            if ($alert->status==='open') {
-                $alert->update(['status'=>'acknowledged','acknowledged_at'=>now(),'acknowledged_by'=>$userId]);
-                AuditLog::query()->create(['actor_id'=>$userId,'action'=>'operational_alert.bulk_acknowledged','target_type'=>OperationalAlert::class,'target_id'=>$id,'metadata'=>['reason'=>$reason]]);
-            }
-            $updated[]=$alert->fresh('order');
+        $users = User::query()->whereHas('roles', fn ($q) => $q->whereIn('slug', ['admin', 'owner', 'manager', 'order_manager']))->pluck('id');
+        $reference = $order->order_number ?: $order->id;
+        $metadata = $alert->metadata ?? [];
+        $threshold = (int) ($metadata['threshold_days'] ?? 0);
+        $overdue = (int) ($metadata['days_overdue'] ?? 0);
+        $elapsed = $threshold + $overdue;
+        $since = isset($metadata['since']) ? Carbon::parse($metadata['since'])->toDateString() : 'unknown';
+        $title = match ($alert->type) {
+            'settlement_missing' => 'Settlement is missing','return_settlement_missing' => 'Return settlement is missing',default => 'Delayed order requires review'
+        };
+        $body = match ($alert->type) {
+            'settlement_missing' => "Order #{$reference} was delivered on {$since} ({$elapsed} days ago) and is overdue for settlement by {$overdue} days. It has not appeared in a completed settlement file yet.",'return_settlement_missing' => "Order #{$reference} has a return awaiting settlement since {$since}. The return is overdue by {$overdue} days and has not appeared in a completed settlement file.",default => "Order #{$reference} has an open {$alert->type} alert; last measured activity was {$since}, {$overdue} days beyond the configured threshold."
+        };
+        foreach ($users as $userId) {
+            if (OperationalAlertNotification::query()->where(['operational_alert_id' => $alert->id, 'user_id' => $userId])->exists()) {
+                continue;
+            } CustomerNotification::query()->create(['user_id' => $userId, 'type' => 'operational_alert', 'title' => $title, 'body' => $body]);
+            OperationalAlertNotification::query()->create(['operational_alert_id' => $alert->id, 'user_id' => $userId, 'sent_at' => now()]);
         }
+    }
+
+    public function delayed(array $filters): array
+    {
+        $q = OperationalAlert::query()->with(['order.user', 'order.shipments.events', 'order.activities', 'order.review'])->where('status', '!=', 'resolved');
+        if (! empty($filters['delay_type'])) {
+            $q->where('type', $filters['delay_type']);
+        }if (! empty($filters['severity'])) {
+            $q->where('severity', $filters['severity']);
+        }if (! empty($filters['status'])) {
+            $q->where('status', $filters['status']);
+        }if (! empty($filters['search'])) {
+            $term = $filters['search'];
+            $q->where(function ($outer) use ($term): void {
+                $outer->whereHas('order', fn ($x) => $x->where('id', $term)->orWhere('order_number', $term)->orWhere('status', 'like', '%'.$term.'%')->orWhere('guest_phone', 'like', '%'.$term.'%')->orWhereHas('user', fn ($u) => $u->where('name', 'like', '%'.$term.'%')->orWhere('email', 'like', '%'.$term.'%')->orWhere('phone', 'like', '%'.$term.'%')))->orWhereHas('order.shipments', fn ($x) => $x->where('tracking_number', $term)->orWhere('provider_code', 'like', '%'.$term.'%'));
+            });
+        }if (! empty($filters['provider'])) {
+            $q->whereHas('order.shipments', fn ($x) => $x->where('provider_code', $filters['provider']));
+        }$per = min(100, max(1, (int) ($filters['per_page'] ?? 25)));
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $result = $q->latest('detected_at')->paginate($per, ['*'], 'page', $page);
+        $items = collect($result->items())->map(function (OperationalAlert $alert): OperationalAlert {
+            $alert->setAttribute('latest_activity', $alert->order?->activities?->sortByDesc('occurred_at')->first());
+            $alert->setAttribute('last_customer_contact', $alert->order?->review?->contacted_at);
+            $alert->setAttribute('last_provider_update', $alert->order?->shipments?->flatMap->events?->sortByDesc('created_at')->first()?->created_at);
+            $alert->setAttribute('last_settlement', ShippingSettlementItem::query()->whereIn('shipment_id', $alert->order?->shipments?->pluck('id') ?? [])->latest()->first());
+
+            return $alert;
+        })->all();
+
+        return ['items' => $items, 'meta' => ['current_page' => $result->currentPage(), 'per_page' => $result->perPage(), 'total' => $result->total(), 'last_page' => $result->lastPage()]];
+    }
+
+    public function alerts(array $filters): array
+    {
+        $q = OperationalAlert::query()->with(['order.user', 'acknowledgedBy', 'resolvedBy'])->when(! empty($filters['delay_type']), fn ($query) => $query->where('type', $filters['delay_type']))->when(! empty($filters['severity']), fn ($query) => $query->where('severity', $filters['severity']))->when(isset($filters['status']) && $filters['status'] !== '', fn ($query) => $query->where('status', $filters['status']));
+        if (! empty($filters['search'])) {
+            $term = $filters['search'];
+            $q->whereHas('order', fn ($order) => $order->where('id', $term)->orWhere('order_number', $term));
+        } $per = min(100, max(1, (int) ($filters['per_page'] ?? 25)));
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $result = $q->latest('detected_at')->paginate($per, ['*'], 'page', $page);
+
+        return ['items' => $result->items(), 'meta' => ['current_page' => $result->currentPage(), 'per_page' => $result->perPage(), 'total' => $result->total(), 'last_page' => $result->lastPage()]];
+    }
+
+    public function alert(int $id): mixed
+    {
+        $alert = $this->findAlert($id);
+        $alert->setAttribute('latest_activity', $alert->order?->activities?->sortByDesc('occurred_at')->first());
+        $alert->setAttribute('last_customer_contact', $alert->order?->review?->contacted_at);
+        $alert->setAttribute('last_provider_update', $alert->order?->shipments?->flatMap->events?->sortByDesc('created_at')->first()?->created_at);
+        $alert->setAttribute('last_settlement', ShippingSettlementItem::query()->whereIn('shipment_id', $alert->order?->shipments?->pluck('id') ?? [])->latest()->first());
+
+        return $alert;
+    }
+
+    public function findAlert(int $id): mixed
+    {
+        return OperationalAlert::query()->with(['order.user', 'order.shipments.events', 'order.activities', 'order.review', 'acknowledgedBy', 'resolvedBy'])->findOrFail($id);
+    }
+
+    public function acknowledge(int $id, int $userId): mixed
+    {
+        $a = $this->findAlert($id);
+        if ($a->status === 'open') {
+            $a->update(['status' => 'acknowledged', 'acknowledged_at' => now(), 'acknowledged_by' => $userId]);
+        }
+
+return $a->fresh('order');
+    }
+
+    public function resolve(int $id, int $userId): mixed
+    {
+        $a = $this->findAlert($id);
+        $order = $a->order()->with(['review', 'shipments.events'])->firstOrFail();
+        $settings = collect($this->settings())->keyBy('rule_type');
+        if (collect($this->candidates($order, $settings))->contains('type', $a->type)) {
+            throw new OperationalAlertException('The alert cannot be resolved while its underlying condition is still active.');
+        }$a->update(['status' => 'resolved', 'resolved_at' => now(), 'resolved_by' => $userId]);
+
+        return $a->fresh('order');
+    }
+
+    public function bulkAcknowledge(array $ids, int $userId, ?string $reason = null): array
+    {
+        $updated = [];
+        foreach (array_values(array_unique(array_map('intval', $ids))) as $id) {
+            $alert = $this->findAlert($id);
+            if ($alert->status === 'open') {
+                $alert->update(['status' => 'acknowledged', 'acknowledged_at' => now(), 'acknowledged_by' => $userId]);
+                AuditLog::query()->create(['actor_id' => $userId, 'action' => 'operational_alert.bulk_acknowledged', 'target_type' => OperationalAlert::class, 'target_id' => $id, 'metadata' => ['reason' => $reason]]);
+            }
+            $updated[] = $alert->fresh('order');
+        }
+
         return $updated;
     }
-    public function bulkResolve(array $ids,int $userId,?string $reason=null):array
+
+    public function bulkResolve(array $ids, int $userId, ?string $reason = null): array
     {
-        $updated=[];
+        $updated = [];
         foreach (array_values(array_unique(array_map('intval',$ids))) as $id) {
-            $alert=$this->resolve($id,$userId);
-            AuditLog::query()->create(['actor_id'=>$userId,'action'=>'operational_alert.bulk_resolved','target_type'=>OperationalAlert::class,'target_id'=>$id,'metadata'=>['reason'=>$reason]]);
-            $updated[]=$alert;
+            $alert = $this->resolve($id,$userId);
+            AuditLog::query()->create(['actor_id' => $userId, 'action' => 'operational_alert.bulk_resolved', 'target_type' => OperationalAlert::class, 'target_id' => $id, 'metadata' => ['reason' => $reason]]);
+            $updated[] = $alert;
         }
+
         return $updated;
     }
 }

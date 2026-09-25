@@ -1,17 +1,21 @@
 <?php
+
 namespace Tests\Feature;
-use App\Modules\Promotion\Infrastructure\Models\Coupon;
-use App\Modules\Promotion\Infrastructure\Models\CouponUsage;
+
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
 use App\Modules\Promotion\Domain\Exceptions\CouponInvalidException;
+use App\Modules\Promotion\Infrastructure\Models\Coupon;
+use App\Modules\Promotion\Infrastructure\Models\CouponUsage;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+
 final class PromotionTaxManagementApiTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_admin_can_manage_coupons_and_tax_rules(): void
     {
         $this->seed(RbacSeeder::class);
@@ -25,6 +29,7 @@ final class PromotionTaxManagementApiTest extends TestCase
         $this->actingAs($admin)->deleteJson("/api/v1/tax-rules/{$tax}")->assertNoContent();
         $this->actingAs($admin)->deleteJson("/api/v1/coupons/{$coupon}")->assertNoContent();
     }
+
     public function test_customer_cannot_manage_promotions_or_taxes(): void
     {
         $this->seed(RbacSeeder::class);
@@ -62,6 +67,7 @@ final class PromotionTaxManagementApiTest extends TestCase
     {
         $user = User::factory()->create();
         $user->roles()->attach(Role::query()->where('slug', $role)->firstOrFail());
+
         return $user;
     }
 }

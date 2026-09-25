@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 final class MarkAbandonedCarts extends Command
 {
     protected $signature = 'cart:mark-abandoned {--hours=24 : Hours without activity before the cart is abandoned}';
+
     protected $description = 'Mark inactive carts as abandoned and notify customers once';
 
     public function handle(): int
@@ -23,6 +24,7 @@ final class MarkAbandonedCarts extends Command
             }
         });
         $this->info("Marked {$count} abandoned cart(s).");
+
         return self::SUCCESS;
     }
 }

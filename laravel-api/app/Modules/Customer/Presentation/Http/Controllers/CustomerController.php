@@ -3,9 +3,9 @@
 namespace App\Modules\Customer\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Customer\Domain\ValueObjects\UpdateCustomerData;
 use App\Modules\Customer\Application\UseCases\GetCustomerProfile;
 use App\Modules\Customer\Application\UseCases\UpdateCustomerProfile;
+use App\Modules\Customer\Domain\ValueObjects\UpdateCustomerData;
 use App\Modules\Customer\Presentation\Http\Requests\UpdateCustomerProfileRequest;
 use App\Modules\Customer\Presentation\Http\Requests\ViewCustomerProfileRequest;
 use Illuminate\Http\JsonResponse;

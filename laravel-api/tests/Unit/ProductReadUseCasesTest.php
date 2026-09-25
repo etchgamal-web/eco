@@ -1,13 +1,14 @@
 <?php
+
 namespace Tests\Unit;
 
-use App\Modules\Catalog\Infrastructure\Models\Product;
-use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\GetProduct;
 use App\Modules\Catalog\Application\UseCases\Products\GetProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\ListProducts;
 use App\Modules\Catalog\Application\UseCases\Products\ListProductVariants;
 use App\Modules\Catalog\Domain\Contracts\ProductRepositoryInterface;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use Illuminate\Support\Collection;
 use Mockery;
 use PHPUnit\Framework\TestCase;
