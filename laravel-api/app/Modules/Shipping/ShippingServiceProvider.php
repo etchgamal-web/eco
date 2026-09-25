@@ -2,6 +2,8 @@
 
 namespace App\Modules\Shipping;
 
+use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
+use App\Modules\Shipping\Application\Outbox\ShippingOutboxHandler;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
@@ -34,4 +36,9 @@ final class ShippingServiceProvider extends ServiceProvider
         ShippingWebhookAuthenticatorInterface::class => ShippingWebhookAuthenticator::class,
         ShippingWebhookEventRepositoryInterface::class => EloquentShippingWebhookEventRepository::class,
     ];
+
+    public function register(): void
+    {
+        $this->app->tag(ShippingOutboxHandler::class, OutboxEventHandlerInterface::class);
+    }
 }

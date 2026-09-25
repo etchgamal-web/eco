@@ -2,20 +2,22 @@
 
 namespace App\Modules\Payment;
 
+use App\Modules\Payment\Application\Outbox\PaymentOutboxHandler;
+use App\Modules\Payment\Domain\Contracts\KashierWebhookVerifierInterface;
+use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
-use App\Modules\Payment\Domain\Contracts\PaymobWebhookVerifierInterface;
-use App\Modules\Payment\Domain\Contracts\KashierWebhookVerifierInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentWebhookEventRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymobWebhookVerifierInterface;
 use App\Modules\Payment\Infrastructure\Gateways\PaymentGatewayRouter;
-use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentRepository;
-use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentOperationRepository;
 use App\Modules\Payment\Infrastructure\Persistence\EloquentOperationalDashboardReader;
-use App\Modules\Payment\Infrastructure\Webhooks\PaymobWebhookVerifier;
-use App\Modules\Payment\Infrastructure\Webhooks\KashierWebhookVerifier;
+use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentOperationRepository;
+use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentRepository;
 use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentWebhookEventRepository;
+use App\Modules\Payment\Infrastructure\Webhooks\KashierWebhookVerifier;
+use App\Modules\Payment\Infrastructure\Webhooks\PaymobWebhookVerifier;
+use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
 use Illuminate\Support\ServiceProvider;
 
 final class PaymentServiceProvider extends ServiceProvider
@@ -29,4 +31,9 @@ final class PaymentServiceProvider extends ServiceProvider
         KashierWebhookVerifierInterface::class => KashierWebhookVerifier::class,
         PaymentWebhookEventRepositoryInterface::class => EloquentPaymentWebhookEventRepository::class,
     ];
+
+    public function register(): void
+    {
+        $this->app->tag(PaymentOutboxHandler::class, OutboxEventHandlerInterface::class);
+    }
 }

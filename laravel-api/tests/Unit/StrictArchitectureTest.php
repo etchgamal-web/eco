@@ -37,7 +37,7 @@ final class StrictArchitectureTest extends TestCase
             $owner = $ownerMatch[1] ?? '';
             preg_match_all('/App\\\\Modules\\\\([A-Za-z0-9_]+)\\\\Domain\\\\/', $source, $matches);
             foreach (array_unique($matches[1] ?? []) as $dependency) {
-                self::assertTrue($dependency === $owner || $dependency === 'Shared', $file . ' crosses bounded-context Domain boundary.');
+                self::assertTrue($dependency === $owner || $dependency === 'Shared', $file.' crosses bounded-context Domain boundary.');
             }
         }
     }
@@ -69,6 +69,26 @@ final class StrictArchitectureTest extends TestCase
                 'Application\\',
                 'Presentation\\',
                 'Http\\Controllers\\',
+            ], $file);
+        }
+    }
+
+    public function test_shared_application_does_not_depend_on_business_modules(): void
+    {
+        foreach ($this->filesIn('Shared/Application') as $file) {
+            $source = $this->source($file);
+            $this->assertNone($source, [
+                'App\\Modules\\Auth\\',
+                'App\\Modules\\Catalog\\',
+                'App\\Modules\\Customer\\',
+                'App\\Modules\\Inventory\\',
+                'App\\Modules\\Order\\',
+                'App\\Modules\\Payment\\',
+                'App\\Modules\\Promotion\\',
+                'App\\Modules\\Shipping\\',
+                'App\\Modules\\SocialCommerce\\',
+                'App\\Modules\\Staff\\',
+                'App\\Modules\\Tax\\',
             ], $file);
         }
     }
@@ -132,7 +152,7 @@ final class StrictArchitectureTest extends TestCase
 
     public function test_central_error_handler_is_registered_in_bootstrap(): void
     {
-        $bootstrap = file_get_contents(dirname(__DIR__, 2) . '/bootstrap/app.php');
+        $bootstrap = file_get_contents(dirname(__DIR__, 2).'/bootstrap/app.php');
         self::assertIsString($bootstrap);
         self::assertStringContainsString('withExceptions', $bootstrap);
         self::assertStringContainsString('DomainAuthenticationException', $bootstrap);
@@ -144,24 +164,25 @@ final class StrictArchitectureTest extends TestCase
     /** @return list<string> */
     private function filesIn(string $suffix): array
     {
-        $root = dirname(__DIR__, 2) . '/app/Modules';
+        $root = dirname(__DIR__, 2).'/app/Modules';
         $files = [];
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
         );
 
         foreach ($iterator as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
+            if (! $file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }
             $path = str_replace('\\', '/', $file->getPathname());
-            $normalizedSuffix = '/' . trim($suffix, '/') . '/';
+            $normalizedSuffix = '/'.trim($suffix, '/').'/';
             if (str_contains($path, $normalizedSuffix)) {
                 $files[] = $file->getPathname();
             }
         }
 
         sort($files);
+
         return $files;
     }
 
@@ -169,6 +190,7 @@ final class StrictArchitectureTest extends TestCase
     {
         $source = file_get_contents($file);
         self::assertIsString($source, $file);
+
         return $source;
     }
 
@@ -176,6 +198,7 @@ final class StrictArchitectureTest extends TestCase
     private function publicActions(string $source): array
     {
         preg_match_all('/public function\s+\w+\s*\((.*?)\)\s*:/s', $source, $matches);
+
         return $matches[1] ?? [];
     }
 
@@ -183,7 +206,7 @@ final class StrictArchitectureTest extends TestCase
     private function assertNone(string $source, array $forbidden, string $file): void
     {
         foreach ($forbidden as $token) {
-            self::assertStringNotContainsString($token, $source, $file . ' contains forbidden dependency: ' . $token);
+            self::assertStringNotContainsString($token, $source, $file.' contains forbidden dependency: '.$token);
         }
     }
 }
