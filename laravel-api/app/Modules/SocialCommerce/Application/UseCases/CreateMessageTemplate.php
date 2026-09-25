@@ -2,11 +2,13 @@
 
 namespace App\Modules\SocialCommerce\Application\UseCases;
 
-use App\Models\SocialMessageTemplate;
+use App\Modules\SocialCommerce\Domain\Contracts\MessageTemplateRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Exceptions\SocialCommerceException;
 
 final class CreateMessageTemplate
 {
+    public function __construct(private readonly MessageTemplateRepositoryInterface $templates) {}
+
     public function execute(array $data): object
     {
         $variables = $this->variables($data['body']);
@@ -14,7 +16,7 @@ final class CreateMessageTemplate
             throw new SocialCommerceException('Template variables must declare every placeholder used in the body.');
         }
 
-        return SocialMessageTemplate::query()->create([
+        return $this->templates->create([
             'name' => $data['name'],
             'channel' => $data['channel'] ?? null,
             'body' => $data['body'],

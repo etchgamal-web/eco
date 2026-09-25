@@ -18,6 +18,6 @@ final class PublicLandingPageController extends Controller
 
     public function lead(LandingLeadRequest $r, string $slug, CaptureLandingLead $u): JsonResponse
     {
-        return response()->json(['data' => $u->execute($slug, $r->validated())], 201);
+        return response()->json(['data' => $u->execute($slug, $r->validated(), $r->ip())], 201);
     }
 }

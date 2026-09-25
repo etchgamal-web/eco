@@ -2,13 +2,12 @@
 
 namespace App\Modules\Auth\Presentation\Http\Concerns;
 
-use App\Models\User;
 use App\Modules\Auth\Application\UseCases\AuthenticateUser;
 use App\Modules\Auth\Application\UseCases\AuthorizeUser;
 
 trait AuthorizesRequest
 {
-    protected function authenticatedUser(): User
+    protected function authenticatedUser(): object
     {
         return app(AuthenticateUser::class)->execute();
     }

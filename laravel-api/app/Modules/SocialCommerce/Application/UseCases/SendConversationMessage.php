@@ -32,7 +32,7 @@ final class SendConversationMessage
         $key = $idempotencyKey ?: 'social:message:'.hash('sha256', implode('|', [$conversation->id, $body, $actor?->id ?? 'system']));
 
         return $this->transactions->run(function () use ($conversation, $body, $actor, $key): object {
-            $existing = \App\Models\SocialMessage::query()->where('idempotency_key', $key)->first();
+            $existing = $this->interactions->findMessageByIdempotencyKey($key);
             if ($existing) return $existing;
             $responder = ['type' => 'human', 'id' => $actor?->id, 'name' => $actor?->name ?? 'Human Operator'];
             $message = $this->interactions->addMessage([

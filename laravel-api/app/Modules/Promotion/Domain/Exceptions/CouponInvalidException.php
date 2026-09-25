@@ -2,7 +2,7 @@
 
 namespace App\Modules\Promotion\Domain\Exceptions;
 
-use App\Modules\Catalog\Domain\Exceptions\BusinessRuleException;
+use App\Modules\Shared\Domain\Exceptions\BusinessRuleException;
 
 final class CouponInvalidException extends BusinessRuleException
 {

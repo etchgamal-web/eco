@@ -2,17 +2,14 @@
 
 namespace App\Modules\SocialCommerce\Application\UseCases;
 
-use App\Models\SocialMessageTemplate;
+use App\Modules\SocialCommerce\Domain\Contracts\MessageTemplateRepositoryInterface;
 
 final class ListMessageTemplates
 {
+    public function __construct(private readonly MessageTemplateRepositoryInterface $templates) {}
+
     public function execute(array $filters = []): array
     {
-        return SocialMessageTemplate::query()
-            ->when(isset($filters['channel']), fn ($query) => $query->where('channel', $filters['channel']))
-            ->when(isset($filters['is_active']), fn ($query) => $query->where('is_active', $filters['is_active']))
-            ->latest()
-            ->get()
-            ->all();
+        return $this->templates->list($filters);
     }
 }

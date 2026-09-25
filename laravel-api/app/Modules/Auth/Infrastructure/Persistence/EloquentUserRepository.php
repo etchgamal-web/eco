@@ -43,7 +43,7 @@ final class EloquentUserRepository implements UserRepositoryInterface
 
     public function updatePassword(object $user, string $password): object
     {
-        $user->forceFill(['password' => Hash::make($password)])->save();
+        $user->forceFill(['password' => Hash::make($password), 'remember_token' => null])->save();
 
         return $user->fresh();
     }

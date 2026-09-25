@@ -1,6 +1,6 @@
 <?php
 namespace App\Modules\Order\Domain\Exceptions;
-use App\Modules\Catalog\Domain\Exceptions\BusinessRuleException;
+use App\Modules\Shared\Domain\Exceptions\BusinessRuleException;
 final class ReturnException extends BusinessRuleException
 {
     public static function notAllowed(): self { return new self('This order is not eligible for return.'); }

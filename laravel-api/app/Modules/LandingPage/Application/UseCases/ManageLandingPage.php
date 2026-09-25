@@ -3,6 +3,7 @@
 namespace App\Modules\LandingPage\Application\UseCases;
 
 use App\Modules\LandingPage\Domain\Contracts\LandingPageRepositoryInterface;
+use DateTimeImmutable;
 
 final class ManageLandingPage
 {
@@ -25,7 +26,7 @@ final class ManageLandingPage
 
     public function publish(int $id): object
     {
-        return $this->pages->save(['status' => 'published', 'published_at' => now()], $id);
+        return $this->pages->save(['status' => 'published', 'published_at' => new DateTimeImmutable()], $id);
     }
 
     public function unpublish(int $id): object

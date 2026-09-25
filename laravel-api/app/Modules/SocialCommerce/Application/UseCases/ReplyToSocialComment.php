@@ -31,7 +31,7 @@ final class ReplyToSocialComment
         $key = $idempotencyKey ?: 'social:comment-reply:'.hash('sha256', implode('|', [$interaction->id, $body, $actor?->id ?? 'system']));
         return $this->transactions->run(function () use ($interaction, $body, $actor, $commentId, $connection, $key): object {
             $existing = $this->interactions->find($interaction->id);
-            $duplicate = \App\Models\SocialInteraction::query()->where('idempotency_key', $key)->first();
+            $duplicate = $this->interactions->findByIdempotencyKey($key);
             if ($duplicate) return $duplicate;
             $responder = ['type' => 'human', 'id' => $actor?->id, 'name' => $actor?->name ?? 'Human Operator'];
             $reply = $this->interactions->create([

@@ -2,7 +2,7 @@
 
 namespace App\Modules\Payment\Application\UseCases;
 
-use App\Models\AuditLog;
+use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
@@ -12,6 +12,7 @@ use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
 use Illuminate\Support\Str;
 
 final class RefundPayment
@@ -23,6 +24,8 @@ final class RefundPayment
         private readonly OrderRepositoryInterface $orders,
         private readonly TransactionManagerInterface $transactions,
         private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly AuthenticationServiceInterface $authentication,
+        private readonly AuditLogRepositoryInterface $audit,
     ) {}
 
     public function execute(int $paymentId): object
@@ -75,7 +78,7 @@ final class RefundPayment
             if ($order->status === 'delivered') {
                 $this->orders->markRefunded($payment->order_id);
             }
-            AuditLog::query()->create(['actor_id' => auth()->id(), 'action' => 'payment.refunded', 'target_type' => get_class($refunded), 'target_id' => $refunded->id, 'metadata' => ['provider_reference' => $refunded->provider_reference]]);
+            $this->audit->record($this->authentication->user(), 'payment.refunded', get_class($refunded), $refunded->id, ['provider_reference' => $refunded->provider_reference]);
 
             return $refunded;
         });

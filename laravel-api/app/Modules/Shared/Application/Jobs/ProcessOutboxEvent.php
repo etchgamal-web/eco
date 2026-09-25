@@ -2,9 +2,6 @@
 
 namespace App\Modules\Shared\Application\Jobs;
 
-use App\Models\OutboxEvent;
-use App\Models\SocialInteraction;
-use App\Models\SocialMessage;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
@@ -15,6 +12,7 @@ use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialMessagingProviderInterface;
+use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -36,17 +34,18 @@ final class ProcessOutboxEvent implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
-        $event = OutboxEvent::query()->find($this->eventId);
+        $outbox = app(OutboxEventRepositoryInterface::class);
+        $event = $outbox->find($this->eventId);
         if (! $event) return;
 
-        $exhausted = app(OutboxEventRepositoryInterface::class)->markFailed(
+        $exhausted = $outbox->markFailed(
             (string) $event->deduplication_key,
             $exception->getMessage(),
         );
         if ($exhausted && $event->aggregate_type === 'social_message') {
-            SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+            app(SocialInteractionRepositoryInterface::class)->updateMessageStatus((int) $event->aggregate_id, 'failed');
         } elseif ($exhausted && $event->aggregate_type === 'social_comment') {
-            SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+            app(SocialInteractionRepositoryInterface::class)->updateInteractionStatus((int) $event->aggregate_id, 'failed');
         }
     }
 
@@ -61,15 +60,16 @@ final class ProcessOutboxEvent implements ShouldQueue
         OutboxEventRepositoryInterface $outbox,
         SocialConnectionRepositoryInterface $connections,
         SocialMessagingProviderInterface $socialProvider,
+        SocialInteractionRepositoryInterface $socialInteractions,
     ): void {
-        $event = OutboxEvent::query()->find($this->eventId);
+        $event = $outbox->find($this->eventId);
         if ($event === null || $event->status === 'dispatched') {
             return;
         }
 
         try {
             if ($event->aggregate_type === 'social_message') {
-                $message = SocialMessage::query()->find($event->aggregate_id);
+                $message = $socialInteractions->findMessage((int) $event->aggregate_id);
                 if (! $message || $message->status === 'sent') {
                     $outbox->markDispatched($event->deduplication_key);
                     return;
@@ -77,11 +77,11 @@ final class ProcessOutboxEvent implements ShouldQueue
                 $payload = $event->payload;
                 $connection = $connections->activeForChannel((string) ($payload['channel'] ?? ''));
                 if (! $connection) throw new \RuntimeException('No active social connection for queued message.');
-                $message->update(['status' => 'processing']);
+                $socialInteractions->updateMessageStatus((int) $event->aggregate_id, 'processing');
                 $result = $socialProvider->sendMessage($connection, (string) $payload['recipient'], (string) $payload['body']);
-                $message->update(['status' => 'sent', 'provider_message_id' => $result['provider_message_id'] ?? null, 'metadata' => $result]);
+                $socialInteractions->updateMessage((int) $event->aggregate_id, ['status' => 'sent', 'provider_message_id' => $result['provider_message_id'] ?? null, 'metadata' => $result]);
             } elseif ($event->aggregate_type === 'social_comment') {
-                $interaction = SocialInteraction::query()->find($event->aggregate_id);
+                $interaction = $socialInteractions->find((int) $event->aggregate_id);
                 if (! $interaction || $interaction->status === 'sent') {
                     $outbox->markDispatched($event->deduplication_key);
                     return;
@@ -89,9 +89,9 @@ final class ProcessOutboxEvent implements ShouldQueue
                 $payload = $event->payload;
                 $connection = $connections->activeForChannel((string) ($payload['channel'] ?? ''));
                 if (! $connection) throw new \RuntimeException('No active social connection for queued comment.');
-                $interaction->update(['status' => 'processing']);
+                $socialInteractions->updateInteractionStatus((int) $event->aggregate_id, 'processing');
                 $result = $socialProvider->replyToComment($connection, (string) $payload['comment_id'], (string) $payload['body']);
-                $interaction->update(['status' => 'sent', 'provider_interaction_id' => $result['provider_message_id'] ?? null, 'metadata' => array_merge($interaction->metadata ?? [], $result)]);
+                $socialInteractions->updateInteraction((int) $event->aggregate_id, ['status' => 'sent', 'provider_interaction_id' => $result['provider_message_id'] ?? null, 'metadata' => array_merge($interaction->metadata ?? [], $result)]);
             } elseif ($event->aggregate_type === 'payment') {
                 $payment = $payments->find((int) $event->aggregate_id);
                 if (in_array($payment->status, ['provider_created', 'confirmed', 'paid', 'refunded', 'failed'], true)) {
@@ -159,15 +159,15 @@ final class ProcessOutboxEvent implements ShouldQueue
                 $shipment = $shipments->find((int) $event->aggregate_id);
                 $shipments->markCreationFailed($shipment, $exception->getMessage());
             } elseif ($event->aggregate_type === 'social_message') {
-                SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'retrying']);
+                $socialInteractions->updateMessageStatus((int) $event->aggregate_id, 'retrying');
             } elseif ($event->aggregate_type === 'social_comment') {
-                SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'retrying']);
+                $socialInteractions->updateInteractionStatus((int) $event->aggregate_id, 'retrying');
             }
             $exhausted = $outbox->markFailed($event->deduplication_key, $exception->getMessage());
             if ($exhausted && $event->aggregate_type === 'social_message') {
-                SocialMessage::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+                $socialInteractions->updateMessageStatus((int) $event->aggregate_id, 'failed');
             } elseif ($exhausted && $event->aggregate_type === 'social_comment') {
-                SocialInteraction::query()->whereKey($event->aggregate_id)->update(['status' => 'failed']);
+                $socialInteractions->updateInteractionStatus((int) $event->aggregate_id, 'failed');
             }
         }
     }

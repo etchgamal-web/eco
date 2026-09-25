@@ -8,7 +8,7 @@ use App\Modules\Auth\Domain\Exceptions\AuthorizationException as DomainAuthoriza
 use App\Modules\Catalog\Domain\Exceptions\AttributeNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\AttributeValueNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\BrandNotFoundException;
-use App\Modules\Catalog\Domain\Exceptions\BusinessRuleException;
+use App\Modules\Shared\Domain\Exceptions\BusinessRuleException;
 use App\Modules\Catalog\Domain\Exceptions\CategoryNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\ProductNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\VariantNotFoundException;

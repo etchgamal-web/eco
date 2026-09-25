@@ -36,6 +36,26 @@ final class EloquentSocialInteractionRepository implements SocialInteractionRepo
         return SocialInteraction::query()->findOrFail($id);
     }
 
+    public function findByIdempotencyKey(string $key): ?object
+    {
+        return SocialInteraction::query()->where('idempotency_key', $key)->first();
+    }
+
+    public function updateInteractionStatus(int $id, string $status): void
+    {
+        SocialInteraction::query()->whereKey($id)->update(['status' => $status]);
+    }
+
+    public function updateMessage(int $id, array $data): void
+    {
+        SocialMessage::query()->whereKey($id)->update($data);
+    }
+
+    public function updateInteraction(int $id, array $data): void
+    {
+        SocialInteraction::query()->whereKey($id)->update($data);
+    }
+
     public function findConversation(int $id): object
     {
         return SocialConversation::query()->findOrFail($id);
@@ -49,6 +69,21 @@ final class EloquentSocialInteractionRepository implements SocialInteractionRepo
     public function addMessage(array $data): object
     {
         return SocialMessage::query()->create($data);
+    }
+
+    public function findMessageByIdempotencyKey(string $key): ?object
+    {
+        return SocialMessage::query()->where('idempotency_key', $key)->first();
+    }
+
+    public function findMessage(int $id): ?object
+    {
+        return SocialMessage::query()->find($id);
+    }
+
+    public function updateMessageStatus(int $id, string $status): void
+    {
+        SocialMessage::query()->whereKey($id)->update(['status' => $status]);
     }
 
     public function messages(object $conversation): array

@@ -20,10 +20,25 @@ final class StrictArchitectureTest extends TestCase
                 'Application\\',
                 'Infrastructure\\',
                 'Presentation\\',
+                'App\\Models\\',
                 'Illuminate\\Database\\',
                 'Illuminate\\Http\\',
                 'Illuminate\\Support\\Facades\\',
             ], $file);
+        }
+    }
+
+    public function test_domain_does_not_depend_on_another_bounded_context(): void
+    {
+        foreach ($this->filesIn('Domain') as $file) {
+            $source = $this->source($file);
+            $relative = str_replace('\\', '/', $file);
+            preg_match('#/Modules/([^/]+)/Domain/#', $relative, $ownerMatch);
+            $owner = $ownerMatch[1] ?? '';
+            preg_match_all('/App\\\\Modules\\\\([A-Za-z0-9_]+)\\\\Domain\\\\/', $source, $matches);
+            foreach (array_unique($matches[1] ?? []) as $dependency) {
+                self::assertTrue($dependency === $owner || $dependency === 'Shared', $file . ' crosses bounded-context Domain boundary.');
+            }
         }
     }
 
@@ -36,6 +51,10 @@ final class StrictArchitectureTest extends TestCase
                 'Presentation\\',
                 'Illuminate\\Database\\',
                 'Illuminate\\Support\\Facades\\',
+                'App\\Models\\',
+                '::query(',
+                'auth()',
+                'forceFill(',
                 'DB::',
                 'Model::',
             ], $file);
@@ -106,7 +125,7 @@ final class StrictArchitectureTest extends TestCase
     {
         foreach ($this->filesIn('Domain/Exceptions') as $file) {
             $source = $this->source($file);
-            self::assertMatchesRegularExpression('/(?:extends|implements)\s+\w+/', $source, $file);
+            self::assertMatchesRegularExpression('/(?:extends|implements)\s+(?:[A-Za-z_][A-Za-z0-9_]*|\\\\[A-Za-z_][A-Za-z0-9_\\\\]*)/', $source, $file);
             self::assertDoesNotMatchRegularExpression('/response\s*\(|JsonResponse|abort\s*\(/', $source, $file);
         }
     }

@@ -7,6 +7,11 @@ use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 
 final class EloquentOutboxEventRepository implements OutboxEventRepositoryInterface
 {
+    public function find(int $eventId): ?OutboxEvent
+    {
+        return OutboxEvent::query()->find($eventId);
+    }
+
     public function record(
         string $aggregateType,
         int $aggregateId,

@@ -3,14 +3,14 @@
 namespace App\Modules\LandingPage\Application\UseCases;
 
 use App\Modules\LandingPage\Domain\Contracts\LandingPageRepositoryInterface;
-use App\Modules\Catalog\Domain\Exceptions\BusinessRuleException;
+use App\Modules\Shared\Domain\Exceptions\BusinessRuleException;
 use Illuminate\Support\Str;
 
 final class CaptureLandingLead
 {
     public function __construct(private readonly LandingPageRepositoryInterface $pages) {}
 
-    public function execute(string $slug, array $data): object
+    public function execute(string $slug, array $data, ?string $ipAddress = null): object
     {
         $page = $this->pages->bySlug($slug, true);
 
@@ -22,7 +22,7 @@ final class CaptureLandingLead
             throw new BusinessRuleException('A lead with the same contact was already submitted recently.');
         }
 
-        $ip = request()->ip();
+        $ip = $ipAddress;
         $data['email'] = $email ?: null;
         $data['phone'] = $phone ?: null;
         $data['dedupe_key'] = $dedupeKey;
