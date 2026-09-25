@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Settings\Infrastructure\Models\Setting;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -67,6 +68,7 @@ class CatalogApiTest extends TestCase
 
         $attribute = $this->actingAs($this->user)->postJson('/api/v1/attributes', ['name' => 'Color'])->json('data.id');
         $attributeValue = $this->actingAs($this->user)->postJson("/api/v1/attributes/{$attribute}/values", ['value' => 'Red'])->json('data.id');
+        Setting::query()->create(['group' => 'catalog', 'key' => 'catalog.sku_prefix', 'value' => 'PROD', 'type' => 'string']);
         $xlsx = UploadedFile::fake()->createWithContent('products.xlsx', $this->xlsx([
             ['name', 'type', 'status', 'slug', 'sku', 'price', 'attribute_value_ids'],
             ['XLSX Product', 'variable', 'draft', 'xlsx-product', '', '1500', (string) $attributeValue],
@@ -80,7 +82,7 @@ class CatalogApiTest extends TestCase
         $this->assertDatabaseHas('products', ['slug' => 'csv-product-2']);
         $this->assertDatabaseHas('products', ['slug' => 'xlsx-product', 'type' => 'variable']);
         $productId = Product::query()->where('slug', 'xlsx-product')->value('id');
-        $this->assertDatabaseHas('product_variants', ['sku' => 'SKU-P'.$productId, 'price' => 1500]);
+        $this->assertDatabaseHas('product_variants', ['sku' => 'PROD-P'.$productId, 'price' => 1500]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'catalog.products_imported', 'actor_id' => $this->user->id]);
     }
 

@@ -10,6 +10,7 @@ use App\Modules\Catalog\Domain\Contracts\ProductRepositoryInterface;
 use App\Modules\Catalog\Domain\Exceptions\ProductImportException;
 use App\Modules\Catalog\Domain\ValueObjects\ProductData;
 use App\Modules\Catalog\Domain\ValueObjects\ProductVariantData;
+use App\Modules\Settings\Application\UseCases\GetSetting;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
 use Illuminate\Support\Str;
@@ -29,6 +30,7 @@ final class ImportProducts
         private readonly CreateProductVariant $createVariant,
         private readonly AttributeValueRepositoryInterface $attributeValues,
         private readonly AuditLogRepositoryInterface $audit,
+        private readonly GetSetting $settings,
         private readonly TransactionManagerInterface $transactions,
     ) {}
 
@@ -179,7 +181,9 @@ final class ImportProducts
 
     private function uniqueSku(int $productId): string
     {
-        $base = 'SKU-P'.$productId;
+        $prefix = strtoupper(trim((string) $this->settings->execute('catalog.sku_prefix', 'SKU')));
+        $prefix = trim($prefix, '-_ ');
+        $base = ($prefix !== '' ? $prefix : 'SKU').'-P'.$productId;
         $candidate = $base;
         $suffix = 2;
         while ($this->products->skuExists($candidate)) {

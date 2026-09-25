@@ -119,4 +119,15 @@ class SettingsApiTest extends TestCase
             'group' => 'order_monitoring', 'value' => 7, 'type' => 'integer',
         ])->assertUnprocessable()->assertJsonValidationErrors('value');
     }
+
+    public function test_manager_can_configure_the_catalog_sku_prefix(): void
+    {
+        $this->actingAs($this->admin)->putJson('/api/v1/settings/catalog.sku_prefix', [
+            'group' => 'catalog', 'value' => 'PROD', 'type' => 'string',
+        ])->assertOk()->assertJsonPath('data.value', 'PROD');
+
+        $this->putJson('/api/v1/settings/catalog.sku_prefix', [
+            'group' => 'catalog', 'value' => '123-invalid', 'type' => 'string',
+        ])->assertUnprocessable()->assertJsonValidationErrors('value');
+    }
 }

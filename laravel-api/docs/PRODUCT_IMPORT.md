@@ -10,6 +10,22 @@ Content-Type: multipart/form-data
 
 The authenticated user must have the `products.create` permission.
 
+The administrator can configure the automatic prefix through the settings API:
+
+```http
+PUT /api/v1/settings/catalog.sku_prefix
+```
+
+```json
+{
+  "group": "catalog",
+  "value": "PROD",
+  "type": "string"
+}
+```
+
+The prefix must start with a letter and contain only letters, numbers, `_`, or `-` (maximum 20 characters). The default is `SKU`.
+
 ## Supported files
 
 - `.xlsx` Excel workbooks (the first worksheet is read)
@@ -39,7 +55,7 @@ The import is **create-only**. If a provided slug already exists, the whole impo
 
 Extra columns are ignored. The first row must contain the column names. Column names are normalized, so `Brand ID` is accepted as `brand_id`.
 
-> **SKU note:** SKU belongs to `ProductVariant` in the domain model, not to `Product`. When variant columns are supplied for a `variable` product, a variant is created. If `sku` is empty, it is generated from the persisted product identity (for example `SKU-P42`, then `SKU-P42-2` for another variant), so it is independent of the Excel/CSV file name or import source.
+> **SKU note:** SKU belongs to `ProductVariant` in the domain model, not to `Product`. When variant columns are supplied for a `variable` product, a variant is created. If `sku` is empty, it is generated from the configured prefix and persisted product identity (for example `PROD-P42`, then `PROD-P42-2` for another variant), so it is independent of the Excel/CSV file name or import source.
 
 ## Example CSV
 
