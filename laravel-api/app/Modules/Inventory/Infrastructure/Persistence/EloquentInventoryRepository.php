@@ -2,10 +2,10 @@
 
 namespace App\Modules\Inventory\Infrastructure\Persistence;
 
-use App\Models\InventoryItem;
-use App\Models\InventoryMovement;
-use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
+use App\Modules\Inventory\Infrastructure\Models\InventoryMovement;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use App\Modules\Inventory\Domain\Exceptions\InsufficientStockException;
 use App\Modules\Inventory\Domain\Exceptions\InvalidStockAdjustmentException;

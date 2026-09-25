@@ -2,7 +2,7 @@
 
 namespace App\Modules\Payment\Infrastructure\Persistence;
 
-use App\Models\Payment;
+use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\PaymentNotFoundException;
 use App\Modules\Payment\Domain\ValueObjects\PaymentClaim;

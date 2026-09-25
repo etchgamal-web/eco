@@ -1,8 +1,8 @@
 <?php
 namespace App\Modules\Order\Infrastructure\Persistence;
-use App\Models\AuditLog;
-use App\Models\CustomerOrder;
-use App\Models\OrderReturn;
+use App\Modules\Staff\Infrastructure\Models\AuditLog;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\OrderReturn;
 use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\ReturnException;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;

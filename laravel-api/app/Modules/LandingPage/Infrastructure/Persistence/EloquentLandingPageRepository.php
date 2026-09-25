@@ -2,9 +2,9 @@
 
 namespace App\Modules\LandingPage\Infrastructure\Persistence;
 
-use App\Models\LandingPage;
-use App\Models\LandingPageEvent;
-use App\Models\LandingPageLead;
+use App\Modules\LandingPage\Infrastructure\Models\LandingPage;
+use App\Modules\LandingPage\Infrastructure\Models\LandingPageEvent;
+use App\Modules\LandingPage\Infrastructure\Models\LandingPageLead;
 use App\Modules\LandingPage\Domain\Contracts\LandingPageRepositoryInterface;
 
 final class EloquentLandingPageRepository implements LandingPageRepositoryInterface

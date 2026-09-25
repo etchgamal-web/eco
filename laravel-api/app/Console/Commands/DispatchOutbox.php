@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\OutboxEvent;
+use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
 use App\Modules\Shared\Application\Jobs\ProcessOutboxEvent;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 use Illuminate\Console\Command;

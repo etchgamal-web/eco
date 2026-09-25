@@ -2,7 +2,7 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Models\ShipmentOperation;
+use App\Modules\Shipping\Infrastructure\Models\ShipmentOperation;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 
 final class EloquentShipmentOperationRepository implements ShipmentOperationRepositoryInterface

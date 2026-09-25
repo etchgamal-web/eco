@@ -2,18 +2,5 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class SocialConnection extends Model
-{
-    protected $table = 'social_connections';
-
-    protected $guarded = [];
-
-    protected $hidden = ['access_token', 'webhook_secret'];
-
-    protected function casts(): array
-    {
-        return ['access_token' => 'encrypted', 'webhook_secret' => 'encrypted', 'metadata' => 'array', 'is_active' => 'boolean'];
-    }
-}
+/** @deprecated Use the SocialCommerce module infrastructure model. */
+class SocialConnection extends \App\Modules\SocialCommerce\Infrastructure\Models\SocialConnection {}

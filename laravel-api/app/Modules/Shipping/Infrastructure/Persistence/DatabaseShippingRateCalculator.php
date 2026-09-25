@@ -2,7 +2,7 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Models\ShippingProvider;
+use App\Modules\Shipping\Infrastructure\Models\ShippingProvider;
 use App\Modules\Shipping\Domain\Contracts\ShippingPricingCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingRateCalculatorInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;

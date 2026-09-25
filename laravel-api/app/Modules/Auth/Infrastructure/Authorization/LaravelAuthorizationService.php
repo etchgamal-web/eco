@@ -4,7 +4,7 @@ namespace App\Modules\Auth\Infrastructure\Authorization;
 
 use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PermissionRepositoryInterface;
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\User;
 
 final class LaravelAuthorizationService implements AuthorizationServiceInterface
 {

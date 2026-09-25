@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Payment;
+use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Payment\Application\UseCases\ReconcilePayment;
 use Illuminate\Console\Command;
 

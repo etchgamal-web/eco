@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Middleware\AssignCorrelationId;
-use App\Models\Setting;
+use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\AI\Domain\Exceptions\AiProviderException;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException as DomainAuthenticationException;
 use App\Modules\Auth\Domain\Exceptions\AuthorizationException as DomainAuthorizationException;

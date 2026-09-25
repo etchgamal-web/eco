@@ -2,7 +2,7 @@
 
 namespace App\Modules\Payment\Infrastructure\Resilience;
 
-use App\Models\ProviderCircuitBreaker as ProviderCircuitState;
+use App\Modules\Payment\Infrastructure\Models\ProviderCircuitBreaker as ProviderCircuitState;
 use RuntimeException;
 
 final class ProviderCircuitBreaker

@@ -2,7 +2,7 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Customer\Domain\Contracts\CustomerRepositoryInterface;
 
 final class EloquentCustomerRepository implements CustomerRepositoryInterface

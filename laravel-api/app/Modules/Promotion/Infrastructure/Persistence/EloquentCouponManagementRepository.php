@@ -1,6 +1,6 @@
 <?php
 namespace App\Modules\Promotion\Infrastructure\Persistence;
-use App\Models\Coupon;
+use App\Modules\Promotion\Infrastructure\Models\Coupon;
 use App\Modules\Promotion\Domain\Contracts\CouponManagementRepositoryInterface;
 use App\Modules\Promotion\Domain\Exceptions\CouponInvalidException;
 final class EloquentCouponManagementRepository implements CouponManagementRepositoryInterface

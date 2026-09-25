@@ -2,8 +2,8 @@
 
 namespace App\Modules\Staff\Infrastructure\Persistence;
 
-use App\Models\Role;
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Staff\Domain\ValueObjects\StaffData;
 use App\Modules\Staff\Domain\Contracts\StaffRepositoryInterface;
 use App\Modules\Staff\Domain\Exceptions\StaffActionNotAllowedException;

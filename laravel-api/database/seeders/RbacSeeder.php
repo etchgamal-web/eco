@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Permission;
-use App\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\Permission;
+use App\Modules\Auth\Infrastructure\Models\Role;
 use Illuminate\Database\Seeder;
 
 class RbacSeeder extends Seeder

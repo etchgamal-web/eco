@@ -1,12 +1,12 @@
 <?php
 namespace App\Modules\Settlement\Infrastructure\Persistence;
-use App\Models\CustomerOrder;
-use App\Models\OrderReturn;
-use App\Models\Setting;
-use App\Models\ShippingProvider;
-use App\Models\ShippingSettlement;
-use App\Models\ShippingSettlementItem;
-use App\Models\Shipment;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\OrderReturn;
+use App\Modules\Settings\Infrastructure\Models\Setting;
+use App\Modules\Shipping\Infrastructure\Models\ShippingProvider;
+use App\Modules\Shipping\Infrastructure\Models\ShippingSettlement;
+use App\Modules\Shipping\Infrastructure\Models\ShippingSettlementItem;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Settlement\Domain\Contracts\SettlementRepositoryInterface;
 use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
 use Illuminate\Support\Facades\DB;

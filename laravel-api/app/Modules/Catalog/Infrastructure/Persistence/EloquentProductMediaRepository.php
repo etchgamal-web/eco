@@ -1,8 +1,8 @@
 <?php
 namespace App\Modules\Catalog\Infrastructure\Persistence;
-use App\Models\Product;
-use App\Models\ProductMedia;
-use App\Models\ProductVariant;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductMedia;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Catalog\Domain\Contracts\ProductMediaRepositoryInterface;
 use App\Modules\Catalog\Domain\Exceptions\ProductMediaNotFoundException;
 use Illuminate\Support\Facades\Storage;

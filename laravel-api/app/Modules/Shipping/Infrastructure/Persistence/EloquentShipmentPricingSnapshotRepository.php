@@ -2,7 +2,7 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Models\ShipmentPricingSnapshot;
+use App\Modules\Shipping\Infrastructure\Models\ShipmentPricingSnapshot;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;
 
 final class EloquentShipmentPricingSnapshotRepository implements ShipmentPricingSnapshotRepositoryInterface

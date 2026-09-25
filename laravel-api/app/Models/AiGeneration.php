@@ -2,14 +2,5 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class AiGeneration extends Model
-{
-    protected $guarded = [];
-
-    protected function casts(): array
-    {
-        return ['input' => 'array', 'output' => 'array'];
-    }
-}
+/** @deprecated Use the AI module infrastructure model. */
+class AiGeneration extends \App\Modules\AI\Infrastructure\Models\AiGeneration {}

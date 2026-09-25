@@ -2,8 +2,11 @@
 
 namespace App\Modules\Order;
 
-use App\Models\CustomerOrder;
-use App\Models\OrderReview;
+use App\Models\CustomerOrder as LegacyCustomerOrder;
+use App\Models\OrderReview as LegacyOrderReview;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\OrderReview;
+use App\Modules\Order\Domain\Contracts\CheckoutGatewayInterface;
 use App\Modules\Order\Domain\Contracts\OrderActivityRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\OrderReviewRepositoryInterface;
@@ -12,6 +15,7 @@ use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Order\Infrastructure\Observers\CustomerOrderObserver;
 use App\Modules\Order\Infrastructure\Observers\OrderReviewObserver;
 use App\Modules\Order\Infrastructure\Persistence\DatabaseTransactionManager;
+use App\Modules\Order\Infrastructure\Persistence\EloquentCheckoutGateway;
 use App\Modules\Order\Infrastructure\Persistence\EloquentOrderActivityRepository;
 use App\Modules\Order\Infrastructure\Persistence\EloquentOrderRepository;
 use App\Modules\Order\Infrastructure\Persistence\EloquentOrderReviewRepository;
@@ -22,6 +26,7 @@ use Illuminate\Support\ServiceProvider;
 final class OrderServiceProvider extends ServiceProvider
 {
     public array $bindings = [
+        CheckoutGatewayInterface::class => EloquentCheckoutGateway::class,
         OrderActivityRepositoryInterface::class => EloquentOrderActivityRepository::class,
         OrderRepositoryInterface::class => EloquentOrderRepository::class,
         OrderReviewRepositoryInterface::class => EloquentOrderReviewRepository::class,
@@ -34,5 +39,7 @@ final class OrderServiceProvider extends ServiceProvider
     {
         CustomerOrder::observe(CustomerOrderObserver::class);
         OrderReview::observe(OrderReviewObserver::class);
+        LegacyCustomerOrder::observe(CustomerOrderObserver::class);
+        LegacyOrderReview::observe(OrderReviewObserver::class);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Modules\Order\Infrastructure\Observers;
 
-use App\Models\OrderActivity;
-use App\Models\OrderReview;
+use App\Modules\Order\Infrastructure\Models\OrderActivity;
+use App\Modules\Order\Infrastructure\Models\OrderReview;
 
 final class OrderReviewObserver
 {

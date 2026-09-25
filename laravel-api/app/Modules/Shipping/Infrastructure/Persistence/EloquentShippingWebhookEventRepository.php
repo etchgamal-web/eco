@@ -2,7 +2,7 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Models\ShippingWebhookEvent;
+use App\Modules\Shipping\Infrastructure\Models\ShippingWebhookEvent;
 use App\Modules\Shipping\Domain\Contracts\ShippingWebhookEventRepositoryInterface;
 use Illuminate\Database\QueryException;
 

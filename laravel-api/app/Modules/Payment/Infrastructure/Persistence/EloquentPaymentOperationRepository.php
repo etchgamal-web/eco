@@ -2,7 +2,7 @@
 
 namespace App\Modules\Payment\Infrastructure\Persistence;
 
-use App\Models\PaymentOperation;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 
 final class EloquentPaymentOperationRepository implements PaymentOperationRepositoryInterface

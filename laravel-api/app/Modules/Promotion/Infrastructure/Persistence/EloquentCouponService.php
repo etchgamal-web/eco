@@ -2,7 +2,7 @@
 
 namespace App\Modules\Promotion\Infrastructure\Persistence;
 
-use App\Models\Coupon;
+use App\Modules\Promotion\Infrastructure\Models\Coupon;
 use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
 use App\Modules\Promotion\Domain\Exceptions\CouponInvalidException;
 

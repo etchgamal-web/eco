@@ -2,23 +2,5 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-final class PaymentOperation extends Model
-{
-    protected $fillable = [
-        'payment_id', 'operation', 'status', 'idempotency_key', 'provider_reference',
-        'attempt_count', 'request_payload', 'response_payload', 'last_error', 'next_retry_at',
-    ];
-
-    protected function casts(): array
-    {
-        return ['attempt_count' => 'integer', 'request_payload' => 'array', 'response_payload' => 'array', 'next_retry_at' => 'datetime'];
-    }
-
-    public function payment(): BelongsTo
-    {
-        return $this->belongsTo(Payment::class);
-    }
-}
+/** @deprecated Use the Payment module infrastructure model. */
+class PaymentOperation extends \App\Modules\Payment\Infrastructure\Models\PaymentOperation {}

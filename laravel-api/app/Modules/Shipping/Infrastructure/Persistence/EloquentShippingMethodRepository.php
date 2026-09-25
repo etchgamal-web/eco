@@ -2,7 +2,7 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Models\ShippingMethod;
+use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
 use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingRateNotFoundException;
 

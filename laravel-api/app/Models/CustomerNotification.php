@@ -1,5 +1,6 @@
 <?php
+
 namespace App\Models;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-class CustomerNotification extends Model { protected $fillable=['user_id','type','title','body','read_at']; protected function casts(): array{return ['read_at'=>'datetime'];} public function user(): BelongsTo{return $this->belongsTo(User::class);} }
+
+/** @deprecated Use the Customer module infrastructure model. */
+class CustomerNotification extends \App\Modules\Customer\Infrastructure\Models\CustomerNotification {}

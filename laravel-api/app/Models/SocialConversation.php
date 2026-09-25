@@ -2,16 +2,5 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class SocialConversation extends Model
-{
-    protected $table = 'social_conversations';
-
-    protected $guarded = [];
-
-    protected function casts(): array
-    {
-        return ['metadata' => 'array'];
-    }
-}
+/** @deprecated Use the SocialCommerce module infrastructure model. */
+class SocialConversation extends \App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation {}

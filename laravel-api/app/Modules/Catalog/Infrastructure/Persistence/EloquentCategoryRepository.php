@@ -1,6 +1,6 @@
 <?php
 namespace App\Modules\Catalog\Infrastructure\Persistence;
-use App\Models\Category;
+use App\Modules\Catalog\Infrastructure\Models\Category;
 use App\Modules\Catalog\Domain\ValueObjects\CategoryData;
 use App\Modules\Catalog\Domain\Contracts\CategoryRepositoryInterface;
 use App\Modules\Catalog\Domain\Exceptions\CategoryNotFoundException;

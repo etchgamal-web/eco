@@ -2,7 +2,7 @@
 
 namespace App\Modules\Shared\Infrastructure\Persistence;
 
-use App\Models\OutboxEvent;
+use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 
 final class EloquentOutboxEventRepository implements OutboxEventRepositoryInterface

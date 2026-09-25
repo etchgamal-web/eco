@@ -2,7 +2,7 @@
 
 namespace App\Modules\Auth\Infrastructure\Authentication;
 
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PasswordServiceInterface;
 use App\Modules\Auth\Domain\Contracts\UserRepositoryInterface;

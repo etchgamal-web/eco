@@ -2,8 +2,8 @@
 
 namespace App\Modules\Customer\Infrastructure\Console;
 
-use App\Models\CustomerCart;
-use App\Models\CustomerNotification;
+use App\Modules\Customer\Infrastructure\Models\CustomerCart;
+use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
 use Illuminate\Console\Command;
 
 final class MarkAbandonedCarts extends Command

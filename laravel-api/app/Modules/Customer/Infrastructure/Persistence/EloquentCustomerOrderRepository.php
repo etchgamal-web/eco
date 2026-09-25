@@ -2,7 +2,7 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Customer\Domain\Contracts\CustomerOrderRepositoryInterface;
 
 final class EloquentCustomerOrderRepository implements CustomerOrderRepositoryInterface

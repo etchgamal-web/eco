@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Shipment;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Shipping\Application\UseCases\ReconcileShipment;
 use Illuminate\Console\Command;
 

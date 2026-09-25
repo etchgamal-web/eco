@@ -2,16 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Attribute extends Model
+/** @deprecated Use the Catalog module infrastructure model. */
+class Attribute extends \App\Modules\Catalog\Infrastructure\Models\Attribute
 {
-    use HasFactory;
-
-    protected $fillable = ['name'];
-
     public function values(): HasMany
     {
         return $this->hasMany(AttributeValue::class);

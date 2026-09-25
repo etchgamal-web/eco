@@ -2,10 +2,10 @@
 
 namespace App\Modules\Payment\Infrastructure\Persistence;
 
-use App\Models\OutboxEvent;
-use App\Models\Payment;
-use App\Models\PaymentWebhookEvent;
-use App\Models\ProviderCircuitBreaker;
+use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
+use App\Modules\Payment\Infrastructure\Models\Payment;
+use App\Modules\Payment\Infrastructure\Models\PaymentWebhookEvent;
+use App\Modules\Payment\Infrastructure\Models\ProviderCircuitBreaker;
 use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
 use Illuminate\Support\Facades\DB;
 

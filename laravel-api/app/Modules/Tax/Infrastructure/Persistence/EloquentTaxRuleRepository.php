@@ -1,6 +1,6 @@
 <?php
 namespace App\Modules\Tax\Infrastructure\Persistence;
-use App\Models\TaxRule;
+use App\Modules\Tax\Infrastructure\Models\TaxRule;
 use App\Modules\Tax\Domain\Contracts\TaxRuleRepositoryInterface;
 use App\Modules\Settings\Domain\Exceptions\SettingsNotFoundException;
 final class EloquentTaxRuleRepository implements TaxRuleRepositoryInterface

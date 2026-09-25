@@ -2,8 +2,8 @@
 
 namespace App\Modules\Order\Infrastructure\Persistence;
 
-use App\Models\CustomerOrder;
-use App\Models\OrderActivity;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\OrderActivity;
 use App\Modules\Order\Domain\Contracts\OrderActivityRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\OrderNotFoundException;
 

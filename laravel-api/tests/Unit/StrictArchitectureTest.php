@@ -104,6 +104,42 @@ final class StrictArchitectureTest extends TestCase
         self::assertStringNotContainsString('PaymentData', $source);
     }
 
+    public function test_checkout_flow_is_not_owned_by_the_order_repository(): void
+    {
+        $repository = $this->source(dirname(__DIR__, 2).'/app/Modules/Order/Infrastructure/Persistence/EloquentOrderRepository.php');
+        $service = $this->source(dirname(__DIR__, 2).'/app/Modules/Order/Application/Services/CheckoutOrderService.php');
+        $gateway = $this->source(dirname(__DIR__, 2).'/app/Modules/Order/Infrastructure/Persistence/EloquentCheckoutGateway.php');
+
+        self::assertStringNotContainsString('function checkout(', $repository);
+        self::assertStringNotContainsString('function checkoutGuest(', $repository);
+        self::assertStringContainsString('CheckoutGatewayInterface', $service);
+        self::assertStringContainsString('TransactionManagerInterface', $service);
+        self::assertStringContainsString('CheckoutGatewayInterface', $gateway);
+    }
+
+    public function test_order_models_are_owned_by_order_infrastructure_with_legacy_wrappers_only(): void
+    {
+        $root = dirname(__DIR__, 2);
+        foreach (['CustomerOrder', 'CustomerOrderItem', 'OrderActivity', 'OrderReview'] as $model) {
+            $infrastructure = $this->source($root.'/app/Modules/Order/Infrastructure/Models/'.$model.'.php');
+            $legacy = $this->source($root.'/app/Models/'.$model.'.php');
+
+            self::assertStringContainsString('namespace App\\Modules\\Order\\Infrastructure\\Models;', $infrastructure);
+            self::assertStringContainsString('extends \\App\\Modules\\Order\\Infrastructure\\Models\\'.$model, $legacy);
+        }
+    }
+
+    public function test_app_models_contains_compatibility_wrappers_only(): void
+    {
+        foreach (glob(dirname(__DIR__, 2).'/app/Models/*.php') ?: [] as $file) {
+            $source = $this->source($file);
+
+            self::assertStringContainsString('@deprecated Use the ', $source, $file);
+            self::assertMatchesRegularExpression('~class\s+\w+\s+extends\s+\\\\App\\\\Modules\\\\[A-Za-z0-9_]+\\\\Infrastructure\\\\Models\\\\[A-Za-z0-9_]+~', $source, $file);
+            self::assertStringNotContainsString('use Illuminate\\Database\\Eloquent\\Model;', $source, $file);
+        }
+    }
+
     public function test_every_controller_is_thin_and_uses_form_request_and_use_case(): void
     {
         foreach ($this->filesIn('Presentation/Http/Controllers') as $file) {

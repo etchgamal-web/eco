@@ -1,8 +1,8 @@
 <?php
 namespace App\Modules\Catalog\Infrastructure\Persistence;
-use App\Models\CustomerOrder;
-use App\Models\Product;
-use App\Models\ProductReview;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductReview;
 use App\Modules\Catalog\Domain\Contracts\ProductReviewRepositoryInterface;
 use App\Modules\Catalog\Domain\Exceptions\ReviewNotAllowedException;
 final class EloquentProductReviewRepository implements ProductReviewRepositoryInterface

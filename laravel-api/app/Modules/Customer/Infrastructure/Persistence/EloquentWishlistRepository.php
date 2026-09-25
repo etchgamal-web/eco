@@ -2,7 +2,7 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Models\CustomerWishlist;
+use App\Modules\Customer\Infrastructure\Models\CustomerWishlist;
 use App\Modules\Customer\Domain\Contracts\WishlistRepositoryInterface;
 
 final class EloquentWishlistRepository implements WishlistRepositoryInterface

@@ -2,7 +2,7 @@
 
 namespace App\Modules\Auth\Infrastructure\Persistence;
 
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Auth\Domain\Contracts\PermissionRepositoryInterface;
 
 final class EloquentPermissionRepository implements PermissionRepositoryInterface

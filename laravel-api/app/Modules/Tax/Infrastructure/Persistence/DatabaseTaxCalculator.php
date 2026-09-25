@@ -2,7 +2,7 @@
 
 namespace App\Modules\Tax\Infrastructure\Persistence;
 
-use App\Models\TaxRule;
+use App\Modules\Tax\Infrastructure\Models\TaxRule;
 use App\Modules\Tax\Domain\Contracts\TaxCalculatorInterface;
 
 final class DatabaseTaxCalculator implements TaxCalculatorInterface

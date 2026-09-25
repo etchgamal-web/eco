@@ -1,4 +1,6 @@
 <?php
+
 namespace App\Models;
-use Illuminate\Database\Eloquent\Model;
-final class OrderMonitoringSetting extends Model { protected $fillable=['rule_type','days','is_enabled']; protected function casts():array{return ['days'=>'integer','is_enabled'=>'boolean'];} }
+
+/** @deprecated Use the Monitoring module infrastructure model. */
+class OrderMonitoringSetting extends \App\Modules\Monitoring\Infrastructure\Models\OrderMonitoringSetting {}

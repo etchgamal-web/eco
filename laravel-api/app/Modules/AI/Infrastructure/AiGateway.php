@@ -2,7 +2,7 @@
 
 namespace App\Modules\AI\Infrastructure;
 
-use App\Models\AiGeneration;
+use App\Modules\AI\Infrastructure\Models\AiGeneration;
 use App\Modules\AI\Domain\Contracts\AiGatewayInterface;
 use App\Modules\AI\Domain\Contracts\AiProviderInterface;
 use App\Modules\AI\Domain\Contracts\AiTextGeneratorInterface;

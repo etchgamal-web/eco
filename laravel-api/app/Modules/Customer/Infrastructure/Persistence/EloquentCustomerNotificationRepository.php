@@ -2,7 +2,7 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Models\CustomerNotification;
+use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
 use App\Modules\Customer\Domain\Contracts\CustomerNotificationRepositoryInterface;
 use App\Modules\Customer\Domain\Exceptions\CustomerFeatureNotFoundException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

@@ -2,8 +2,8 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Models\Shipment;
-use App\Models\ShipmentEvent;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
+use App\Modules\Shipping\Infrastructure\Models\ShipmentEvent;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShipmentNotFoundException;
 use App\Modules\Shipping\Domain\StateMachines\ShipmentStateMachine;

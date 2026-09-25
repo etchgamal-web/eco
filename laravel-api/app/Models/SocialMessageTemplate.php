@@ -2,16 +2,5 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class SocialMessageTemplate extends Model
-{
-    protected $table = 'social_message_templates';
-
-    protected $guarded = [];
-
-    protected function casts(): array
-    {
-        return ['variables' => 'array', 'is_active' => 'boolean'];
-    }
-}
+/** @deprecated Use the SocialCommerce module infrastructure model. */
+class SocialMessageTemplate extends \App\Modules\SocialCommerce\Infrastructure\Models\SocialMessageTemplate {}

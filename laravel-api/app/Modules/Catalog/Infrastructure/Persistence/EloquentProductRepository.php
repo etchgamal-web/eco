@@ -1,7 +1,7 @@
 <?php
 namespace App\Modules\Catalog\Infrastructure\Persistence;
-use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Catalog\Domain\ValueObjects\ProductData;
 use App\Modules\Catalog\Domain\ValueObjects\ProductListCriteria;
 use App\Modules\Catalog\Domain\ValueObjects\ProductVariantData;

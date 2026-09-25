@@ -2,7 +2,7 @@
 
 namespace App\Modules\Backup\Infrastructure\Configuration;
 
-use App\Models\Setting;
+use App\Modules\Settings\Infrastructure\Models\Setting;
 
 final class BackupSettings
 {

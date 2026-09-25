@@ -2,11 +2,11 @@
 
 namespace App\Modules\Customer\Infrastructure\Persistence;
 
-use App\Models\CustomerCart;
-use App\Models\CustomerCartItem;
-use App\Models\InventoryItem;
-use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Modules\Customer\Infrastructure\Models\CustomerCart;
+use App\Modules\Customer\Infrastructure\Models\CustomerCartItem;
+use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Customer\Domain\Contracts\CartRepositoryInterface;
 use App\Modules\Customer\Domain\Exceptions\CartItemNotFoundException;
 use App\Modules\Customer\Domain\Exceptions\CartItemOutOfStockException;
