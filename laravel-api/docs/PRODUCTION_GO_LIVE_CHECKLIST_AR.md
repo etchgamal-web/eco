@@ -18,10 +18,11 @@
 | OpenAPI | JSON صالح واختبارات العقد ناجحة | جاهز |
 | `/up` | Liveness أساسي من Laravel | موجود |
 | `/ready` | يفحص Database وCache وStorage وQueue | موجود ومغطى بالاختبار |
+| `/metrics` | Prometheus metrics محمية بـBearer Token | موجود، يحتاج Redis وPrometheus خارجي |
 | Queue worker | ملف Supervisor موجود، لكنه غير مثبت على سيرفر | يحتاج تنفيذًا خارجيًا |
 | Scheduler | ملف Cron موجود، لكنه غير مثبت على سيرفر | يحتاج تنفيذًا خارجيًا |
 | Backup | أمر وسكربتات موجودة | يحتاج تخزينًا واختبار Restore حقيقي |
-| Monitoring/Alerting | لا يوجد نظام مركزي منفذ | مطلوب قبل الإنتاج |
+| Monitoring/Alerting | Sentry وPrometheus endpoint وAlert rules مضافة؛ الربط الخارجي غير مضبوط | مطلوب إعداد DSN وPrometheus/Grafana/Alertmanager |
 | Staging deployment | غير موجود كـ workflow فعلي | مطلوب |
 | Production deployment | لا يوجد Pipeline نشر آلي | مطلوب أو ينفذ يدويًا موثقًا |
 
@@ -102,7 +103,7 @@ app/Modules/Shared/Infrastructure/Health/QueueHealthCheck.php
 
 ### 3.2 Monitoring وAlerting
 
-لا يوجد داخل المشروع حاليًا تكامل مكتمل مع:
+تمت إضافة طبقة Monitoring داخلية تشمل Sentry وPrometheus-compatible metrics وAlert rules. ما يحتاج إعدادًا خارجيًا هو:
 
 - Sentry أو APM
 - Prometheus أو Metrics backend
@@ -112,7 +113,7 @@ app/Modules/Shared/Infrastructure/Health/QueueHealthCheck.php
 - تنبيه عند فشل Payment/Webhook
 - تنبيه عند تراكم Outbox
 
-**المطلوب برمجيًا أو تشغيليًا:** اختيار نظام واحد على الأقل، مثل:
+**المطلوب تشغيليًا:** ربط الخدمات التالية في بيئة الإنتاج:
 
 ```text
 Sentry + CloudWatch/Grafana/Better Stack
@@ -547,4 +548,4 @@ docs/RELEASE_RUNBOOK_AR.md
 - Smoke test بعد النشر ناجح.
 - Rollback معروف ومجرب.
 
-**الخلاصة:** لا يوجد نقص يمنع بناء الواجهة الأمامية الآن. يوجد نقص في تجهيز البنية التشغيلية والإجراءات اللازمة للإنتاج الحقيقي، وبعض التحسينات البرمجية الاختيارية في readiness وobservability وsmoke tests.
+**الخلاصة:** لا يوجد نقص يمنع بناء الواجهة الأمامية الآن. طبقة Monitoring البرمجية مضافة، ويبقى تجهيز DSN وخدمات Prometheus/Grafana/Alertmanager والتنبيهات الفعلية على البنية التشغيلية قبل الإنتاج الحقيقي.

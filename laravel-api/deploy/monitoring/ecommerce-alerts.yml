@@ -1,0 +1,43 @@
+groups:
+  - name: ecommerce-api
+    rules:
+      - alert: EcommerceApiDown
+        expr: up{job="ecommerce-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Ecommerce API metrics endpoint is down
+          description: Prometheus cannot scrape the Ecommerce API for more than two minutes.
+
+      - alert: EcommerceApiHighErrorRate
+        expr: sum(rate(ecommerce_http_requests_total{job="ecommerce-api",status=~"5.."}[5m])) / clamp_min(sum(rate(ecommerce_http_requests_total{job="ecommerce-api"}[5m])), 1) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Ecommerce API 5xx rate is above 5 percent
+
+      - alert: EcommerceApiHighLatency
+        expr: sum(rate(ecommerce_http_request_duration_ms_sum{job="ecommerce-api"}[5m])) / clamp_min(sum(rate(ecommerce_http_request_duration_ms_count{job="ecommerce-api"}[5m])), 1) > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Ecommerce API average latency is above one second
+
+      - alert: EcommerceFailedJobs
+        expr: ecommerce_queue_failed_jobs{job="ecommerce-api"} > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Ecommerce has failed queue jobs
+
+      - alert: EcommerceOutboxBacklog
+        expr: ecommerce_outbox_pending_events{job="ecommerce-api"} > 100
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Ecommerce outbox backlog is above 100 events

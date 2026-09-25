@@ -18,7 +18,7 @@
 | --- | --- | --- | --- |
 | P0 | تفعيل Debug في بيئة تظهر كـProduction | ناتج `php artisan about`: `Environment PROD` و`Debug Mode ENABLED` | يمنع الإطلاق حتى يصبح `APP_DEBUG=false` وتتم مراجعة secrets وconfig cache |
 | P0 | لا يوجد backup/restore مُنفّذ ومختبر على بنية خارجية | أضيف أمر `backup:database` وسكربتات `sqlite` و`mysql` و`pgsql` وrunbook، لكن لا توجد storage أو schedule أو restore test فعلية داخل المستودع | ما زال خطر فقدان البيانات قائمًا حتى تنفيذ الاختبار |
-| P0 | لا توجد مراقبة وتنبيهات إنتاجية | توجد logs و`X-Correlation-Id` فقط، دون APM أو metrics أو alerting | لا يمكن اكتشاف فشل الدفع أو queue أو webhook في الوقت المناسب |
+| P0 | ربط المراقبة الخارجية غير مكتمل | أضيف Sentry وPrometheus metrics وAlert rules وendpoint محمي، لكن DSN وPrometheus/Grafana/Alertmanager تحتاج إعدادًا على البنية الخارجية | يجب ضبط الخدمات واختبار تنبيه فعلي قبل الإنتاج |
 | P0 | لا يوجد worker مُشغّل في بنية خارجية | أضيف `deploy/supervisor/ecommerce-worker.conf`، لكن لم يُثبت على host أو يُراقب بعد | الطلبات والأحداث المؤجلة قد تتراكم أو تتوقف بصمت |
 | P0 | لا يوجد scheduler مُفعّل في بنية خارجية | أضيف `deploy/ecommerce-scheduler.cron`، لكن لم يُثبت في crontab production بعد | abandoned carts وoutbox وreconciliation لن تعمل تلقائيًا دون cron خارجي |
 | P1 | readiness health محدود | Laravel `/up` هو health endpoint أساسي، ولا يوجد فحص DB/cache/queue/providers | قد يعلن التطبيق جاهزًا رغم تعطل dependency حرجة |
@@ -62,9 +62,9 @@ php artisan schedule:run
 
 ### 5. Health وobservability
 
-المسار `/up` ليس كافيًا كـreadiness check لمتجر يعتمد على database وcache وqueue وproviders. يجب إضافة readiness داخلي محمي أو غير كاشف للمعلومات الحساسة يفحص database connection، cache read/write، queue backend، ومساحة التخزين، مع فصل liveness عن readiness.
+يوجد الآن `/ready` منظم يفحص database وcache وstorage وqueue، ويوجد `/metrics` محمي بـBearer Token لتصدير مؤشرات Prometheus؛ يلزم ربطهما بمراقبة وتنبيهات خارجية. يجب إضافة readiness داخلي محمي أو غير كاشف للمعلومات الحساسة يفحص database connection، cache read/write، queue backend، ومساحة التخزين، مع فصل liveness عن readiness.
 
-يجب إرسال logs إلى نظام مركزي، وإضافة alerting على HTTP 5xx، authentication failures، authorization spikes، webhook signature failures، payment failures، outbox backlog، queue failures، وslow queries. يجب الحفاظ على `X-Correlation-Id` في logs وresponses دون تسجيل tokens أو card data أو secrets.
+يجب ربط Sentry وPrometheus وAlertmanager، ثم إضافة alerting على HTTP 5xx، authentication failures، authorization spikes، webhook signature failures، payment failures، outbox backlog، queue failures، وslow queries. التطبيق يصدّر حاليًا request totals/durations وfailed jobs وoutbox backlog. يجب الحفاظ على `X-Correlation-Id` في logs وresponses دون تسجيل tokens أو card data أو secrets.
 
 ### 6. Webhooks وPayments
 

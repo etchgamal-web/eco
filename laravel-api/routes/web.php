@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Shared\Presentation\Http\Controllers\MetricsController;
 use App\Modules\Shared\Presentation\Http\Controllers\ReadinessController;
 use Illuminate\Support\Facades\Route;
 
@@ -8,3 +9,4 @@ Route::get('/', function () {
 });
 
 Route::get('/ready', ReadinessController::class);
+Route::get('/metrics', MetricsController::class);
