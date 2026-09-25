@@ -29,4 +29,13 @@ final class EloquentCouponService implements CouponServiceInterface
             : min($subtotal, $coupon->value);
         return ['code' => $coupon->code, 'discount' => $discount];
     }
+
+    public function recordUsage(string $code, int $userId, int $orderId, int $discount): void
+    {
+        Coupon::query()->where('code', $code)->firstOrFail()->usages()->create([
+            'user_id' => $userId,
+            'order_id' => $orderId,
+            'discount_amount' => $discount,
+        ]);
+    }
 }

@@ -4,18 +4,22 @@ namespace App\Modules\Customer\Infrastructure\Persistence;
 
 use App\Modules\Customer\Infrastructure\Models\CustomerCart;
 use App\Modules\Customer\Infrastructure\Models\CustomerCartItem;
-use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
-use App\Modules\Catalog\Infrastructure\Models\Product;
-use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
+use App\Modules\Catalog\Domain\Contracts\ProductReaderInterface;
 use App\Modules\Customer\Domain\Contracts\CartRepositoryInterface;
 use App\Modules\Customer\Domain\Exceptions\CartItemNotFoundException;
 use App\Modules\Customer\Domain\Exceptions\CartItemOutOfStockException;
 use App\Modules\Customer\Domain\Exceptions\ProductNotPurchasableException;
+use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class EloquentCartRepository implements CartRepositoryInterface
 {
+    public function __construct(
+        private readonly ProductReaderInterface $products,
+        private readonly InventoryRepositoryInterface $inventory,
+    ) {}
+
     public function get(int $userId): CustomerCart
     {
         $cart = CustomerCart::query()->firstOrCreate(
@@ -29,11 +33,11 @@ final class EloquentCartRepository implements CartRepositoryInterface
     public function addItem(int $userId, int $productId, ?int $variantId, int $quantity): CustomerCart
     {
         return DB::transaction(function () use ($userId, $productId, $variantId, $quantity): CustomerCart {
-            $product = Product::query()->find($productId);
+            $product = $this->products->findForCheckout($productId);
             if ($product === null || $product->status !== 'active') throw new ProductNotPurchasableException('Product is not available for purchase.');
             $variant = null;
             if ($variantId !== null) {
-                $variant = ProductVariant::query()->where('product_id', $productId)->whereKey($variantId)->first();
+                $variant = $this->products->findVariantForProduct($productId, $variantId);
                 if ($variant === null || $variant->status !== 'active') throw new ProductNotPurchasableException('Product variant is not available for purchase.');
             } elseif ($product->type === 'variable') {
                 throw new ProductNotPurchasableException('A product variant is required.');
@@ -76,8 +80,7 @@ final class EloquentCartRepository implements CartRepositoryInterface
 
     private function assertAvailable(int $productId, ?int $variantId, int $quantity, string $name): void
     {
-        $inventory = InventoryItem::query()->where('product_id', $productId)->where('variant_id', $variantId)->first();
-        if ($inventory !== null && $inventory->on_hand - $inventory->reserved < $quantity) throw new CartItemOutOfStockException("Insufficient stock for [{$name}].");
+        if (! $this->inventory->isAvailable($productId, $variantId, $quantity)) throw new CartItemOutOfStockException("Insufficient stock for [{$name}].");
     }
 
     private function touch(object $cart): CustomerCart

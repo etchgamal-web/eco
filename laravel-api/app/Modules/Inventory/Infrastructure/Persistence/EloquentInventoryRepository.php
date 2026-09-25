@@ -73,6 +73,15 @@ final class EloquentInventoryRepository implements InventoryRepositoryInterface
         });
     }
 
+    public function isAvailable(int $productId, ?int $variantId, int $quantity): bool
+    {
+        $query = InventoryItem::query()->where('product_id', $productId);
+        $variantId === null ? $query->whereNull('variant_id') : $query->where('variant_id', $variantId);
+        $item = $query->first();
+
+        return $item === null || $item->on_hand - $item->reserved >= $quantity;
+    }
+
     public function release(int $productId, ?int $variantId, int $quantity): InventoryItem
     {
         if ($quantity <= 0) {

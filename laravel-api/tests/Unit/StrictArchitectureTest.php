@@ -135,6 +135,21 @@ final class StrictArchitectureTest extends TestCase
         self::assertStringNotContainsString('App\\Modules\\Auth\\Infrastructure\\Models\\User', $gateway);
     }
 
+    public function test_cross_module_checkout_adapters_use_public_ports(): void
+    {
+        $cart = $this->source(dirname(__DIR__, 2).'/app/Modules/Customer/Infrastructure/Persistence/EloquentCartRepository.php');
+        $gateway = $this->source(dirname(__DIR__, 2).'/app/Modules/Order/Infrastructure/Persistence/EloquentCheckoutGateway.php');
+
+        self::assertStringContainsString('ProductReaderInterface', $cart);
+        self::assertStringContainsString('InventoryRepositoryInterface', $cart);
+        self::assertStringNotContainsString('App\\Modules\\Catalog\\Infrastructure\\Models\\', $cart);
+        self::assertStringNotContainsString('App\\Modules\\Inventory\\Infrastructure\\Models\\', $cart);
+        self::assertStringContainsString('ProductReaderInterface', $gateway);
+        self::assertStringContainsString('CouponServiceInterface', $gateway);
+        self::assertStringNotContainsString('App\\Modules\\Catalog\\Infrastructure\\Models\\', $gateway);
+        self::assertStringNotContainsString('App\\Modules\\Promotion\\Infrastructure\\Models\\', $gateway);
+    }
+
     public function test_order_models_are_owned_by_order_infrastructure_with_legacy_wrappers_only(): void
     {
         $root = dirname(__DIR__, 2);
