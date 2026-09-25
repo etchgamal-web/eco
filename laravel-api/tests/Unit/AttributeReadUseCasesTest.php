@@ -1,8 +1,8 @@
 <?php
 namespace Tests\Unit;
 
-use App\Models\Attribute;
-use App\Models\AttributeValue;
+use App\Modules\Catalog\Infrastructure\Models\Attribute;
+use App\Modules\Catalog\Infrastructure\Models\AttributeValue;
 use App\Modules\Catalog\Application\UseCases\Attributes\GetAttribute;
 use App\Modules\Catalog\Application\UseCases\Attributes\GetAttributeValue;
 use App\Modules\Catalog\Application\UseCases\Attributes\ListAttributes;

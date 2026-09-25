@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\LandingPage;
-use App\Models\LandingPageEvent;
-use App\Models\LandingPageLead;
-use App\Models\Role;
-use App\Models\User;
+use App\Modules\LandingPage\Infrastructure\Models\LandingPage;
+use App\Modules\LandingPage\Infrastructure\Models\LandingPageEvent;
+use App\Modules\LandingPage\Infrastructure\Models\LandingPageLead;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

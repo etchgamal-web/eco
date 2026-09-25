@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
-use App\Models\SocialConnection;
-use App\Models\SocialAutomationRule;
-use App\Models\SocialConversation;
-use App\Models\SocialWebhookEvent;
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialConnection;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialAutomationRule;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialWebhookEvent;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -61,7 +61,7 @@ final class SocialCommerceFeatureTest extends TestCase
         $request()->assertOk()->assertJsonPath('received', true);
 
         self::assertSame(1, SocialWebhookEvent::query()->where('provider_event_id', 'event-1')->count());
-        self::assertSame(1, \App\Models\SocialConversation::query()->where('provider_conversation_id', 'conversation-1')->count());
+        self::assertSame(1, \App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation::query()->where('provider_conversation_id', 'conversation-1')->count());
         $connection->delete();
     }
 

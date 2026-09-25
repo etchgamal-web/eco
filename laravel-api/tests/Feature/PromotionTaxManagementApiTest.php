@@ -1,9 +1,9 @@
 <?php
 namespace Tests\Feature;
-use App\Models\Coupon;
-use App\Models\CouponUsage;
-use App\Models\Role;
-use App\Models\User;
+use App\Modules\Promotion\Infrastructure\Models\Coupon;
+use App\Modules\Promotion\Infrastructure\Models\CouponUsage;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
 use App\Modules\Promotion\Domain\Exceptions\CouponInvalidException;
 use Database\Seeders\RbacSeeder;

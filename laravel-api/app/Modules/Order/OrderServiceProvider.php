@@ -2,8 +2,6 @@
 
 namespace App\Modules\Order;
 
-use App\Models\CustomerOrder as LegacyCustomerOrder;
-use App\Models\OrderReview as LegacyOrderReview;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReview;
 use App\Modules\Order\Domain\Contracts\CheckoutGatewayInterface;
@@ -39,7 +37,5 @@ final class OrderServiceProvider extends ServiceProvider
     {
         CustomerOrder::observe(CustomerOrderObserver::class);
         OrderReview::observe(OrderReviewObserver::class);
-        LegacyCustomerOrder::observe(CustomerOrderObserver::class);
-        LegacyOrderReview::observe(OrderReviewObserver::class);
     }
 }

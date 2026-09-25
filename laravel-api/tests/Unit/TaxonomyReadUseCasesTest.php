@@ -1,8 +1,8 @@
 <?php
 namespace Tests\Unit;
 
-use App\Models\Brand;
-use App\Models\Category;
+use App\Modules\Catalog\Infrastructure\Models\Brand;
+use App\Modules\Catalog\Infrastructure\Models\Category;
 use App\Modules\Catalog\Application\UseCases\Brands\GetBrand;
 use App\Modules\Catalog\Application\UseCases\Brands\ListBrands;
 use App\Modules\Catalog\Application\UseCases\Categories\GetCategory;

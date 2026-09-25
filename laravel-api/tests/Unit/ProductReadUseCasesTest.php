@@ -1,8 +1,8 @@
 <?php
 namespace Tests\Unit;
 
-use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\GetProduct;
 use App\Modules\Catalog\Application\UseCases\Products\GetProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\ListProducts;

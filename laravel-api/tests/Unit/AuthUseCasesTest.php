@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Auth\Domain\ValueObjects\ChangePasswordData;
 use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
 use App\Modules\Auth\Application\UseCases\ChangePassword;

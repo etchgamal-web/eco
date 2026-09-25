@@ -1,7 +1,7 @@
 <?php
 namespace Tests\Unit;
 
-use App\Models\Setting;
+use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\Settings\Application\UseCases\GetSetting;
 use App\Modules\Settings\Application\UseCases\GetSettingRecord;
 use App\Modules\Settings\Application\UseCases\GetSettingsByGroup;

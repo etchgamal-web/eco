@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\CustomerCart;
-use App\Models\CustomerNotification;
-use App\Models\InventoryItem;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Models\Role;
-use App\Models\User;
+use App\Modules\Customer\Infrastructure\Models\CustomerCart;
+use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
+use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

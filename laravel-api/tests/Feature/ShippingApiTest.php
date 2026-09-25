@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\CustomerOrder;
-use App\Models\Role;
-use App\Models\Shipment;
-use App\Models\ShippingMethod;
-use App\Models\User;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
+use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
+use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

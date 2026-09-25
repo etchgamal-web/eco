@@ -1,14 +1,14 @@
 <?php
 namespace Tests\Feature;
 
-use App\Models\Attribute;
-use App\Models\AttributeValue;
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Models\Role;
-use App\Models\User;
+use App\Modules\Catalog\Infrastructure\Models\Attribute;
+use App\Modules\Catalog\Infrastructure\Models\AttributeValue;
+use App\Modules\Catalog\Infrastructure\Models\Brand;
+use App\Modules\Catalog\Infrastructure\Models\Category;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;

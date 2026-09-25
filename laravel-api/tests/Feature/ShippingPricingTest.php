@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\Models\CustomerOrder;
-use App\Models\CustomerOrderItem;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Models\ShippingFeeOption;
-use App\Models\ShippingMethod;
-use App\Models\ShippingPricingPlan;
-use App\Models\ShippingPricingRule;
-use App\Models\ShippingProvider;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\CustomerOrderItem;
+use App\Modules\Catalog\Infrastructure\Models\Product;
+use App\Modules\Catalog\Infrastructure\Models\ProductVariant;
+use App\Modules\Shipping\Infrastructure\Models\ShippingFeeOption;
+use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
+use App\Modules\Shipping\Infrastructure\Models\ShippingPricingPlan;
+use App\Modules\Shipping\Infrastructure\Models\ShippingPricingRule;
+use App\Modules\Shipping\Infrastructure\Models\ShippingProvider;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
 use App\Modules\Shipping\Infrastructure\Persistence\DatabaseShippingRateCalculator;
 use Illuminate\Foundation\Testing\RefreshDatabase;

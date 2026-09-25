@@ -1,8 +1,8 @@
 <?php
 namespace Tests\Feature;
 
-use App\Models\Setting;
-use App\Models\User;
+use App\Modules\Settings\Infrastructure\Models\Setting;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

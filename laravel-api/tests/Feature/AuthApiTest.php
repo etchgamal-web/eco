@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
-use App\Models\User;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Auth\Infrastructure\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -116,7 +116,7 @@ class AuthApiTest extends TestCase
         $user = User::factory()->create();
         self::assertFalse($user->hasPermission('products.create'));
         $user->permissionOverrides()->attach(
-            \App\Models\Permission::query()->where('slug', 'products.create')->value('id'),
+            \App\Modules\Auth\Infrastructure\Models\Permission::query()->where('slug', 'products.create')->value('id'),
             ['allowed' => false],
         );
         self::assertFalse($user->hasPermission('products.create'));

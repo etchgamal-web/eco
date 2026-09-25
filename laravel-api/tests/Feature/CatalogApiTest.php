@@ -1,6 +1,6 @@
 <?php
 namespace Tests\Feature;
-use App\Models\Permission;use App\Models\Role;use App\Models\User;use Database\Seeders\RbacSeeder;use Illuminate\Foundation\Testing\RefreshDatabase;use Tests\TestCase;
+use App\Modules\Auth\Infrastructure\Models\Permission;use App\Modules\Auth\Infrastructure\Models\Role;use App\Modules\Auth\Infrastructure\Models\User;use Database\Seeders\RbacSeeder;use Illuminate\Foundation\Testing\RefreshDatabase;use Tests\TestCase;
 class CatalogApiTest extends TestCase
 {
  use RefreshDatabase;

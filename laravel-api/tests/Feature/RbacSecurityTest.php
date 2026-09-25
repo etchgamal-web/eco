@@ -1,6 +1,6 @@
 <?php
 namespace Tests\Feature;
-use App\Models\Permission;use App\Models\Role;use App\Models\User;use App\Modules\Auth\Application\UseCases\AuthenticateUser;use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;use App\Modules\Auth\Domain\Exceptions\AuthenticationException;use App\Modules\Auth\Domain\Exceptions\AuthorizationException;use Database\Seeders\RbacSeeder;use Illuminate\Foundation\Testing\RefreshDatabase;use Tests\TestCase;
+use App\Modules\Auth\Infrastructure\Models\Permission;use App\Modules\Auth\Infrastructure\Models\Role;use App\Modules\Auth\Infrastructure\Models\User;use App\Modules\Auth\Application\UseCases\AuthenticateUser;use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;use App\Modules\Auth\Domain\Exceptions\AuthenticationException;use App\Modules\Auth\Domain\Exceptions\AuthorizationException;use Database\Seeders\RbacSeeder;use Illuminate\Foundation\Testing\RefreshDatabase;use Tests\TestCase;
 final class RbacSecurityTest extends TestCase {
  use RefreshDatabase;
  protected function setUp():void{parent::setUp();$this->seed(RbacSeeder::class);}

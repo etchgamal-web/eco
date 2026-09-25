@@ -1,16 +1,16 @@
 <?php
 namespace Tests\Feature;
-use App\Models\CustomerOrder;
-use App\Models\CustomerNotification;
-use App\Models\OperationalAlert;
-use App\Models\OrderReturn;
-use App\Models\OrderMonitoringSetting;
-use App\Models\Role;
-use App\Models\Shipment;
-use App\Models\ShippingMethod;
-use App\Models\ShippingProvider;
-use App\Models\ShippingSettlement;
-use App\Models\ShippingSettlementItem;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
+use App\Modules\Monitoring\Infrastructure\Models\OperationalAlert;
+use App\Modules\Order\Infrastructure\Models\OrderReturn;
+use App\Modules\Monitoring\Infrastructure\Models\OrderMonitoringSetting;
+use App\Modules\Auth\Infrastructure\Models\Role;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
+use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
+use App\Modules\Shipping\Infrastructure\Models\ShippingProvider;
+use App\Modules\Shipping\Infrastructure\Models\ShippingSettlement;
+use App\Modules\Shipping\Infrastructure\Models\ShippingSettlementItem;
 use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
 use App\Modules\Monitoring\Domain\Exceptions\OperationalAlertException;
 use App\Modules\Settlement\Infrastructure\Persistence\EloquentSettlementRepository;
@@ -41,7 +41,7 @@ final class SettlementImportApiTest extends TestCase
     }
     public function test_manager_can_list_settlements_with_filters_and_pagination(): void
     {
-        $admin = \App\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); $provider = ShippingProvider::query()->firstOrFail();
+        $admin = \App\Modules\Auth\Infrastructure\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); $provider = ShippingProvider::query()->firstOrFail();
         ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'SEP-001', 'period_from' => '2026-09-01', 'period_to' => '2026-09-07', 'status' => 'completed', 'currency' => 'EGP', 'difference_total' => 0]);
         ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'SEP-002', 'period_from' => '2026-09-08', 'period_to' => '2026-09-14', 'status' => 'finalized', 'currency' => 'EGP', 'difference_total' => 25]);
         ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'AUG-001', 'period_from' => '2026-08-01', 'period_to' => '2026-08-07', 'status' => 'completed', 'currency' => 'EGP', 'difference_total' => 10]);
@@ -53,12 +53,12 @@ final class SettlementImportApiTest extends TestCase
     }
     public function test_customer_cannot_list_shipping_settlements(): void
     {
-        $customer = \App\Models\User::factory()->create(); $customer->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
+        $customer = \App\Modules\Auth\Infrastructure\Models\User::factory()->create(); $customer->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
         $this->actingAs($customer)->getJson('/api/v1/shipping/settlements')->assertForbidden();
     }
     public function test_manager_can_read_financial_summary_and_provider_breakdown(): void
     {
-        $admin = \App\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); $provider = ShippingProvider::query()->firstOrFail(); $shipment = $this->shipment('TRK-REPORT', 30, 'ORD-REPORT');
+        $admin = \App\Modules\Auth\Infrastructure\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail()); $provider = ShippingProvider::query()->firstOrFail(); $shipment = $this->shipment('TRK-REPORT', 30, 'ORD-REPORT');
         $settlement = ShippingSettlement::query()->create(['shipping_provider_id' => $provider->id, 'reference' => 'REPORT-001', 'period_from' => '2026-09-01', 'period_to' => '2026-09-30', 'status' => 'completed', 'currency' => 'EGP', 'shipments_count' => 1, 'total_rows' => 1, 'matched_rows' => 0, 'mismatched_rows' => 1]);
         ShippingSettlementItem::query()->create(['shipping_settlement_id' => $settlement->id, 'shipment_id' => $shipment->id, 'order_number' => 'ORD-REPORT', 'expected_order_amount' => 100, 'actual_order_amount' => 95, 'order_amount_difference' => -5, 'expected_collection' => 100, 'actual_collection' => 100, 'collection_difference' => 0, 'expected_shipping_cost' => 30, 'actual_shipping_cost' => 35, 'shipping_difference' => 5, 'expected_return_fee' => 10, 'actual_return_fee' => 12, 'return_difference' => 2, 'expected_customer_refund' => 20, 'actual_customer_refund' => 18, 'customer_refund_difference' => -2, 'expected_total' => 40, 'actual_total' => 47, 'difference' => 7, 'status' => 'mismatched']);
 
@@ -74,7 +74,7 @@ final class SettlementImportApiTest extends TestCase
     }
     public function test_customer_cannot_read_settlement_reports(): void
     {
-        $customer = \App\Models\User::factory()->create(); $customer->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
+        $customer = \App\Modules\Auth\Infrastructure\Models\User::factory()->create(); $customer->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
         $this->actingAs($customer)->getJson('/api/v1/reports/settlements/summary')->assertForbidden();
     }
     public function test_import_counts_invalid_missing_duplicate_and_mismatched_rows(): void
@@ -114,7 +114,7 @@ final class SettlementImportApiTest extends TestCase
     }
     public function test_delivered_shipment_without_settlement_creates_settlement_missing_alert(): void
     {
-        $admin = \App\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->value('id')); OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-MISSING', 30, 'ORD-MISSING'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); DB::table('customer_orders')->where('id', $shipment->order_id)->update(['status' => 'delivered', 'updated_at' => $old]);
+        $admin = \App\Modules\Auth\Infrastructure\Models\User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->value('id')); OrderMonitoringSetting::query()->updateOrCreate(['rule_type' => 'settlement_missing'], ['days' => 1, 'is_enabled' => true]); $shipment = $this->shipment('TRK-MISSING', 30, 'ORD-MISSING'); $old = Carbon::now()->subDays(5); DB::table('shipments')->where('id', $shipment->id)->update(['status' => 'delivered', 'created_at' => $old, 'updated_at' => $old]); DB::table('customer_orders')->where('id', $shipment->order_id)->update(['status' => 'delivered', 'updated_at' => $old]);
         app(EloquentMonitoringRepository::class)->detect(); self::assertDatabaseHas('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'settlement_missing', 'status' => 'open']); self::assertDatabaseMissing('operational_alerts', ['order_id' => $shipment->order_id, 'type' => 'delivery_overdue']); $notification = CustomerNotification::query()->latest('id')->first(); self::assertNotNull($notification); self::assertSame('Settlement is missing', $notification->title); self::assertStringContainsString('ORD-MISSING', $notification->body); self::assertStringContainsString('completed settlement file', $notification->body);
     }
     public function test_processing_settlement_item_does_not_clear_settlement_missing_alert(): void
@@ -146,6 +146,6 @@ final class SettlementImportApiTest extends TestCase
         $file = $this->csv(implode("\n", $lines)."\n"); $settlement = app(EloquentSettlementRepository::class)->import($file, 'test-provider', null, null);
         self::assertSame(1, $settlement->shipments_count); self::assertSame(1000, $settlement->total_rows); self::assertSame(999, $settlement->metadata['duplicates']); self::assertSame(1, $settlement->metadata['matched']);
     }
-    private function shipment(string $tracking, int $fee, ?string $orderNumber = null): Shipment { $customer = \App\Models\User::factory()->create(); $order = CustomerOrder::query()->create(['order_number' => $orderNumber, 'user_id' => $customer->id, 'status' => 'processing', 'total_amount' => 100, 'currency' => 'EGP']); $method = ShippingMethod::query()->create(['code' => 'standard-'.uniqid(), 'name' => 'Standard', 'base_fee' => $fee, 'currency' => 'EGP', 'is_active' => true]); return Shipment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'shipping_method_id' => $method->id, 'method_code' => $method->code, 'provider_code' => 'test-provider', 'tracking_number' => $tracking, 'fee' => $fee, 'currency' => 'EGP', 'status' => 'in_transit', 'address_snapshot' => [], 'idempotency_key' => uniqid('settlement-', true)]); }
+    private function shipment(string $tracking, int $fee, ?string $orderNumber = null): Shipment { $customer = \App\Modules\Auth\Infrastructure\Models\User::factory()->create(); $order = CustomerOrder::query()->create(['order_number' => $orderNumber, 'user_id' => $customer->id, 'status' => 'processing', 'total_amount' => 100, 'currency' => 'EGP']); $method = ShippingMethod::query()->create(['code' => 'standard-'.uniqid(), 'name' => 'Standard', 'base_fee' => $fee, 'currency' => 'EGP', 'is_active' => true]); return Shipment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'shipping_method_id' => $method->id, 'method_code' => $method->code, 'provider_code' => 'test-provider', 'tracking_number' => $tracking, 'fee' => $fee, 'currency' => 'EGP', 'status' => 'in_transit', 'address_snapshot' => [], 'idempotency_key' => uniqid('settlement-', true)]); }
     private function csv(string $content): string { $file = tempnam(sys_get_temp_dir(), 'settlement-'); file_put_contents($file, $content); $this->files[] = $file; return $file; }
 }

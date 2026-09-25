@@ -1,6 +1,6 @@
 <?php
 namespace Tests\Feature;
-use App\Models\CustomerNotification;use App\Models\CustomerOrder;use App\Models\Product;use App\Models\Role;use App\Models\User;use Database\Seeders\RbacSeeder;use Illuminate\Foundation\Testing\RefreshDatabase;use Tests\TestCase;
+use App\Modules\Customer\Infrastructure\Models\CustomerNotification;use App\Modules\Order\Infrastructure\Models\CustomerOrder;use App\Modules\Catalog\Infrastructure\Models\Product;use App\Modules\Auth\Infrastructure\Models\Role;use App\Modules\Auth\Infrastructure\Models\User;use Database\Seeders\RbacSeeder;use Illuminate\Foundation\Testing\RefreshDatabase;use Tests\TestCase;
 final class CustomerFeaturesApiTest extends TestCase {
  use RefreshDatabase; private User $customer; private Product $product;
  protected function setUp():void{parent::setUp();$this->seed(RbacSeeder::class);$this->customer=User::factory()->create();$this->customer->roles()->attach(Role::query()->where('slug','customer')->firstOrFail());$this->product=Product::query()->create(['name'=>'Phone','slug'=>'phone','type'=>'simple','status'=>'active']);}
@@ -16,10 +16,10 @@ final class CustomerFeaturesApiTest extends TestCase {
  public function test_customer_cannot_read_modify_or_delete_another_customers_data():void{
   $other=User::factory()->create();
   $otherAddress=
-   \App\Models\CustomerAddress::query()->create(['user_id'=>$other->id,'recipient_name'=>'Other','phone'=>'012','address_line1'=>'Other Street','city'=>'Cairo','country'=>'EG','is_default'=>true]);
-  \App\Models\CustomerCart::query()->create(['user_id'=>$other->id]);
-  \App\Models\CustomerWishlist::query()->create(['user_id'=>$other->id,'product_id'=>$this->product->id]);
-  \App\Models\CustomerPreference::query()->create(['user_id'=>$other->id,'data'=>['secret'=>true]]);
+   \App\Modules\Customer\Infrastructure\Models\CustomerAddress::query()->create(['user_id'=>$other->id,'recipient_name'=>'Other','phone'=>'012','address_line1'=>'Other Street','city'=>'Cairo','country'=>'EG','is_default'=>true]);
+  \App\Modules\Customer\Infrastructure\Models\CustomerCart::query()->create(['user_id'=>$other->id]);
+  \App\Modules\Customer\Infrastructure\Models\CustomerWishlist::query()->create(['user_id'=>$other->id,'product_id'=>$this->product->id]);
+  \App\Modules\Customer\Infrastructure\Models\CustomerPreference::query()->create(['user_id'=>$other->id,'data'=>['secret'=>true]]);
   $notification=CustomerNotification::query()->create(['user_id'=>$other->id,'type'=>'private','title'=>'Private']);
   $this->actingAs($this->customer)->getJson('/api/v1/customer/addresses/default')->assertNotFound();
   $this->actingAs($this->customer)->putJson("/api/v1/customer/addresses/{$otherAddress->id}",['recipient_name'=>'Hijacked','phone'=>'013','address_line1'=>'No','city'=>'Cairo','country'=>'EG'])->assertNotFound();
