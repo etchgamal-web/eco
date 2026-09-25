@@ -6,8 +6,6 @@ interface CheckoutGatewayInterface
 {
     public function findByIdempotencyKey(string $key): ?object;
 
-    public function customerContext(int $userId): object;
-
     public function productForGuest(int $productId): ?object;
 
     public function createOrder(array $attributes): object;
@@ -16,5 +14,4 @@ interface CheckoutGatewayInterface
 
     public function recordCouponUsage(string $code, int $userId, int $orderId, int $discount): void;
 
-    public function clearCart(object $cart): void;
 }

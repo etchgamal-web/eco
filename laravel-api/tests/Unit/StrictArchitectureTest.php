@@ -117,6 +117,24 @@ final class StrictArchitectureTest extends TestCase
         self::assertStringContainsString('CheckoutGatewayInterface', $gateway);
     }
 
+    public function test_auth_user_does_not_own_business_module_relationships(): void
+    {
+        $user = $this->source(dirname(__DIR__, 2).'/app/Modules/Auth/Infrastructure/Models/User.php');
+
+        self::assertStringNotContainsString('App\\Modules\\Customer\\Infrastructure\\', $user);
+        self::assertStringNotContainsString('App\\Modules\\Order\\Infrastructure\\', $user);
+    }
+
+    public function test_order_checkout_uses_customer_public_context_port(): void
+    {
+        $service = $this->source(dirname(__DIR__, 2).'/app/Modules/Order/Application/Services/CheckoutOrderService.php');
+        $gateway = $this->source(dirname(__DIR__, 2).'/app/Modules/Order/Infrastructure/Persistence/EloquentCheckoutGateway.php');
+
+        self::assertStringContainsString('CheckoutCustomerContextInterface', $service);
+        self::assertStringNotContainsString('customerContext(', $gateway);
+        self::assertStringNotContainsString('App\\Modules\\Auth\\Infrastructure\\Models\\User', $gateway);
+    }
+
     public function test_order_models_are_owned_by_order_infrastructure_with_legacy_wrappers_only(): void
     {
         $root = dirname(__DIR__, 2);

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Order\Application\Services;
 
+use App\Modules\Customer\Domain\Contracts\CheckoutCustomerContextInterface;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\CheckoutGatewayInterface;
 use App\Modules\Order\Domain\Exceptions\CheckoutException;
@@ -14,6 +15,7 @@ final class CheckoutOrderService
 {
     public function __construct(
         private readonly CheckoutGatewayInterface $gateway,
+        private readonly CheckoutCustomerContextInterface $customers,
         private readonly InventoryRepositoryInterface $inventory,
         private readonly CouponServiceInterface $coupons,
         private readonly TaxCalculatorInterface $taxes,
@@ -42,14 +44,13 @@ final class CheckoutOrderService
 
     private function checkoutCustomer(CheckoutData $data, int $userId): object
     {
-        $user = $this->gateway->customerContext($userId);
-        $cart = $user->cart;
-        $items = $cart?->items;
-        if ($items === null || $items->isEmpty()) {
+        $cart = $this->customers->cartForUser($userId);
+        $items = $cart->items;
+        if ($items->isEmpty()) {
             throw CheckoutException::emptyCart();
         }
 
-        $address = $user->addresses()->findOrFail($data->addressId);
+        $address = $this->customers->addressForUser($userId, $data->addressId);
         [$subtotal, $snapshots] = $this->priceCustomerItems($items);
         $promotion = $this->coupons->apply($data->couponCode, $userId, $subtotal);
         $tax = $this->taxes->calculate($subtotal - $promotion['discount'], (string) $address->country, $address->state);
@@ -82,7 +83,7 @@ final class CheckoutOrderService
         if ($promotion['code'] !== null) {
             $this->gateway->recordCouponUsage($promotion['code'], $userId, (int) $order->id, $promotion['discount']);
         }
-        $this->gateway->clearCart($cart);
+        $this->customers->clearCartForUser($userId);
 
         return $order->load('items');
     }

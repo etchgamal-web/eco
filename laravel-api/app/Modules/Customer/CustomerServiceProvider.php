@@ -4,6 +4,7 @@ namespace App\Modules\Customer;
 
 use App\Modules\Customer\Domain\Contracts\AddressRepositoryInterface;
 use App\Modules\Customer\Domain\Contracts\CartRepositoryInterface;
+use App\Modules\Customer\Domain\Contracts\CheckoutCustomerContextInterface;
 use App\Modules\Customer\Domain\Contracts\CustomerNotificationRepositoryInterface;
 use App\Modules\Customer\Domain\Contracts\CustomerOrderRepositoryInterface;
 use App\Modules\Customer\Domain\Contracts\CustomerPreferencesRepositoryInterface;
@@ -12,6 +13,7 @@ use App\Modules\Customer\Domain\Contracts\WishlistRepositoryInterface;
 use App\Modules\Customer\Infrastructure\Console\MarkAbandonedCarts;
 use App\Modules\Customer\Infrastructure\Persistence\EloquentAddressRepository;
 use App\Modules\Customer\Infrastructure\Persistence\EloquentCartRepository;
+use App\Modules\Customer\Infrastructure\Persistence\EloquentCheckoutCustomerContext;
 use App\Modules\Customer\Infrastructure\Persistence\EloquentCustomerNotificationRepository;
 use App\Modules\Customer\Infrastructure\Persistence\EloquentCustomerOrderRepository;
 use App\Modules\Customer\Infrastructure\Persistence\EloquentCustomerPreferencesRepository;
@@ -25,6 +27,7 @@ final class CustomerServiceProvider extends ServiceProvider
         CustomerRepositoryInterface::class => EloquentCustomerRepository::class,
         AddressRepositoryInterface::class => EloquentAddressRepository::class,
         CartRepositoryInterface::class => EloquentCartRepository::class,
+        CheckoutCustomerContextInterface::class => EloquentCheckoutCustomerContext::class,
         CustomerOrderRepositoryInterface::class => EloquentCustomerOrderRepository::class,
         WishlistRepositoryInterface::class => EloquentWishlistRepository::class,
         CustomerPreferencesRepositoryInterface::class => EloquentCustomerPreferencesRepository::class,

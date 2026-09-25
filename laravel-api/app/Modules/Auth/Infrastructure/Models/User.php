@@ -1,12 +1,6 @@
 <?php
 
 namespace App\Modules\Auth\Infrastructure\Models;
-use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Customer\Infrastructure\Models\CustomerAddress;
-use App\Modules\Customer\Infrastructure\Models\CustomerCart;
-use App\Modules\Customer\Infrastructure\Models\CustomerNotification;
-use App\Modules\Customer\Infrastructure\Models\CustomerPreference;
-use App\Modules\Customer\Infrastructure\Models\CustomerWishlist;
 use App\Modules\Auth\Infrastructure\Models\Permission;
 use App\Modules\Auth\Infrastructure\Models\Role;
 
@@ -17,8 +11,6 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -69,36 +61,6 @@ class User extends Authenticatable implements CanResetPassword
             'permission_id'
         )->withPivot('allowed')
             ->withTimestamps();
-    }
-
-    public function addresses(): HasMany
-    {
-        return $this->hasMany(CustomerAddress::class);
-    }
-
-    public function orders(): HasMany
-    {
-        return $this->hasMany(CustomerOrder::class);
-    }
-
-    public function cart(): HasOne
-    {
-        return $this->hasOne(CustomerCart::class);
-    }
-
-    public function wishlist(): HasMany
-    {
-        return $this->hasMany(CustomerWishlist::class);
-    }
-
-    public function preferences(): HasOne
-    {
-        return $this->hasOne(CustomerPreference::class);
-    }
-
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(CustomerNotification::class);
     }
 
     /**
