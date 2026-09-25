@@ -2,6 +2,15 @@
 
 هذا المجلد يصف الحد الأدنى لتشغيل Laravel في production. يجب وضع secrets في secret manager أو environment provider، وليس في Git.
 
+للتثبيت الأولي على Ubuntu أو Debian استخدم السكربت الموحد من جذر المستودع:
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+الدليل الكامل بالعربية موجود في `docs/INSTALLATION_AR.md`.
+
 ## Release sequence
 
 1. أنشئ release directory جديدًا، ثم ثبّت dependencies باستخدام `composer install --no-dev --prefer-dist --optimize-autoloader`.
@@ -11,7 +20,7 @@
 5. شغّل `php artisan optimize`، ثم أعد تشغيل workers باستخدام `php artisan queue:restart`.
 6. فعّل Supervisor من `supervisor/ecommerce-worker.conf` بعملية أو أكثر حسب حجم الحمل.
 7. ثبّت `ecommerce-scheduler.cron` في crontab لمستخدم التطبيق.
-8. نفّذ smoke tests على `/up` و`/api/v1/products` وعمليات authentication، ثم تحقق من queue وwebhook logs.
+8. نفّذ smoke tests على `/up` و`/ready` و`/api/v1/products` وعمليات authentication، ثم تحقق من queue وwebhook logs.
 9. احتفظ بالrelease السابق حتى ينجح smoke test، ولا تحذف آخر release قابل للرجوع.
 
 ## Queue and scheduler checks
@@ -44,4 +53,4 @@ php artisan backup:database --force
 
 ## Health expectations
 
-`/up` هو liveness check أساسي، أما `/ready` فيفحص database وcache وstorage ويعيد `503` عند عدم الجاهزية. يجب أن يراقب مشغل البنية التحتية `/ready` قبل توجيه traffic، إضافة إلى `5xx` وqueue failures وpayment/webhook failures.
+`/up` هو liveness check أساسي، أما `/ready` فيفحص database وcache وstorage وqueue ويعيد `503` عند عدم الجاهزية. يجب أن يراقب مشغل البنية التحتية `/ready` قبل توجيه traffic، إضافة إلى `/metrics` المحمي و`5xx` وqueue failures وpayment/webhook failures.
