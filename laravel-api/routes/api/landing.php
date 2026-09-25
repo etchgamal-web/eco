@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('landing-pages/{slug}', [PublicLandingPageController::class, 'show'])->middleware('throttle:api')->name('landing.public.show');
 Route::post('landing-pages/{slug}/leads', [PublicLandingPageController::class, 'lead'])->middleware('throttle:landing-lead')->name('landing.public.leads');
 Route::post('landing-pages/{slug}/events', [LandingAnalyticsController::class, 'event'])->middleware('throttle:landing-event')->name('landing.public.events');
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('admin/landing-pages', [LandingPageController::class, 'index'])->name('landing.index');
     Route::post('admin/landing-pages', [LandingPageController::class, 'store'])->name('landing.store');
     Route::match(['put', 'patch'], 'admin/landing-pages/{page}', [LandingPageController::class, 'update'])->name('landing.update');

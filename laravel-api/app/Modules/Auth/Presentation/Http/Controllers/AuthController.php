@@ -25,9 +25,9 @@ class AuthController extends Controller
     public function register(RegisterRequest $request, RegisterUser $useCase, LoginUser $login): JsonResponse
     {
         $user = $useCase->execute(RegisterUserData::fromArray($request->validated()));
-        $login->execute($request->validated('email') ?? $request->validated('phone'), $request->validated('password'));
+        $user = $login->execute($request->validated('email') ?? $request->validated('phone'), $request->validated('password'));
 
-        return response()->json(['data' => $user], 201);
+        return response()->json($this->tokenResponse($user), 201);
     }
 
     public function login(LoginRequest $request, LoginUser $useCase): JsonResponse
@@ -38,7 +38,7 @@ class AuthController extends Controller
             (bool) $request->validated('remember', false),
         );
 
-        return response()->json(['data' => $user]);
+        return response()->json($this->tokenResponse($user));
     }
 
     public function me(AuthRequest $request, GetCurrentUser $useCase): JsonResponse
@@ -76,5 +76,15 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'Password has been reset successfully.']);
+    }
+
+    /** @return array{data: object, token: string, token_type: string} */
+    private function tokenResponse(object $user): array
+    {
+        return [
+            'data' => $user,
+            'token' => $user->createToken('api')->plainTextToken,
+            'token_type' => 'Bearer',
+        ];
     }
 }

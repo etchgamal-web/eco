@@ -2,10 +2,10 @@
 
 ## Base URL and authentication
 
-All registered application endpoints use the versioned base path `/api/v1`. Legacy `/api` routes are not registered. Public storefront reads and authentication endpoints do not require a bearer token. Protected operations require an authenticated token:
+All registered application endpoints use the versioned base path `/api/v1`. Legacy `/api` routes are not registered. Public storefront reads and authentication endpoints do not require a bearer token. Protected operations require a Laravel Sanctum personal access token:
 
 ```http
-Authorization: Bearer <token>
+Authorization: Bearer <plainTextToken>
 Accept: application/json
 Content-Type: application/json
 ```
@@ -14,7 +14,9 @@ The complete machine-readable contract is available in [`openapi.json`](./openap
 
 ## Authorization
 
-Authentication and authorization are separate checks. A valid token is not sufficient for protected business operations; the authenticated user must also hold the permission declared by the operation's `x-required-permission` OpenAPI extension. Missing credentials return `401`; missing permissions return `403`.
+`POST /api/v1/auth/login` and `POST /api/v1/auth/register` return `token` and `token_type: Bearer`. Store the token in a platform-secure credential store and send it in the `Authorization` header for every protected request. `POST /api/v1/auth/logout` revokes the current token. Authentication and authorization are separate checks. A valid token is not sufficient for protected business operations; the authenticated user must also hold the permission declared by the operation's `x-required-permission` OpenAPI extension. Missing credentials return `401`; missing permissions return `403`.
+
+Tokens expire after 43,200 minutes (30 days) by default. The expiration is configurable with `SANCTUM_TOKEN_EXPIRATION`; after expiration, the client should send the user through login again.
 
 ## Safe retries and idempotency
 

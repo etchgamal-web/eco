@@ -16,7 +16,7 @@ Route::post('auth/password/reset', [AuthController::class, 'resetPassword'])
     ->middleware('throttle:password-reset')
     ->name('auth.password.reset');
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
     Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
     Route::post('auth/password', [AuthController::class, 'changePassword'])

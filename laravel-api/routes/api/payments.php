@@ -4,7 +4,7 @@ use App\Modules\Payment\Presentation\Http\Controllers\OperationalDashboardContro
 use App\Modules\Payment\Presentation\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('orders/{orderId}/payments', [PaymentController::class, 'adminIndex'])->name('payments.index');
     Route::get('operations/dashboard', OperationalDashboardController::class)->name('operations.dashboard');
     Route::post('payments/{paymentId}/confirm', [PaymentController::class, 'confirm'])->name('payments.confirm');

@@ -8,7 +8,7 @@ Route::get('public/shipments/{tracking_token}', [PublicTrackingController::class
     ->middleware('throttle:public-tracking')
     ->name('public.shipments.track');
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('shipping-methods', [ShippingController::class, 'index'])->name('shipping-methods.index');
     Route::get('shipping-methods/{shippingMethodId}', [ShippingController::class, 'show'])->name('shipping-methods.show');
     Route::post('shipping-methods', [ShippingController::class, 'store'])->name('shipping-methods.store');

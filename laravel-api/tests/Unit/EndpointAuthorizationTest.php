@@ -28,7 +28,11 @@ final class EndpointAuthorizationTest extends TestCase
 
             $public = $this->isPublicRoute($route);
             if (! $public) {
-                $this->assertContains('auth', $route->gatherMiddleware(), 'Missing auth middleware: '.$route->uri());
+                $middleware = $route->gatherMiddleware();
+                $this->assertTrue(
+                    in_array('auth', $middleware, true) || in_array('auth:sanctum', $middleware, true) || collect($middleware)->contains(static fn (string $item): bool => str_contains($item, 'Authenticate:sanctum')),
+                    'Missing auth middleware: '.$route->uri()
+                );
             }
 
             [$controller, $method] = $this->controllerAction($route);

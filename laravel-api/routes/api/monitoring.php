@@ -3,7 +3,7 @@
 use App\Modules\Monitoring\Presentation\Http\Controllers\MonitoringController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('settings/order-monitoring', [MonitoringController::class, 'settings'])->name('settings.order-monitoring.index');
     Route::put('settings/order-monitoring', [MonitoringController::class, 'updateSetting'])->name('settings.order-monitoring.update');
     Route::get('orders/delayed', [MonitoringController::class, 'delayed'])->name('orders.delayed');

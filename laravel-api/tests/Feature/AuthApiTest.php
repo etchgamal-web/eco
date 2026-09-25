@@ -27,8 +27,9 @@ class AuthApiTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.email', 'customer@example.com');
-        $this->assertAuthenticated('web');
+        $response->assertCreated()->assertJsonPath('data.email', 'customer@example.com')
+            ->assertJsonPath('token_type', 'Bearer')
+            ->assertJsonStructure(['token']);
         $this->assertDatabaseHas('users', ['email' => 'customer@example.com', 'status' => 'active']);
         $this->assertDatabaseHas('roles', ['slug' => 'customer']);
     }
@@ -52,17 +53,17 @@ class AuthApiTest extends TestCase
     {
         $user = User::factory()->create(['email' => 'customer@example.com', 'password' => 'password123']);
 
-        $this->postJson('/api/v1/auth/login', [
+        $login = $this->postJson('/api/v1/auth/login', [
             'identifier' => 'customer@example.com', 'password' => 'password123',
-        ])->assertOk();
-        $this->assertAuthenticatedAs($user);
-        $this->getJson('/api/v1/auth/me')->assertOk()->assertJsonPath('data.id', $user->id);
-        $this->postJson('/api/v1/auth/password', [
+        ])->assertOk()->assertJsonPath('token_type', 'Bearer')->assertJsonStructure(['token']);
+        $token = $login->json('token');
+        $this->withToken($token)->getJson('/api/v1/auth/me')->assertOk()->assertJsonPath('data.id', $user->id);
+        $this->withToken($token)->postJson('/api/v1/auth/password', [
             'current_password' => 'password123', 'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ])->assertOk();
-        $this->postJson('/api/v1/auth/logout')->assertOk();
-        $this->assertGuest('web');
+        $this->withToken($token)->postJson('/api/v1/auth/logout')->assertOk();
+        $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
     public function test_invalid_or_inactive_login_is_rejected_and_protected_routes_require_authentication(): void

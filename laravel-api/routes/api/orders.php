@@ -4,7 +4,7 @@ use App\Modules\Order\Presentation\Http\Controllers\OrderController;
 use App\Modules\Order\Presentation\Http\Controllers\ReturnController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/{orderId}', [OrderController::class, 'show'])->name('orders.show');

@@ -8,7 +8,7 @@ use App\Modules\Auth\Domain\Contracts\PasswordServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PermissionRepositoryInterface;
 use App\Modules\Auth\Domain\Contracts\UserRepositoryInterface;
 use App\Modules\Auth\Infrastructure\Authentication\LaravelPasswordService;
-use App\Modules\Auth\Infrastructure\Authentication\LaravelSessionAuthenticationService;
+use App\Modules\Auth\Infrastructure\Authentication\LaravelTokenAuthenticationService;
 use App\Modules\Auth\Infrastructure\Authorization\LaravelAuthorizationService;
 use App\Modules\Auth\Infrastructure\Persistence\EloquentPermissionRepository;
 use App\Modules\Auth\Infrastructure\Persistence\EloquentUserRepository;
@@ -22,7 +22,7 @@ class AuthServiceProvider extends ServiceProvider
     public array $bindings = [
         UserRepositoryInterface::class => EloquentUserRepository::class,
         PermissionRepositoryInterface::class => EloquentPermissionRepository::class,
-        AuthenticationServiceInterface::class => LaravelSessionAuthenticationService::class,
+        AuthenticationServiceInterface::class => LaravelTokenAuthenticationService::class,
         AuthorizationServiceInterface::class => LaravelAuthorizationService::class,
         PasswordServiceInterface::class => LaravelPasswordService::class,
     ];

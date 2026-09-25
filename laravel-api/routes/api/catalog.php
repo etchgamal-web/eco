@@ -12,7 +12,7 @@ Route::get('products', [ProductController::class, 'index'])->name('products.inde
 Route::get('products/{productId}', [ProductController::class, 'show'])->name('products.show');
 Route::get('products/{productId}/variants', [ProductController::class, 'variants'])->name('products.variants.index');
 Route::get('products/{productId}/variants/{variantId}', [ProductController::class, 'showVariant'])->name('products.variants.show');
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('products/import', [ProductController::class, 'import'])->middleware('throttle:10,1')->name('products.import');
     Route::post('products', [ProductController::class, 'store'])->name('products.store');
     Route::match(['put', 'patch'], 'products/{productId}', [ProductController::class, 'update'])->name('products.update');

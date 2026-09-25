@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('social/webhooks/{channel}', [SocialWebhookController::class, 'verify'])->whereIn('channel', ['facebook', 'instagram', 'whatsapp'])->name('social.webhooks.verify');
 Route::post('social/webhooks/{channel}', [SocialWebhookController::class, 'receive'])->whereIn('channel', ['facebook', 'instagram', 'whatsapp'])->middleware('throttle:social-webhook')->name('social.webhooks.receive');
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('admin/social/connections', [SocialConnectionController::class, 'index'])->name('social.connections.index');
     Route::post('admin/social/connections', [SocialConnectionController::class, 'store'])->name('social.connections.store');
     Route::get('admin/social/connections/{connection}', [SocialConnectionController::class, 'show'])->name('social.connections.show');

@@ -1790,14 +1790,32 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse"
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "token",
+                    "token_type"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "example": "Bearer"
+                    }
+                  }
                 },
                 "examples": {
                   "default": {
-                    "summary": "Successful response",
+                    "summary": "Bearer token response",
                     "value": {
                       "data": {},
-                      "message": "Request completed successfully."
+                      "token": "1|plain-text-token",
+                      "token_type": "Bearer"
                     }
                   }
                 }
@@ -2342,14 +2360,32 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse"
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "token",
+                    "token_type"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "example": "Bearer"
+                    }
+                  }
                 },
                 "examples": {
                   "default": {
-                    "summary": "Successful response",
+                    "summary": "Bearer token response",
                     "value": {
                       "data": {},
-                      "message": "Request completed successfully."
+                      "token": "1|plain-text-token",
+                      "token_type": "Bearer"
                     }
                   }
                 }
@@ -10879,7 +10915,9 @@
     },
     "/products/import": {
       "post": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Import products from Excel or CSV",
         "operationId": "products_import_post",
         "requestBody": {
@@ -10888,7 +10926,9 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["file"],
+                "required": [
+                  "file"
+                ],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -10911,9 +10951,15 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "created": {"type": "integer"},
-                        "variants": {"type": "integer"},
-                        "rows": {"type": "integer"}
+                        "created": {
+                          "type": "integer"
+                        },
+                        "variants": {
+                          "type": "integer"
+                        },
+                        "rows": {
+                          "type": "integer"
+                        }
                       }
                     }
                   }
@@ -10921,12 +10967,24 @@
               }
             }
           },
-          "401": {"description": "Unauthenticated"},
-          "403": {"description": "Missing products.create permission"},
-          "409": {"description": "Invalid row or duplicate slug"},
-          "422": {"description": "Invalid file or validation error"}
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing products.create permission"
+          },
+          "409": {
+            "description": "Invalid row or duplicate slug"
+          },
+          "422": {
+            "description": "Invalid file or validation error"
+          }
         },
-        "security": [{"bearerAuth": []}]
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/products": {
