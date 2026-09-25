@@ -8,6 +8,7 @@ use App\Modules\Catalog\Domain\Exceptions\AttributeNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\AttributeValueNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\BrandNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\CategoryNotFoundException;
+use App\Modules\Catalog\Domain\Exceptions\ProductImportException;
 use App\Modules\Catalog\Domain\Exceptions\ProductNotFoundException;
 use App\Modules\Catalog\Domain\Exceptions\VariantNotFoundException;
 use App\Modules\Customer\Domain\Exceptions\AddressNotFoundException;
@@ -115,6 +116,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (OperationalAlertException $e, Request $r) {
             if ($r->is('api/*')) {
                 return response()->json(['message' => $e->getMessage()], 409);
+            }
+        });
+        $exceptions->render(function (ProductImportException $e, Request $r) {
+            if ($r->is('api/*')) {
+                return response()->json(['message' => $e->getMessage()], 422);
             }
         });
         $exceptions->render(function (BusinessRuleException $e, Request $r) {

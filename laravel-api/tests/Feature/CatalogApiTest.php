@@ -61,19 +61,25 @@ class CatalogApiTest extends TestCase
         $this->actingAs($this->user)->post('/api/v1/products/import', ['file' => $csv])
             ->assertCreated()
             ->assertJsonPath('data.created', 2)
+            ->assertJsonPath('data.variants', 0)
             ->assertJsonPath('data.rows', 2);
 
+        $attribute = $this->actingAs($this->user)->postJson('/api/v1/attributes', ['name' => 'Color'])->json('data.id');
+        $attributeValue = $this->actingAs($this->user)->postJson("/api/v1/attributes/{$attribute}/values", ['value' => 'Red'])->json('data.id');
         $xlsx = UploadedFile::fake()->createWithContent('products.xlsx', $this->xlsx([
-            ['name', 'type', 'status', 'slug'],
-            ['XLSX Product', 'variable', 'draft', 'xlsx-product'],
+            ['name', 'type', 'status', 'slug', 'sku', 'price', 'attribute_value_ids'],
+            ['XLSX Product', 'variable', 'draft', 'xlsx-product', '', '1500', (string) $attributeValue],
         ]));
         $this->actingAs($this->user)->post('/api/v1/products/import', ['file' => $xlsx])
             ->assertCreated()
-            ->assertJsonPath('data.created', 1);
+            ->assertJsonPath('data.created', 1)
+            ->assertJsonPath('data.variants', 1);
 
         $this->assertDatabaseHas('products', ['slug' => 'csv-product']);
         $this->assertDatabaseHas('products', ['slug' => 'csv-product-2']);
         $this->assertDatabaseHas('products', ['slug' => 'xlsx-product', 'type' => 'variable']);
+        $this->assertDatabaseHas('product_variants', ['sku' => 'SKU-XLSX-PRODUCT', 'price' => 1500]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'catalog.products_imported', 'actor_id' => $this->user->id]);
     }
 
     public function test_product_import_is_atomic_and_requires_product_creation_permission(): void
@@ -83,7 +89,7 @@ class CatalogApiTest extends TestCase
             ->assertUnauthorized();
 
         $file = UploadedFile::fake()->createWithContent('products.csv', "name,type,status,slug\nFirst,simple,active,first\nBroken,invalid,active,broken\n");
-        $this->actingAs($this->user)->post('/api/v1/products/import', ['file' => $file])->assertConflict();
+        $this->actingAs($this->user)->post('/api/v1/products/import', ['file' => $file])->assertUnprocessable();
         $this->assertDatabaseMissing('products', ['slug' => 'first']);
     }
 

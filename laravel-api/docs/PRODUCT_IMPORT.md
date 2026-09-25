@@ -30,17 +30,23 @@ The import is **create-only**. If a provided slug already exists, the whole impo
 | `description` | No | Product description |
 | `brand_id` | No | Existing brand ID, positive integer |
 | `category_id` | No | Existing category ID, positive integer |
+| `sku` | No | Variant SKU; generated automatically for a variant when empty |
+| `price` | No | Required when variant columns are supplied; non-negative integer |
+| `compare_at_price` | No | Optional variant comparison price |
+| `weight` | No | Optional non-negative variant weight |
+| `variant_status` | No | Variant status; defaults to `active` |
+| `attribute_value_ids` | No | Comma-separated attribute value IDs for a variable product variant |
 
 Extra columns are ignored. The first row must contain the column names. Column names are normalized, so `Brand ID` is accepted as `brand_id`.
 
-> **SKU note:** SKU belongs to `ProductVariant` in the current domain model, not to `Product`. This endpoint imports product records only. Variant/SKU import requires defining how Excel rows map to variants and their attribute values; it is intentionally not silently stored on the product.
+> **SKU note:** SKU belongs to `ProductVariant` in the domain model, not to `Product`. When variant columns are supplied for a `variable` product, a variant is created. If `sku` is empty, it is generated uniquely from the product name (for example `SKU-T-SHIRT`, then `SKU-T-SHIRT-2`).
 
 ## Example CSV
 
 ```csv
-name,type,status,slug,description,brand_id,category_id
-Phone,simple,active,phone,Mobile phone,1,2
-T-Shirt,variable,draft,t-shirt,Cotton shirt,1,3
+name,type,status,slug,description,brand_id,category_id,sku,price,attribute_value_ids
+Phone,simple,active,phone,Mobile phone,1,2,,,
+T-Shirt,variable,draft,t-shirt,Cotton shirt,1,3,,1500,12|18
 ```
 
 ## Example request
@@ -57,6 +63,7 @@ curl -X POST https://api.example.com/api/v1/products/import \
 {
   "data": {
     "created": 2,
+    "variants": 1,
     "rows": 2
   }
 }
