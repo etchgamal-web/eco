@@ -2,7 +2,7 @@
 
 **تاريخ التدقيق:** 13 سبتمبر 2026
 
-**آخر تحديث:** أضيفت بعد التدقيق حزمة production artifacts تشمل قالب environment آمن، سياسة CORS، إعداد Supervisor، cron للـscheduler، سكربت PostgreSQL backup، وCI لفحص الجودة والأمن. ما زالت البنود التي تتطلب بنية خارجية أو secrets أو تشغيلًا فعليًا في staging غير مغلقة تلقائيًا.
+**آخر تحديث:** أضيفت بعد التدقيق حزمة production artifacts تشمل قالب environment آمن، سياسة CORS، إعداد Supervisor، cron للـscheduler، سكربتات backup، readiness health، واختبار smoke يدوي للـStaging وCI لفحص الجودة والأمن. ما زالت البنود التي تتطلب بنية خارجية أو secrets أو تشغيلًا فعليًا في staging غير مغلقة تلقائيًا.
 
 ## الخلاصة التنفيذية
 
