@@ -39,7 +39,7 @@ The import is **create-only**. If a provided slug already exists, the whole impo
 
 Extra columns are ignored. The first row must contain the column names. Column names are normalized, so `Brand ID` is accepted as `brand_id`.
 
-> **SKU note:** SKU belongs to `ProductVariant` in the domain model, not to `Product`. When variant columns are supplied for a `variable` product, a variant is created. If `sku` is empty, it is generated uniquely from the product name (for example `SKU-T-SHIRT`, then `SKU-T-SHIRT-2`).
+> **SKU note:** SKU belongs to `ProductVariant` in the domain model, not to `Product`. When variant columns are supplied for a `variable` product, a variant is created. If `sku` is empty, it is generated from the persisted product identity (for example `SKU-P42`, then `SKU-P42-2` for another variant), so it is independent of the Excel/CSV file name or import source.
 
 ## Example CSV
 

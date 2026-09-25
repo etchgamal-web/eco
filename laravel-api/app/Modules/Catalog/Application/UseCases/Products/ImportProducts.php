@@ -111,10 +111,10 @@ final class ImportProducts
 
         $product = $this->products->create($productData, $normalizedSlug);
 
-        return $this->createVariantIfRequested($product, $row, $type, $name, $rowNumber);
+        return $this->createVariantIfRequested($product, $row, $type, $rowNumber);
     }
 
-    private function createVariantIfRequested(object $product, array $row, string $type, string $name, int $rowNumber): int
+    private function createVariantIfRequested(object $product, array $row, string $type, int $rowNumber): int
     {
         $variantColumns = ['sku', 'price', 'compare_at_price', 'weight', 'variant_status', 'attribute_value_ids', 'variant_data'];
         if (count(array_filter($variantColumns, fn (string $column): bool => ($row[$column] ?? '') !== '')) === 0) {
@@ -129,7 +129,7 @@ final class ImportProducts
             throw ProductImportException::invalidRow($rowNumber, 'price is required for an imported variant and must be a non-negative integer');
         }
         $sku = trim((string) ($row['sku'] ?? ''));
-        $sku = $sku !== '' ? $sku : $this->uniqueSku($name);
+        $sku = $sku !== '' ? $sku : $this->uniqueSku($product->id);
         if ($this->products->skuExists($sku)) {
             throw ProductImportException::invalidRow($rowNumber, "sku [{$sku}] is already in use");
         }
@@ -177,10 +177,9 @@ final class ImportProducts
         return $candidate;
     }
 
-    private function uniqueSku(string $name): string
+    private function uniqueSku(int $productId): string
     {
-        $base = 'SKU-'.Str::upper(Str::slug($name, '-'));
-        $base = $base === 'SKU-' ? 'SKU-PRODUCT' : $base;
+        $base = 'SKU-P'.$productId;
         $candidate = $base;
         $suffix = 2;
         while ($this->products->skuExists($candidate)) {

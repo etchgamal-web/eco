@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Catalog\Infrastructure\Models\Product;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -78,7 +79,8 @@ class CatalogApiTest extends TestCase
         $this->assertDatabaseHas('products', ['slug' => 'csv-product']);
         $this->assertDatabaseHas('products', ['slug' => 'csv-product-2']);
         $this->assertDatabaseHas('products', ['slug' => 'xlsx-product', 'type' => 'variable']);
-        $this->assertDatabaseHas('product_variants', ['sku' => 'SKU-XLSX-PRODUCT', 'price' => 1500]);
+        $productId = Product::query()->where('slug', 'xlsx-product')->value('id');
+        $this->assertDatabaseHas('product_variants', ['sku' => 'SKU-P'.$productId, 'price' => 1500]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'catalog.products_imported', 'actor_id' => $this->user->id]);
     }
 
