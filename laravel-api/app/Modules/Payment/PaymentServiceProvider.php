@@ -2,7 +2,9 @@
 
 namespace App\Modules\Payment;
 
+use App\Modules\Order\Domain\Contracts\PaymentInitiatorInterface;
 use App\Modules\Payment\Application\Outbox\PaymentOutboxHandler;
+use App\Modules\Payment\Application\PublicApi\PaymentCheckoutAdapter;
 use App\Modules\Payment\Domain\Contracts\KashierWebhookVerifierInterface;
 use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
@@ -30,6 +32,7 @@ final class PaymentServiceProvider extends ServiceProvider
         PaymobWebhookVerifierInterface::class => PaymobWebhookVerifier::class,
         KashierWebhookVerifierInterface::class => KashierWebhookVerifier::class,
         PaymentWebhookEventRepositoryInterface::class => EloquentPaymentWebhookEventRepository::class,
+        PaymentInitiatorInterface::class => PaymentCheckoutAdapter::class,
     ];
 
     public function register(): void

@@ -93,6 +93,17 @@ final class StrictArchitectureTest extends TestCase
         }
     }
 
+    public function test_order_checkout_uses_an_order_owned_payment_port(): void
+    {
+        $file = dirname(__DIR__, 2).'/app/Modules/Order/Application/UseCases/Checkout.php';
+        $source = $this->source($file);
+
+        self::assertStringContainsString('PaymentInitiatorInterface', $source);
+        self::assertStringNotContainsString('App\\Modules\\Payment\\', $source);
+        self::assertStringNotContainsString('CreatePayment', $source);
+        self::assertStringNotContainsString('PaymentData', $source);
+    }
+
     public function test_every_controller_is_thin_and_uses_form_request_and_use_case(): void
     {
         foreach ($this->filesIn('Presentation/Http/Controllers') as $file) {

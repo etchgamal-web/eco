@@ -4,18 +4,18 @@ namespace App\Modules\Order\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
-use App\Modules\Order\Domain\ValueObjects\CheckoutData;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
+use App\Modules\Order\Domain\Contracts\PaymentInitiatorInterface;
 use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
-use App\Modules\Payment\Application\UseCases\CreatePayment;
-use App\Modules\Payment\Domain\ValueObjects\PaymentData;
+use App\Modules\Order\Domain\ValueObjects\CheckoutData;
+
 final class Checkout
 {
     public function __construct(
         private readonly AuthenticationServiceInterface $authentication,
         private readonly OrderRepositoryInterface $orders,
         private readonly TransactionManagerInterface $transactions,
-        private readonly CreatePayment $createPayment,
+        private readonly PaymentInitiatorInterface $payments,
     ) {}
 
     public function execute(CheckoutData $data): object
@@ -34,12 +34,13 @@ final class Checkout
         });
 
         if ($data->paymentMethod !== null) {
-            $this->createPayment->execute($order->id, new PaymentData(
+            $this->payments->initiate(
+                orderId: (int) $order->id,
                 method: $data->paymentMethod,
-                currency: $order->currency,
-                idempotencyKey: $data->paymentIdempotencyKey ?? $data->idempotencyKey ?? ('payment-' . $order->id),
-                amount: $order->total_amount,
-            ));
+                currency: (string) $order->currency,
+                idempotencyKey: $data->paymentIdempotencyKey ?? $data->idempotencyKey ?? ('payment-'.$order->id),
+                amount: (int) $order->total_amount,
+            );
         }
 
         return $user === null ? $this->orders->find($order->id) : $this->orders->findForUser($user->id, $order->id);
