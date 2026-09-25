@@ -3,13 +3,13 @@
 namespace App\Modules\Payment\Application\UseCases;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
-use App\Modules\Payment\Domain\Exceptions\PaymentException;
-use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
 use App\Modules\Payment\Domain\Contracts\KashierWebhookVerifierInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentWebhookEventRepositoryInterface;
+use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
+use App\Modules\Payment\Domain\Exceptions\PaymentException;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 
 final class ProcessKashierWebhook
 {
@@ -20,8 +20,7 @@ final class ProcessKashierWebhook
         private readonly TransactionManagerInterface $transactions,
         private readonly KashierWebhookVerifierInterface $verifier,
         private readonly PaymentWebhookEventRepositoryInterface $events,
-    ) {
-    }
+    ) {}
 
     public function execute(array $payload): ?object
     {
@@ -36,13 +35,13 @@ final class ProcessKashierWebhook
         }
 
         $event = $this->events->recordOrGet([
-                'provider' => 'kashier',
-                'event_id' => $eventId,
-                'event_type' => 'payment',
-                'status' => 'received',
-                'payment_reference' => (string) ($payload['orderId'] ?? $eventId),
-                'payload' => $payload,
-            ]);
+            'provider' => 'kashier',
+            'event_id' => $eventId,
+            'event_type' => 'payment',
+            'status' => 'received',
+            'payment_reference' => (string) ($payload['orderId'] ?? $eventId),
+            'payload' => $payload,
+        ]);
         if ($event->status === 'processed') {
             return null;
         }
@@ -63,6 +62,7 @@ final class ProcessKashierWebhook
         $status = $paid ? 'confirmed' : 'failed';
         if (in_array($payment->status, ['confirmed', 'paid', 'refunded'], true) && $status !== 'confirmed') {
             $this->events->markProcessed('kashier', $eventId);
+
             return $payment;
         }
         $metadata = array_merge((array) $payment->metadata, [
@@ -80,6 +80,7 @@ final class ProcessKashierWebhook
                 $this->orders->updateStatus((int) $updated->order_id, 'confirmed');
             }
             $this->events->markProcessed('kashier', $eventId);
+
             return $updated;
         });
     }

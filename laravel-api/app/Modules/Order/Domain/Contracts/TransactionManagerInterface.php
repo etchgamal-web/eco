@@ -1,10 +1,6 @@
 <?php
+
 namespace App\Modules\Order\Domain\Contracts;
 
-use Closure;
-
-interface TransactionManagerInterface
-{
-    public function run(Closure $operation): mixed;
-}
-
+/** @deprecated Use the Shared transaction contract for cross-module workflows. */
+interface TransactionManagerInterface extends \App\Modules\Shared\Domain\Contracts\TransactionManagerInterface {}

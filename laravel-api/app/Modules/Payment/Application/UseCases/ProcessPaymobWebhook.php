@@ -3,13 +3,13 @@
 namespace App\Modules\Payment\Application\UseCases;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
-use App\Modules\Payment\Domain\Exceptions\PaymentException;
-use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
-use App\Modules\Payment\Domain\Contracts\PaymobWebhookVerifierInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentWebhookEventRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymobWebhookVerifierInterface;
+use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
+use App\Modules\Payment\Domain\Exceptions\PaymentException;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 
 final class ProcessPaymobWebhook
 {
@@ -20,8 +20,7 @@ final class ProcessPaymobWebhook
         private readonly TransactionManagerInterface $transactions,
         private readonly PaymobWebhookVerifierInterface $verifier,
         private readonly PaymentWebhookEventRepositoryInterface $events,
-    ) {
-    }
+    ) {}
 
     public function execute(array $payload, string $hmac): ?object
     {
@@ -37,13 +36,13 @@ final class ProcessPaymobWebhook
         }
 
         $event = $this->events->recordOrGet([
-                'provider' => 'paymob',
-                'event_id' => $eventId,
-                'event_type' => (string) ($payload['type'] ?? 'TRANSACTION'),
-                'status' => 'received',
-                'payment_reference' => $reference,
-                'payload' => $payload,
-            ]);
+            'provider' => 'paymob',
+            'event_id' => $eventId,
+            'event_type' => (string) ($payload['type'] ?? 'TRANSACTION'),
+            'status' => 'received',
+            'payment_reference' => $reference,
+            'payload' => $payload,
+        ]);
         if ($event->status === 'processed') {
             return null;
         }
@@ -70,6 +69,7 @@ final class ProcessPaymobWebhook
         }
         if (in_array($payment->status, ['confirmed', 'paid', 'refunded'], true) && $status !== 'confirmed') {
             $this->events->markProcessed('paymob', $eventId);
+
             return $payment;
         }
         $metadata = array_merge((array) $payment->metadata, [
@@ -86,6 +86,7 @@ final class ProcessPaymobWebhook
                 $this->orders->updateStatus((int) $updated->order_id, 'confirmed');
             }
             $this->events->markProcessed('paymob', $eventId);
+
             return $updated;
         });
 

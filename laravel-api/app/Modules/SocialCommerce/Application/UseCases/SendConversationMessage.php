@@ -3,11 +3,11 @@
 namespace App\Modules\SocialCommerce\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
+use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Exceptions\ConversationNotFoundException;
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
 
 final class SendConversationMessage
 {
@@ -33,7 +33,9 @@ final class SendConversationMessage
 
         return $this->transactions->run(function () use ($conversation, $body, $actor, $key): object {
             $existing = $this->interactions->findMessageByIdempotencyKey($key);
-            if ($existing) return $existing;
+            if ($existing) {
+                return $existing;
+            }
             $responder = ['type' => 'human', 'id' => $actor?->id, 'name' => $actor?->name ?? 'Human Operator'];
             $message = $this->interactions->addMessage([
                 'conversation_id' => $conversation->id, 'direction' => 'outbound', 'sender' => 'store',
@@ -42,6 +44,7 @@ final class SendConversationMessage
                 'responder_name' => $responder['name'], 'body' => $body, 'metadata' => ['responder' => $responder],
             ]);
             $this->outbox->record('social_message', (int) $message->id, 'social.message.send', $key, ['channel' => $conversation->channel, 'recipient' => $conversation->provider_customer_id, 'body' => $body]);
+
             return $message;
         });
     }

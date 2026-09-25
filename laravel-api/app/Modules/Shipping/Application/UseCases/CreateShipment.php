@@ -3,7 +3,7 @@
 namespace App\Modules\Shipping\Application\UseCases;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;

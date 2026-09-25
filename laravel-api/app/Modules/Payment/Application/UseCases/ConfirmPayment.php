@@ -3,13 +3,11 @@
 namespace App\Modules\Payment\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
-
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
-use App\Modules\Payment\Domain\Exceptions\PaymentException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
 
 final class ConfirmPayment

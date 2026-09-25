@@ -3,11 +3,11 @@
 namespace App\Modules\Payment\Application\UseCases;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\PaymentException;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use Illuminate\Support\Str;
 
 final class ReconcilePayment
@@ -18,8 +18,7 @@ final class ReconcilePayment
         private readonly PaymentOperationRepositoryInterface $operations,
         private readonly OrderRepositoryInterface $orders,
         private readonly TransactionManagerInterface $transactions,
-    ) {
-    }
+    ) {}
 
     public function execute(int $paymentId): object
     {
@@ -39,6 +38,7 @@ final class ReconcilePayment
         if (! in_array($status, ['pending', 'processing', 'provider_created', 'confirmed', 'failed'], true)) {
             throw new PaymentException('Invalid provider reconciliation status.');
         }
+
         return $this->transactions->run(function () use ($payment, $result, $status): object {
             $locked = $this->payments->findForUpdate((int) $payment->id);
             $updated = $this->payments->updateStatus($locked, $status, [
@@ -49,6 +49,7 @@ final class ReconcilePayment
             if ($status === 'confirmed' && $updated->order->status === 'pending') {
                 $this->orders->updateStatus((int) $updated->order_id, 'confirmed');
             }
+
             return $updated;
         });
     }

@@ -3,15 +3,14 @@
 namespace App\Modules\Payment\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
-
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
 use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
 use Illuminate\Support\Str;
 
@@ -34,7 +33,7 @@ final class RefundPayment
         if (! in_array($payment->status, ['paid', 'confirmed'], true)) {
             throw InvalidPaymentTransitionException::from($payment->status, 'refunded');
         }
-        $operationKey = 'refund:' . $payment->id . ':' . ($payment->provider_reference ?: $payment->idempotency_key);
+        $operationKey = 'refund:'.$payment->id.':'.($payment->provider_reference ?: $payment->idempotency_key);
         $previous = $this->operations->successfulResponse((int) $payment->id, 'refund');
         if ($previous !== null) {
             return $this->transactions->run(function () use ($paymentId, $payment, $previous): object {
@@ -45,8 +44,10 @@ final class RefundPayment
                     if ($order->status === 'delivered') {
                         $this->orders->markRefunded($payment->order_id);
                     }
+
                     return $refunded;
                 }
+
                 return $locked;
             });
         }
@@ -61,11 +62,12 @@ final class RefundPayment
                 throw new PaymentFailedException('Payment refund failed.');
             }
             $this->operations->complete((int) $payment->id, 'refund', 'confirmed', $payment->provider_reference, $result);
-            $this->outbox->record('payment', (int) $payment->id, 'payment.refund.completed', 'payment:refund:' . $payment->id, ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference]);
+            $this->outbox->record('payment', (int) $payment->id, 'payment.refund.completed', 'payment:refund:'.$payment->id, ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference]);
         } catch (\Throwable $exception) {
             $this->operations->fail((int) $payment->id, 'refund', $exception->getMessage(), ! ($exception instanceof PaymentFailedException));
             throw $exception;
         }
+
         return $this->transactions->run(function () use ($paymentId, $payment, $result): object {
             $locked = $this->payments->findForUpdate($paymentId);
             if (! in_array($locked->status, ['paid', 'confirmed'], true)) {

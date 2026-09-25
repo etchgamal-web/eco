@@ -6,8 +6,8 @@ use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\PaymentInitiatorInterface;
-use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Order\Domain\ValueObjects\CheckoutData;
+use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 
 final class Checkout
 {
