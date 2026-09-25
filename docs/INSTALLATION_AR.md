@@ -7,7 +7,28 @@ chmod +x install.sh
 ./install.sh
 ```
 
+يوجد أيضًا معالج تفاعلي خطوة بخطوة:
+
+```bash
+chmod +x install-wizard.sh
+./install-wizard.sh
+```
+
+المعالج يسأل عن مسار التطبيق، Redis، migrations، seeders، وdevelopment dependencies قبل بدء التثبيت.
+
 السكربت مصمم ليكون **Idempotent**؛ يمكن تشغيله أكثر من مرة دون إعادة إنشاء المفتاح إذا كان موجودًا أو حذف ملف `.env` الحالي.
+
+## فحص البيئة قبل التثبيت
+
+السكربت يفحص أولًا PHP وComposer والـextensions الموجودة. إذا كان PHP إصدار `8.3` أو أحدث وComposer موجودين، فلن يعيد تثبيتهما. كما أنه يثبت فقط الـextensions أو الأدوات الناقصة.
+
+للفحص بدون أي تعديل:
+
+```bash
+./install.sh --check-only
+```
+
+إذا كان إصدار PHP أقل من 8.3، سيتوقف السكربت برسالة واضحة بدل استبدال PHP الموجود تلقائيًا.
 
 ## ما الذي يثبته؟
 
@@ -73,6 +94,16 @@ APP_DIR=/var/www/eco/laravel-api ./install.sh
 
 ```bash
 APP_USER=www-data ./install.sh
+```
+
+### استخدام الخيارات المباشرة
+
+```bash
+./install.sh --help
+./install.sh --no-redis
+./install.sh --no-migrations --no-seeders
+./install.sh --dev
+./install.sh --app-dir=/var/www/eco/laravel-api
 ```
 
 ## الترتيب الصحيح على Production
