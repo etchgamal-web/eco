@@ -66,6 +66,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(AssignCorrelationId::class);
         $middleware->append(RecordHttpMetrics::class);
         $middleware->append(SecurityHeaders::class);
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
         $middleware->api(append: ['throttle:api']);
     })
     ->withSchedule(function (Schedule $schedule): void {

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             CheckoutSettingsSeeder::class,
             BackupSettingsSeeder::class,
             CatalogSettingsSeeder::class,
+            DemoDataSeeder::class,
         ]);
     }
 }

@@ -11,8 +11,6 @@ final class OperationalDashboardController extends Controller
 {
     public function __invoke(PaymentManagementRequest $request, GetOperationalDashboard $dashboard): JsonResponse
     {
-        abort_unless($request->user()?->hasAnyRole(['owner', 'manager']), 403);
-
         return response()->json(['data' => $dashboard->execute()]);
     }
 }

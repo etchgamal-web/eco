@@ -101,6 +101,7 @@ final class ImportProducts
             description: trim((string) ($row['description'] ?? '')) ?: null,
             type: $type,
             status: $status,
+            price: (int) ($row['price'] ?? 0),
             brandId: $brandId,
             categoryId: $categoryId,
         );

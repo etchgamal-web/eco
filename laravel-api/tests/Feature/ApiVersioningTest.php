@@ -16,7 +16,8 @@ final class ApiVersioningTest extends TestCase
             }
         }
 
-        $this->assertCount(192, $apiRoutes);
+        // Keep the inventory assertion aligned with the current v1 contract.
+        $this->assertCount(196, $apiRoutes);
         $this->assertTrue(collect($apiRoutes)->every(
             static fn ($route): bool => str_starts_with($route->uri(), 'api/v1/')
         ));
