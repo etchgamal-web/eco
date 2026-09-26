@@ -8,11 +8,12 @@ export type ApiOrder = {
   user?: { name?: string | null; email?: string | null } | null
   items?: Array<{ name?: string | null; quantity?: number; total_amount?: number; product?: { name?: string | null } | null }>
   shipping_address?: { recipient_name?: string; city?: string; address_line1?: string } | null
+  payments?: Array<{ id: number; method?: string | null; amount?: number; currency?: string | null; status?: string | null }>
   shipments?: Array<{ id: number; provider_code?: string; tracking_number?: string | null; status?: string; created_at?: string | null }>
 }
 
-export type ApiProduct = { id: number; name: string; status?: string; price?: number; category?: { name?: string } | null; variants?: Array<{ inventory?: { on_hand?: number; available?: number } | null }> }
-export type ApiInventory = { product_id: number; on_hand?: number; available?: number; reserved?: number; product?: ApiProduct | null }
+export type ApiProduct = { id: number; name: string; type?: 'simple' | 'variable'; status?: string; price?: number; category?: { name?: string } | null; variants?: Array<{ inventory?: { on_hand?: number; available?: number } | null }> }
+export type ApiInventory = { product_id: number; variant_id?: number | null; on_hand?: number; available?: number; reserved?: number; product?: ApiProduct | null; variant?: { sku?: string | null } | null }
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1').replace(/\/$/, '')
 
@@ -24,11 +25,14 @@ export class ApiError extends Error {
 async function request<T>(path: string, init: RequestInit = {}, token = getToken()): Promise<T> {
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
-  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  if (init.body && !headers.has('Content-Type') && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   if (token) headers.set('Authorization', `Bearer ${token}`)
   const response = await fetch(`${API_BASE}${path}`, { ...init, headers })
   const payload = await response.json().catch(() => null)
-  if (!response.ok) throw new ApiError(response.status, payload?.message ?? `فشل الطلب (${response.status})`)
+  if (!response.ok) {
+    if (response.status === 401 && token) clearToken()
+    throw new ApiError(response.status, payload?.message ?? `فشل الطلب (${response.status})`)
+  }
   return payload as T
 }
 
@@ -58,6 +62,7 @@ export async function updateShipmentStatus(id: number, status: string, note?: st
 export async function listProducts(params: Record<string, string | number> = {}) { const query = new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)])); return (await request<{ data: ApiProduct[] | { data?: ApiProduct[] } }>(`/products?${query}`)).data }
 export async function listInventory() { return (await request<{ data: ApiInventory[] }>('/inventory')).data }
 export async function createProduct(payload: { name: string; description?: string; type: 'simple' | 'variable'; status: string; brand_id?: number; category_id?: number }) { return (await request<{ data: ApiProduct }>('/products', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function importProducts(file: File) { const body = new FormData(); body.append('file', file); return (await request<{ data: Record<string, unknown> }>('/products/import', { method: 'POST', body })).data }
 export async function updateProduct(id: number, payload: { name: string; description?: string; type: 'simple' | 'variable'; status: string; brand_id?: number; category_id?: number }) { return (await request<{ data: ApiProduct }>(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function deleteProduct(id: number) { await request(`/products/${id}`, { method: 'DELETE' }) }
 export async function listProductVariants(productId: number) { return (await request<{ data: Array<Record<string, unknown>> }>(`/products/${productId}/variants`)).data }
@@ -78,27 +83,34 @@ export async function updateSetting(payload: { group: string; key: string; value
 function listPayload(value: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> }) { return Array.isArray(value) ? value : Array.isArray(value.data) ? value.data : [] }
 export async function listStaff() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/staff')).data) }
 export async function createStaff(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/staff', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateStaff(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/staff/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function deleteStaff(id: number) { await request(`/staff/${id}`, { method: 'DELETE' }) }
 export async function listCoupons() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/coupons')).data) }
 export async function createCoupon(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/coupons', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateCoupon(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function deleteCoupon(id: number) { await request(`/coupons/${id}`, { method: 'DELETE' }) }
 export async function listReturns() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/returns')).data) }
-export async function updateReturn(id: number, action: 'approve' | 'receive' | 'reject', payload: Record<string, unknown> = {}) { return (await request<{ data: Record<string, unknown> }>(`/returns/${id}/${action}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
+export async function updateReturn(id: number, action: 'approve' | 'receive' | 'inspect' | 'reject', payload: Record<string, unknown> = {}) { return (await request<{ data: Record<string, unknown> }>(`/returns/${id}/${action}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function listReviews() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/reviews')).data) }
 export async function moderateReview(id: number, status: string) { return (await request<{ data: Record<string, unknown> }>(`/reviews/${id}/moderate`, { method: 'PATCH', body: JSON.stringify({ status }) })).data }
 export async function listShippingMethods() { return (await request<{ data: Array<Record<string, unknown>> }>('/shipping-methods')).data }
 export async function createShippingMethod(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/shipping-methods', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateShippingMethod(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/shipping-methods/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function deleteShippingMethod(id: number) { await request(`/shipping-methods/${id}`, { method: 'DELETE' }) }
 export async function listLandingPages() { return (await request<{ data: Array<Record<string, unknown>> }>('/admin/landing-pages')).data }
 export async function createLandingPage(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/admin/landing-pages', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateLandingPage(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/admin/landing-pages/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
+export async function deleteLandingPage(id: number) { await request(`/admin/landing-pages/${id}`, { method: 'DELETE' }) }
 export async function publishLandingPage(id: number, published = true) { return (await request<{ data: Record<string, unknown> }>(`/admin/landing-pages/${id}/${published ? 'publish' : 'unpublish'}`, { method: 'POST' })).data }
 export async function listLandingLeads() { return (await request<{ data: Array<Record<string, unknown>> }>('/admin/landing-leads')).data }
+export async function updateLandingLead(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/admin/landing-leads/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function getLandingPageStats(id: number) { return (await request<{ data: Record<string, unknown> }>(`/admin/landing-pages/${id}/stats`)).data }
 export async function listSocialTemplates() { return (await request<{ data: Array<Record<string, unknown>> }>('/admin/social/templates')).data }
 export async function createSocialTemplate(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/admin/social/templates', { method: 'POST', body: JSON.stringify(payload) })).data }
 export async function deleteSocialTemplate(id: number) { await request(`/admin/social/templates/${id}`, { method: 'DELETE' }) }
 export async function listTaxRules() { return (await request<{ data: Array<Record<string, unknown>> }>('/tax-rules')).data }
 export async function createTaxRule(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/tax-rules', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateTaxRule(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/tax-rules/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function deleteTaxRule(id: number) { await request(`/tax-rules/${id}`, { method: 'DELETE' }) }
 export async function settlementSummary(params: Record<string, string> = {}) { const query = new URLSearchParams(params).toString(); return (await request<{ data: Record<string, unknown> }>(`/reports/settlements/summary${query ? `?${query}` : ''}`)).data }
 export async function settlementProviders(params: Record<string, string> = {}) { const query = new URLSearchParams(params).toString(); return (await request<{ data: Record<string, unknown> }>(`/reports/settlements/providers${query ? `?${query}` : ''}`)).data }
@@ -106,12 +118,19 @@ export async function listSettlements(params: Record<string, string> = {}) { con
 export async function finalizeSettlement(id: number) { return (await request<{ data: Record<string, unknown> }>(`/shipping/settlements/${id}/finalize`, { method: 'PATCH' })).data }
 export async function listCategories() { return (await request<{ data: Array<Record<string, unknown>> }>('/categories')).data }
 export async function createCategory(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/categories', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateCategory(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/categories/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function deleteCategory(id: number) { await request(`/categories/${id}`, { method: 'DELETE' }) }
 export async function listBrands() { return (await request<{ data: Array<Record<string, unknown>> }>('/brands')).data }
 export async function createBrand(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/brands', { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateBrand(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/brands/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function deleteBrand(id: number) { await request(`/brands/${id}`, { method: 'DELETE' }) }
 export async function listAttributes() { return (await request<{ data: Array<Record<string, unknown>> }>('/attributes')).data }
+export async function listAttributeValues(attributeId: number) { return (await request<{ data: Array<Record<string, unknown>> }>(`/attributes/${attributeId}/values`)).data }
 export async function createAttribute(name: string) { return (await request<{ data: Record<string, unknown> }>('/attributes', { method: 'POST', body: JSON.stringify({ name }) })).data }
+export async function updateAttribute(id: number, name: string) { return (await request<{ data: Record<string, unknown> }>(`/attributes/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) })).data }
+export async function createAttributeValue(attributeId: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/attributes/${attributeId}/values`, { method: 'POST', body: JSON.stringify(payload) })).data }
+export async function updateAttributeValue(attributeId: number, valueId: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/attributes/${attributeId}/values/${valueId}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
+export async function deleteAttributeValue(attributeId: number, valueId: number) { await request(`/attributes/${attributeId}/values/${valueId}`, { method: 'DELETE' }) }
 export async function deleteAttribute(id: number) { await request(`/attributes/${id}`, { method: 'DELETE' }) }
 export async function listOrderPayments(orderId: number) { return (await request<{ data: Array<Record<string, unknown>> }>(`/orders/${orderId}/payments`)).data }
 export async function confirmPayment(id: number) { return (await request<{ data: Record<string, unknown> }>(`/payments/${id}/confirm`, { method: 'POST' })).data }
@@ -121,6 +140,14 @@ export async function createSocialConnection(payload: Record<string, unknown>) {
 export async function deleteSocialConnection(id: number) { await request(`/admin/social/connections/${id}`, { method: 'DELETE' }) }
 export async function listSocialInteractions(params: Record<string, string> = {}) { const query = new URLSearchParams(params).toString(); return (await request<{ data: Array<Record<string, unknown>> }>(`/admin/social/interactions${query ? `?${query}` : ''}`)).data }
 export async function replySocialInteraction(id: number, body: string) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/interactions/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) })).data }
+export async function getSocialConversation(id: number) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/conversations/${id}`)).data }
+export async function listSocialConversationMessages(id: number) { return (await request<{ data: Array<Record<string, unknown>> }>(`/admin/social/conversations/${id}/messages`)).data }
+export async function sendSocialConversationMessage(id: number, body: string) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/conversations/${id}/messages`, { method: 'POST', body: JSON.stringify({ body }) })).data }
+export async function pauseSocialConversation(id: number) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/conversations/${id}/pause`, { method: 'POST' })).data }
+export async function resumeSocialConversation(id: number) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/conversations/${id}/resume`, { method: 'POST' })).data }
+export async function updateSocialConnection(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/connections/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
+export async function updateSocialTemplate(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/templates/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
+export async function updateAutomationRule(id: number, payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>(`/admin/social/automation-rules/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
 export async function listAutomationRules() { return (await request<{ data: Array<Record<string, unknown>> }>('/admin/social/automation-rules')).data }
 export async function createAutomationRule(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/admin/social/automation-rules', { method: 'POST', body: JSON.stringify(payload) })).data }
 export async function deleteAutomationRule(id: number) { await request(`/admin/social/automation-rules/${id}`, { method: 'DELETE' }) }
@@ -133,4 +160,8 @@ export async function runDelayedOrderDetection() { return (await request<{ data:
 export async function listOperationalAlerts(params: Record<string, string> = {}) { const query = new URLSearchParams(params).toString(); const result = (await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>(`/operational-alerts${query ? `?${query}` : ''}`)).data; return Array.isArray(result) ? result : result.data ?? [] }
 export async function acknowledgeOperationalAlert(id: number) { return (await request<{ data: Record<string, unknown> }>(`/operational-alerts/${id}/acknowledge`, { method: 'PATCH' })).data }
 export async function resolveOperationalAlert(id: number) { return (await request<{ data: Record<string, unknown> }>(`/operational-alerts/${id}/resolve`, { method: 'PATCH' })).data }
+export async function bulkAcknowledgeOperationalAlerts(ids: number[]) { return (await request<{ data: Record<string, unknown> }>('/operational-alerts/bulk-acknowledge', { method: 'PATCH', body: JSON.stringify({ ids }) })).data }
+export async function bulkResolveOperationalAlerts(ids: number[]) { return (await request<{ data: Record<string, unknown> }>('/operational-alerts/bulk-resolve', { method: 'PATCH', body: JSON.stringify({ ids }) })).data }
+export async function importSettlement(file: File, providerCode: string, periodFrom?: string, periodTo?: string) { const body = new FormData(); body.append('file', file); body.append('provider_code', providerCode); if (periodFrom) body.append('period_from', periodFrom); if (periodTo) body.append('period_to', periodTo); return (await request<{ data: Record<string, unknown> }>('/shipping/settlements/import', { method: 'POST', body })).data }
+export async function exportSettlement(id: number) { const response = await fetch(`${API_BASE}/shipping/settlements/${id}/export`, { headers: { Accept: 'text/csv', Authorization: `Bearer ${getToken()}` } }); if (!response.ok) throw new ApiError(response.status, 'تعذر تصدير التسوية'); return response.blob() }
 export function apiBaseUrl() { return API_BASE }

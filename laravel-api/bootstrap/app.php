@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AssignCorrelationId;
 use App\Http\Middleware\RecordHttpMetrics;
+use App\Http\Middleware\SecurityHeaders;
 use App\Modules\AI\Domain\Exceptions\AiProviderException;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException as DomainAuthenticationException;
 use App\Modules\Auth\Domain\Exceptions\AuthorizationException as DomainAuthorizationException;
@@ -64,6 +65,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(AssignCorrelationId::class);
         $middleware->append(RecordHttpMetrics::class);
+        $middleware->append(SecurityHeaders::class);
         $middleware->api(append: ['throttle:api']);
     })
     ->withSchedule(function (Schedule $schedule): void {

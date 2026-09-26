@@ -100,6 +100,16 @@ class AuthApiTest extends TestCase
             ->assertHeader('X-Correlation-ID', 'request-123');
     }
 
+    public function test_api_responses_include_security_headers(): void
+    {
+        $this->getJson('/api/v1/auth/me')
+            ->assertUnauthorized()
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('X-Frame-Options', 'DENY')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    }
+
     public function test_registration_attempts_are_rate_limited(): void
     {
         foreach (range(1, 3) as $_) {

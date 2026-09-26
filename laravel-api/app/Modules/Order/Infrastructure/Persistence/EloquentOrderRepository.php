@@ -25,7 +25,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function listAll(): iterable
     {
-        return CustomerOrder::query()->with(['user', 'items.product', 'review.reviewer', 'review.confirmer'])->latest()->get();
+        return CustomerOrder::query()->with(['user', 'items.product', 'payments:id,order_id,method,amount,currency,status', 'review.reviewer', 'review.confirmer'])->latest()->get();
     }
 
     public function findForUser(int $userId, int $orderId): object
