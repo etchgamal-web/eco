@@ -1,0 +1,20 @@
+import { useEffect, useState } from 'react'
+import { Activity, AlertTriangle, Check, CheckCircle2, Clock3, RefreshCw, ShieldAlert, TrendingUp } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { ApiError, acknowledgeAlert, listOperationalAlerts, operationalDashboard, resolveAlert } from '../lib/api'
+
+type Props = { onToast: (message: string, type?: 'success' | 'error') => void }
+type Alert = Record<string, unknown>
+const text = (value: unknown, fallback = '—') => value === null || value === undefined || value === '' ? fallback : String(value)
+export function ReportsPage({ onToast }: Props) {
+  const [dashboard, setDashboard] = useState<Record<string, unknown>>({})
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [loading, setLoading] = useState(true)
+  const load = async () => { setLoading(true); try { const [metrics, alertData] = await Promise.all([operationalDashboard(), listOperationalAlerts()]); setDashboard(metrics); setAlerts(alertData) } catch (error) { onToast(error instanceof ApiError ? error.message : 'تعذر تحميل التقارير والتنبيهات', 'error') } finally { setLoading(false) } }
+  // Initial synchronization with the external Laravel API.
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  useEffect(() => { void load() }, [])
+  const act = async (alert: Alert, operation: 'acknowledge' | 'resolve') => { const id = Number(alert.id); try { if (operation === 'acknowledge') await acknowledgeAlert(id); else await resolveAlert(id); onToast(operation === 'acknowledge' ? 'تم تأكيد التنبيه' : 'تم حل التنبيه'); load() } catch (error) { onToast(error instanceof ApiError ? error.message : 'تعذر تحديث التنبيه', 'error') } }
+  const cards: Array<[string, unknown, LucideIcon, string]> = [['الطلبات المتأخرة', dashboard.delayed_orders ?? dashboard.delayed, Clock3, 'amber'], ['التنبيهات المفتوحة', dashboard.open_alerts ?? dashboard.alerts, ShieldAlert, 'red'], ['عمليات الدفع الفاشلة', dashboard.failed_payments, Activity, 'blue'], ['نسبة النجاح', dashboard.success_rate, TrendingUp, 'green']]
+  return <div className="screen-page"><div className="screen-header"><div><p className="eyebrow">التحليلات والعمليات</p><h1>التقارير والتنبيهات</h1><p className="muted">مراقبة صحة العمليات والتنبيهات القادمة من Laravel.</p></div><button className="outline-button" onClick={() => void load()}><RefreshCw size={15} /> تحديث</button></div><div className="report-kpis">{cards.map(([label, value, Icon, tone]) => <div className={`report-kpi ${tone}`} key={String(label)}><span className="report-icon"><Icon size={18} /></span><div><small>{label}</small><b>{loading ? '...' : text(value, '0')}</b></div></div>)}</div><section className="data-card alerts-card"><div className="section-title"><div><h2>التنبيهات التشغيلية</h2><p className="muted">تابع التنبيهات وأكدها أو أغلقها بعد المعالجة.</p></div><span className="count-pill">{alerts.length} تنبيه</span></div>{loading ? <div className="skeleton-table">{[1, 2, 3].map((row) => <div className="skeleton-row" key={row}><span /><span /><span /><span /></div>)}</div> : alerts.length === 0 ? <div className="empty-state"><CheckCircle2 size={28} /><b>لا توجد تنبيهات مفتوحة</b><span>حالة العمليات تبدو مستقرة حالياً.</span></div> : <div className="alert-list">{alerts.map((alert) => <div className="alert-row" key={String(alert.id)}><span className={`alert-severity ${alert.severity === 'critical' ? 'critical' : 'warning'}`}><AlertTriangle size={16} /></span><div className="alert-copy"><b>{text(alert.title, text(alert.type, 'تنبيه تشغيلي'))}</b><small>{text(alert.message, text(alert.description, 'يتطلب هذا التنبيه مراجعة من فريق العمليات.'))}</small><em>{text(alert.created_at, 'حديثاً')}</em></div><span className="alert-state">{text(alert.status, 'open')}</span><div className="quick-actions"><button title="تأكيد" onClick={() => void act(alert, 'acknowledge')}><Check size={16} /></button><button title="حل التنبيه" onClick={() => void act(alert, 'resolve')}><CheckCircle2 size={16} /></button></div></div>)}</div>}</section></div>
+}

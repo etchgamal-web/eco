@@ -1,0 +1,14 @@
+import { useState } from 'react'
+import { CheckCircle2, CreditCard, Search, Undo2 } from 'lucide-react'
+import { ApiError, confirmPayment, listOrderPayments, refundPayment } from '../lib/api'
+type Props = { onToast: (message: string, type?: 'success' | 'error') => void }
+type Row = Record<string, unknown>
+const text = (v: unknown, f = '—') => v === null || v === undefined || v === '' ? f : String(v)
+export function PaymentsPage({ onToast }: Props) {
+  const [orderId, setOrderId] = useState('')
+  const [rows, setRows] = useState<Row[]>([])
+  const [loading, setLoading] = useState(false)
+  const search = async (event: React.FormEvent) => { event.preventDefault(); const id = Number(orderId); if (!id) return onToast('أدخل رقم طلب صحيح', 'error'); setLoading(true); try { setRows(await listOrderPayments(id)) } catch (error) { setRows([]); onToast(error instanceof ApiError ? error.message : 'تعذر تحميل المدفوعات', 'error') } finally { setLoading(false) } }
+  const action = async (row: Row, type: 'confirm' | 'refund') => { try { if (type === 'confirm') await confirmPayment(Number(row.id)); else await refundPayment(Number(row.id)); onToast(type === 'confirm' ? 'تم تأكيد الدفع' : 'تم رد المبلغ'); const id = Number(orderId); setRows(await listOrderPayments(id)) } catch (error) { onToast(error instanceof ApiError ? error.message : 'تعذر تنفيذ العملية', 'error') } }
+  return <div className="screen-page"><div className="screen-header"><div><p className="eyebrow">المدفوعات</p><h1>عمليات الدفع</h1><p className="muted">ابحث برقم الطلب لمراجعة الدفع وتأكيده أو رد المبلغ.</p></div></div><form className="payment-search" onSubmit={search}><CreditCard size={18} /><input inputMode="numeric" value={orderId} onChange={(event) => setOrderId(event.target.value)} placeholder="رقم الطلب مثل 1042" /><button className="primary-button"><Search size={15} /> بحث</button></form><section className="data-card"><div className="table-wrap">{loading ? <div className="settings-loading">جار تحميل عمليات الدفع...</div> : rows.length === 0 ? <div className="empty-state"><CreditCard size={28} /><b>لا توجد عمليات دفع معروضة</b><span>اكتب رقم الطلب لعرض سجل الدفع.</span></div> : <table><thead><tr><th>المعرف</th><th>الطريقة</th><th>المبلغ</th><th>العملة</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead><tbody>{rows.map((row) => <tr key={String(row.id)}><td><b>{text(row.id)}</b></td><td>{text(row.method)}</td><td>{text(row.amount)}</td><td>{text(row.currency, 'SAR')}</td><td>{text(row.status)}</td><td>{text(row.created_at)}</td><td><div className="quick-actions">{text(row.status) !== 'confirmed' && <button title="تأكيد الدفع" onClick={() => void action(row, 'confirm')}><CheckCircle2 size={15} /></button>}{text(row.status) !== 'refunded' && <button title="رد المبلغ" className="danger" onClick={() => void action(row, 'refund')}><Undo2 size={15} /></button>}</div></td></tr>)}</tbody></table>}</div></section></div>
+}
