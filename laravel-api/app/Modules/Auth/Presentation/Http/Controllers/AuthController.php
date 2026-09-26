@@ -10,6 +10,7 @@ use App\Modules\Auth\Application\UseCases\LoginUser;
 use App\Modules\Auth\Application\UseCases\LogoutUser;
 use App\Modules\Auth\Application\UseCases\RegisterUser;
 use App\Modules\Auth\Application\UseCases\RequestPasswordReset;
+use App\Modules\Auth\Application\UseCases\UpdateProfile;
 use App\Modules\Auth\Domain\ValueObjects\ChangePasswordData;
 use App\Modules\Auth\Domain\ValueObjects\RegisterUserData;
 use App\Modules\Auth\Presentation\Http\Requests\AuthRequest;
@@ -18,6 +19,7 @@ use App\Modules\Auth\Presentation\Http\Requests\LoginRequest;
 use App\Modules\Auth\Presentation\Http\Requests\PasswordResetConfirmRequest;
 use App\Modules\Auth\Presentation\Http\Requests\PasswordResetRequest;
 use App\Modules\Auth\Presentation\Http\Requests\RegisterRequest;
+use App\Modules\Auth\Presentation\Http\Requests\UpdateProfileRequest;
 use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
@@ -44,6 +46,13 @@ class AuthController extends Controller
     public function me(AuthRequest $request, GetCurrentUser $useCase): JsonResponse
     {
         return response()->json(['data' => $useCase->execute()]);
+    }
+
+    public function updateProfile(UpdateProfileRequest $request, GetCurrentUser $current, UpdateProfile $useCase): JsonResponse
+    {
+        $user = $useCase->execute($current->execute(), $request->validated());
+
+        return response()->json(['data' => $user]);
     }
 
     public function logout(AuthRequest $request, LogoutUser $useCase): JsonResponse

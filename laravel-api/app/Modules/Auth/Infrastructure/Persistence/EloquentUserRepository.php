@@ -47,4 +47,11 @@ final class EloquentUserRepository implements UserRepositoryInterface
 
         return $user->fresh();
     }
+
+    public function updateProfile(object $user, array $data): object
+    {
+        $user->forceFill($data)->save();
+
+        return $user->fresh();
+    }
 }

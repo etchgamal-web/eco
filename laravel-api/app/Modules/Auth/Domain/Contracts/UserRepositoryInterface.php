@@ -13,4 +13,7 @@ interface UserRepositoryInterface
     public function create(RegisterUserData $data): object;
 
     public function updatePassword(object $user, string $password): object;
+
+    /** @param array{name: string, email: string} $data */
+    public function updateProfile(object $user, array $data): object;
 }

@@ -47,6 +47,8 @@ export async function login(identifier: string, password: string) {
 }
 
 export async function me() { return (await request<{ data: { id: number; name?: string; email?: string } }>('/auth/me')).data }
+export async function updateProfile(payload: { name: string; email: string }) { return (await request<{ data: { id: number; name?: string; email?: string } }>('/auth/me', { method: 'PATCH', body: JSON.stringify(payload) })).data }
+export async function changePassword(payload: { current_password: string; password: string; password_confirmation: string }) { return request<{ data: Record<string, unknown> }>('/auth/password', { method: 'POST', body: JSON.stringify(payload) }) }
 export async function logout() { await request('/auth/logout', { method: 'POST' }).finally(clearToken) }
 export async function listOrders() { return (await request<{ data: ApiOrder[] }>('/orders')).data }
 export async function getOrder(id: number) { return (await request<{ data: ApiOrder }>(`/orders/${id}`)).data }
