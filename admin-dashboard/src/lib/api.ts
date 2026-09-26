@@ -75,15 +75,16 @@ export async function acknowledgeAlert(id: number) { return (await request<{ dat
 export async function resolveAlert(id: number) { return (await request<{ data: Record<string, unknown> }>(`/operational-alerts/${id}/resolve`, { method: 'PATCH' })).data }
 export async function listSettings() { return (await request<{ data: Array<Record<string, unknown>> }>('/settings')).data }
 export async function updateSetting(payload: { group: string; key: string; value: unknown; type: string; description?: string }) { return (await request<{ data: Record<string, unknown> }>(`/settings/${encodeURIComponent(payload.key)}`, { method: 'PUT', body: JSON.stringify(payload) })).data }
-export async function listStaff() { return (await request<{ data: Array<Record<string, unknown>> }>('/staff')).data }
+function listPayload(value: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> }) { return Array.isArray(value) ? value : Array.isArray(value.data) ? value.data : [] }
+export async function listStaff() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/staff')).data) }
 export async function createStaff(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/staff', { method: 'POST', body: JSON.stringify(payload) })).data }
 export async function deleteStaff(id: number) { await request(`/staff/${id}`, { method: 'DELETE' }) }
-export async function listCoupons() { return (await request<{ data: Array<Record<string, unknown>> }>('/coupons')).data }
+export async function listCoupons() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/coupons')).data) }
 export async function createCoupon(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/coupons', { method: 'POST', body: JSON.stringify(payload) })).data }
 export async function deleteCoupon(id: number) { await request(`/coupons/${id}`, { method: 'DELETE' }) }
-export async function listReturns() { return (await request<{ data: Array<Record<string, unknown>> }>('/returns')).data }
+export async function listReturns() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/returns')).data) }
 export async function updateReturn(id: number, action: 'approve' | 'receive' | 'reject', payload: Record<string, unknown> = {}) { return (await request<{ data: Record<string, unknown> }>(`/returns/${id}/${action}`, { method: 'PATCH', body: JSON.stringify(payload) })).data }
-export async function listReviews() { return (await request<{ data: Array<Record<string, unknown>> }>('/reviews')).data }
+export async function listReviews() { return listPayload((await request<{ data: Array<Record<string, unknown>> | { data?: Array<Record<string, unknown>> } }>('/reviews')).data) }
 export async function moderateReview(id: number, status: string) { return (await request<{ data: Record<string, unknown> }>(`/reviews/${id}/moderate`, { method: 'PATCH', body: JSON.stringify({ status }) })).data }
 export async function listShippingMethods() { return (await request<{ data: Array<Record<string, unknown>> }>('/shipping-methods')).data }
 export async function createShippingMethod(payload: Record<string, unknown>) { return (await request<{ data: Record<string, unknown> }>('/shipping-methods', { method: 'POST', body: JSON.stringify(payload) })).data }
