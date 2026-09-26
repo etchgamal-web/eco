@@ -16,6 +16,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('admin/social/connections/{connection}', [SocialConnectionController::class, 'show'])->name('social.connections.show');
     Route::match(['put', 'patch'], 'admin/social/connections/{connection}', [SocialConnectionController::class, 'update'])->name('social.connections.update');
     Route::delete('admin/social/connections/{connection}', [SocialConnectionController::class, 'destroy'])->name('social.connections.destroy');
+    Route::get('admin/social/summary', [SocialInteractionController::class, 'summary'])->name('social.interactions.summary');
     Route::get('admin/social/interactions', [SocialInteractionController::class, 'index'])->name('social.interactions.index');
     Route::post('admin/social/interactions/{interaction}/reply', [SocialInteractionController::class, 'reply'])->name('social.interactions.reply');
     Route::get('admin/social/conversations/{conversation}', [SocialConversationController::class, 'show'])->name('social.conversations.show');

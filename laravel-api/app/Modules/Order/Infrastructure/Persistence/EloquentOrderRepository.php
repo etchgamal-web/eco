@@ -23,9 +23,18 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
         return CustomerOrder::query()->with(['items.product', 'review'])->where('user_id', $userId)->latest()->get();
     }
 
-    public function listAll(): iterable
+    public function listAll(array $filters = []): iterable
     {
-        return CustomerOrder::query()->with(['user', 'items.product', 'payments:id,order_id,method,amount,currency,status', 'review.reviewer', 'review.confirmer'])->latest()->get();
+        $query = CustomerOrder::query()->with(['user', 'items.product', 'payments:id,order_id,method,amount,currency,status', 'review.reviewer', 'review.confirmer'])
+            ->when($filters['search'] ?? null, fn ($orders, $search) => $orders->where(function ($inner) use ($search): void {
+                $inner->where('order_number', 'like', '%'.$search.'%')->orWhereHas('user', fn ($users) => $users->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%'));
+            }))
+            ->when(($filters['status'] ?? 'all') !== 'all' && ($filters['status'] ?? null), fn ($orders) => $orders->where('status', $filters['status']))
+            ->latest();
+
+        return array_key_exists('page', $filters)
+            ? $query->paginate((int) ($filters['per_page'] ?? 10), ['*'], 'page', (int) $filters['page'])
+            : $query->get();
     }
 
     public function findForUser(int $userId, int $orderId): object

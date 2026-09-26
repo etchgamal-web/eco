@@ -30,6 +30,9 @@ final class OrderRequest extends FormRequest
 
     public function rules(): array
     {
+        if ($this->route()?->getName() === 'orders.index') {
+            return ['search' => ['sometimes', 'nullable', 'string', 'max:120'], 'status' => ['sometimes', 'nullable', 'string', 'max:40'], 'page' => ['sometimes', 'integer', 'min:1'], 'per_page' => ['sometimes', 'integer', 'min:1', 'max:100']];
+        }
         if ($this->route()?->getName() === 'orders.shipping-charge') {
             return ['shipping_amount' => ['required', 'integer', 'min:0']];
         }

@@ -10,6 +10,7 @@ final readonly class ProductData
         public ?string $description,
         public string $type,
         public string $status,
+        public int $price,
         public ?int $brandId,
         public ?int $categoryId,
     ) {}
@@ -18,7 +19,7 @@ final readonly class ProductData
     {
         return new self(
             $data['name'], $data['slug'] ?? null, $data['description'] ?? null,
-            $data['type'], $data['status'], $data['brand_id'] ?? null, $data['category_id'] ?? null,
+            $data['type'], $data['status'], (int) ($data['price'] ?? 0), $data['brand_id'] ?? null, $data['category_id'] ?? null,
         );
     }
 
@@ -26,7 +27,7 @@ final readonly class ProductData
     {
         return [
             'name' => $this->name, 'slug' => $this->slug, 'description' => $this->description,
-            'type' => $this->type, 'status' => $this->status,
+            'type' => $this->type, 'status' => $this->status, 'price' => $this->price,
             'brand_id' => $this->brandId, 'category_id' => $this->categoryId,
         ];
     }

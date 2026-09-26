@@ -45,7 +45,21 @@ class AuthController extends Controller
 
     public function me(AuthRequest $request, GetCurrentUser $useCase): JsonResponse
     {
-        return response()->json(['data' => $useCase->execute()]);
+        $user = $useCase->execute()->load(['roles.permissions', 'permissionOverrides']);
+        $permissionMap = [];
+        foreach ($user->roles as $role) {
+            foreach ($role->permissions as $permission) {
+                $permissionMap[$permission->slug] = true;
+            }
+        }
+        foreach ($user->permissionOverrides as $permission) {
+            $permissionMap[$permission->slug] = (bool) $permission->pivot->allowed;
+        }
+
+        return response()->json(['data' => array_merge($user->toArray(), [
+            'roles' => $user->roles->pluck('slug')->values()->all(),
+            'permissions' => array_keys(array_filter($permissionMap)),
+        ])]);
     }
 
     public function updateProfile(UpdateProfileRequest $request, GetCurrentUser $current, UpdateProfile $useCase): JsonResponse

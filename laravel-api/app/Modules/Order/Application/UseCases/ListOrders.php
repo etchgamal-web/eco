@@ -8,8 +8,8 @@ final class ListOrders
 {
     public function __construct(private readonly OrderRepositoryInterface $orders) {}
 
-    public function execute(): iterable
+    public function execute(array $filters = []): iterable
     {
-        return $this->orders->listAll();
+        return $this->orders->listAll($filters);
     }
 }

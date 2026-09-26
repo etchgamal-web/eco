@@ -39,7 +39,7 @@ final class OrderController extends Controller
 
     public function index(OrderRequest $request, ListOrders $orders): JsonResponse
     {
-        return response()->json(['data' => $orders->execute()]);
+        return response()->json(['data' => $orders->execute($request->validated())]);
     }
 
     public function export(OrderRequest $request, ListOrders $orders): StreamedResponse

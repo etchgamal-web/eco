@@ -17,6 +17,6 @@ class UpdateProductRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['name' => ['required', 'string', 'max:255'], 'slug' => ['nullable', 'string', 'max:191'], 'description' => ['nullable', 'string'], 'type' => ['required', Rule::in(['simple', 'variable'])], 'status' => ['required', 'string', 'max:50'], 'brand_id' => ['nullable', 'integer', 'exists:brands,id'], 'category_id' => ['nullable', 'integer', 'exists:categories,id']];
+        return ['name' => ['required', 'string', 'max:255'], 'slug' => ['nullable', 'string', 'max:191'], 'description' => ['nullable', 'string'], 'type' => ['required', Rule::in(['simple', 'variable'])], 'status' => ['required', 'string', 'max:50'], 'price' => ['nullable', 'integer', 'min:0'], 'brand_id' => ['nullable', 'integer', 'exists:brands,id'], 'category_id' => ['nullable', 'integer', 'exists:categories,id']];
     }
 }

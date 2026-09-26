@@ -90,3 +90,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .profile-settings-card input { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; color: #0f172a; padding: 11px 12px; outline: none; font: inherit; font-weight: 500; }
 .profile-settings-card input:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgb(59 130 246 / 12%); background: #fff; }
 @media (max-width: 800px) { .profile-settings-grid { grid-template-columns: 1fr; } }
+
+/* Mobile quality pass: keep dense admin workflows usable without horizontal page overflow. */
+@media (max-width: 600px) {
+  .screen-header .header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .screen-header .header-actions .compact-input { width: 100%; min-width: 0; }
+  .screen-header .header-actions .outline-button,
+  .screen-header .header-actions > button { width: 100%; min-width: 0; }
+  .report-kpis { gap: 8px; }
+  .report-kpi { min-width: 0; padding: 12px; }
+  .report-kpi b { font-size: 15px; }
+  .filter-bar { gap: 8px; }
+  .filter-bar select, .filter-bar .check-filter { min-width: 0; width: 100%; }
+  .bulk-toolbar { align-items: stretch; flex-wrap: wrap; }
+  .bulk-toolbar > span { width: 100%; }
+  .bulk-toolbar .small-button { flex: 1; }
+  .form-modal { max-height: 86vh; overflow-y: auto; }
+  .form-modal .table-wrap { max-width: 100%; overflow-x: auto; }
+  .conversation-drawer { padding: 16px; }
+  .conversation-compose .primary-button { width: 100%; }
+}
+@media (max-width: 380px) {
+  .screen-header .header-actions { grid-template-columns: 1fr; }
+  .report-kpis { grid-template-columns: 1fr; }
+  .report-kpi { min-height: 72px; }
+}

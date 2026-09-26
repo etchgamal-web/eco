@@ -17,7 +17,7 @@ final class EloquentInventoryRepository implements InventoryRepositoryInterface
 {
     public function list(): iterable
     {
-        return InventoryItem::query()->with(['product', 'variant'])->latest()->get();
+        return InventoryItem::query()->with(['product', 'variant', 'movements' => fn ($movements) => $movements->with('actor:id,name')->latest()->limit(10)])->latest()->get();
     }
 
     public function find(int $id): InventoryItem
