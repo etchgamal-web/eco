@@ -6,15 +6,11 @@ use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Exceptions\AuthenticationException;
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
 use App\Modules\Payment\Domain\Exceptions\PaymentException;
-use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
 use App\Modules\Payment\Domain\Exceptions\PaymentInProgressException;
 use App\Modules\Payment\Domain\ValueObjects\PaymentData;
-use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
-use Illuminate\Support\Str;
 
 final class CreatePayment
 {
@@ -22,8 +18,6 @@ final class CreatePayment
         private readonly AuthenticationServiceInterface $authentication,
         private readonly OrderRepositoryInterface $orders,
         private readonly PaymentRepositoryInterface $payments,
-        private readonly PaymentOperationRepositoryInterface $operations,
-        private readonly OutboxRepositoryInterface $outbox,
         private readonly PaymentGatewayInterface $gateway,
     ) {}
 
@@ -65,44 +59,8 @@ final class CreatePayment
             }
         }
 
-        $previousResult = $this->operations->successfulResponse((int) $claim->payment->id, 'create');
-        if ($previousResult !== null) {
-            return $this->payments->updateStatus($claim->payment, $previousResult['_operation_status'] ?? 'provider_created', [
-                'provider_reference' => $previousResult['provider_reference'] ?? null,
-                'metadata' => $previousResult['metadata'] ?? $claim->payment->metadata,
-            ]);
-        }
-        $this->operations->start((int) $claim->payment->id, 'create', $data->idempotencyKey);
-        $leaseToken = (string) Str::uuid();
-        if (! $this->operations->acquireLease((int) $claim->payment->id, 'create', $leaseToken)) {
-            throw new PaymentInProgressException('Payment operation is currently owned by another worker.');
-        }
-
-        try {
-            $result = $this->gateway->createPayment($order, $data->method, $data->idempotencyKey);
-            if (($result['status'] ?? null) === 'failed') {
-                throw new PaymentFailedException('Payment creation failed.');
-            }
-            $paymentStatus = ($result['status'] ?? null) === 'paid' ? 'confirmed' : (($result['status'] ?? null) === 'pending' ? 'pending' : (($result['provider_reference'] ?? null) !== null ? 'provider_created' : 'pending'));
-            $this->operations->complete((int) $claim->payment->id, 'create', $paymentStatus, $result['provider_reference'] ?? null, $result);
-        } catch (\Throwable $exception) {
-            $this->operations->fail((int) $claim->payment->id, 'create', $exception->getMessage(), ! ($exception instanceof PaymentFailedException));
-            $event = $this->outbox->findByDeduplicationKey('payment:create:'.$data->idempotencyKey);
-            if ($event !== null) {
-                $this->outbox->markFailed((int) $event->id, $exception->getMessage());
-            }
-            $this->payments->updateStatus($claim->payment, $exception instanceof PaymentFailedException ? 'failed' : 'processing', [
-                'metadata' => [
-                    'failure' => $exception->getMessage(),
-                    'reconciliation_required' => ! ($exception instanceof PaymentFailedException),
-                ],
-            ]);
-            throw $exception;
-        }
-
-        return $this->payments->updateStatus($claim->payment, $paymentStatus, [
-            'provider_reference' => $result['provider_reference'] ?? null,
-            'metadata' => $result['metadata'] ?? null,
-        ]);
+        // The outbox row is written by the payment repository transaction.
+        // Provider I/O is intentionally performed only by PaymentOutboxHandler.
+        return $this->payments->updateStatus($claim->payment, 'pending');
     }
 }
