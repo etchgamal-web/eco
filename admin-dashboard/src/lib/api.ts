@@ -32,7 +32,15 @@ async function request<T>(path: string, init: RequestInit = {}, token = getToken
   const payload = await response.json().catch(() => null)
   if (!response.ok) {
     if (response.status === 401 && token) clearToken()
-    throw new ApiError(response.status, payload?.message ?? `فشل الطلب (${response.status})`)
+    const serverMessage = typeof payload?.message === 'string' ? payload.message : ''
+    const message = response.status === 401
+      ? 'بيانات الدخول غير صحيحة أو انتهت جلسة الدخول.'
+      : response.status === 403
+        ? 'ليس لديك صلاحية لتنفيذ هذا الإجراء.'
+        : response.status === 422
+          ? 'راجع البيانات المدخلة؛ توجد قيمة غير صحيحة.'
+          : serverMessage || `فشل الطلب (${response.status})`
+    throw new ApiError(response.status, message)
   }
   return payload as T
 }
