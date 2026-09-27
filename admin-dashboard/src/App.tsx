@@ -11,30 +11,12 @@ import { NotAuthorized, NotFound } from './app/guards/RouteFallbacks'
 import './App.css'
 
 import type { Order, OrderStatus } from './features/orders/types'
+import { backendStatuses, statusOptions, normalizeApiOrder, useDashboardOrders } from './features/orders/hooks/useDashboardOrders'
 import { OrderDrawer } from './features/orders/components/OrderDrawer'
 import { CommandPalette } from './features/search/components/CommandPalette'
 import { DashboardShell } from './features/dashboard/components/DashboardShell'
 import { DashboardContent } from './features/dashboard/components/DashboardContent'
 type SessionUser = { name?: string; email?: string; status?: string; roles?: string[]; permissions?: string[] }
-
-const orders: Order[] = [
-  { id: '#ORD-8294', customer: 'سارة العتيبي', initials: 'سع', date: 'اليوم، ١٠:٤٢ ص', total: '٥٩٧ ر.س', payment: 'مدى', status: 'جديد' },
-  { id: '#ORD-8293', customer: 'محمد القحطاني', initials: 'مق', date: 'اليوم، ٠٩:١٨ ص', total: '١,٢٤٠ ر.س', payment: 'Apple Pay', status: 'قيد التجهيز' },
-  { id: '#ORD-8292', customer: 'نورة الحربي', initials: 'نه', date: 'أمس، ٠٦:٣٥ م', total: '٣٩٩ ر.س', payment: 'بطاقة ائتمانية', status: 'تم الشحن' },
-  { id: '#ORD-8291', customer: 'خالد الشهري', initials: 'خش', date: 'أمس، ٠٢:١١ م', total: '٨٧٥ ر.س', payment: 'مدى', status: 'مكتمل' },
-  { id: '#ORD-8290', customer: 'ريم الغامدي', initials: 'رغ', date: '٢٠ أغسطس، ١١:٠٣ ص', total: '٢١٠ ر.س', payment: 'الدفع عند الاستلام', status: 'قيد التجهيز' },
-]
-
-const statusOptions: OrderStatus[] = ['جديد', 'قيد التجهيز', 'تم الشحن', 'مكتمل']
-const backendStatuses = ['pending', 'processing', 'shipped', 'delivered']
-const statusLabels: Record<string, OrderStatus> = { pending: 'جديد', reviewing: 'جديد', confirmed: 'جديد', processing: 'قيد التجهيز', shipped: 'تم الشحن', delivered: 'مكتمل', cancelled: 'مكتمل', refunded: 'مكتمل' }
-
-function normalizeApiOrder(order: import('./lib/api').ApiOrder): Order {
-  const customer = order.user?.name || order.user?.email || 'عميل متجر'
-  return { id: `#${order.order_number || order.id}`, apiId: order.id, customer, initials: customer.slice(0, 2), totalAmount: Number(order.total_amount ?? 0), date: order.created_at ? new Date(order.created_at).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }) : '—', total: `${order.total_amount ?? 0} ${order.currency || 'ر.س'}`, payment: 'غير محدد', status: statusLabels[order.status] || 'جديد' }
-}
-
-
 
 function PageLoading() {
   return <div className="page-loading" role="status" aria-live="polite"><span className="skeleton-line" /><span className="skeleton-line short" /><span>جار تحميل الصفحة...</span></div>
@@ -44,11 +26,6 @@ function App() {
   const navigate = useNavigate()
   const [authenticated, setAuthenticated] = useState(() => Boolean(getToken()))
   const activeNav = navItems.find((item) => item.path === location.pathname)?.label ?? (location.pathname.startsWith('/settings/') ? 'الإعدادات' : 'الرئيسية')
-  const [statusFilter, setStatusFilter] = useState<'الكل' | OrderStatus>('الكل')
-  const [paymentFilter, setPaymentFilter] = useState('كل طرق الدفع')
-  const [dateFilter, setDateFilter] = useState('كل التواريخ')
-  const [search, setSearch] = useState('')
-  const [rows, setRows] = useState(() => getToken() ? [] : orders)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<import('./lib/api').ApiOrder | null>(null)
   const [selectedOrderTimeline, setSelectedOrderTimeline] = useState<unknown[]>([])
@@ -68,18 +45,12 @@ function App() {
 
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), toast.duration ?? (toast.type === 'error' ? 8000 : 4000)); return () => window.clearTimeout(timer) }, [toast])
   useDashboardKeyboard(() => setCommandOpen(true), () => { setCommandOpen(false); setPendingDelete(null) })
+  const { rows, setRows, filteredOrders, dashboardStats, statusFilter, setStatusFilter, paymentFilter, setPaymentFilter, dateFilter, setDateFilter, search, setSearch } = useDashboardOrders()
+
   // The effect synchronizes the authenticated view with the external Laravel API.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { if (!authenticated) { setApiLoading(false); setCurrentUser(null); return } Promise.all([me(), listOrders({ page: 1, per_page: 100 }), socialSummary(), listSettings()]).then(([user, data, social, settings]) => { setCurrentUser(user); const ordersPage = Array.isArray(data) ? data : data.data; setRows(ordersPage.map(normalizeApiOrder)); setSocialStats(social); const currency = String(settings.find((item) => item.key === 'store.currency')?.value ?? localeSettings.currency); const locale = String(settings.find((item) => item.key === 'store.locale')?.value ?? localeSettings.locale) as 'ar' | 'en'; if (currency !== localeSettings.currency || locale !== localeSettings.locale) setLocale(currency, locale) }).catch((error: unknown) => { if (error instanceof ApiError && error.status === 401) { setAuthenticated(false); setToast({ type: 'info', message: 'انتهت جلسة الدخول، يرجى تسجيل الدخول مجددًا' }) } else setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل بيانات الحساب من الـAPI' }) }).finally(() => setApiLoading(false)) }, [authenticated, localeSettings.currency, localeSettings.locale, setLocale])
+  useEffect(() => { if (!authenticated) { setApiLoading(false); setCurrentUser(null); return } Promise.all([me(), listOrders({ page: 1, per_page: 100 }), socialSummary(), listSettings()]).then(([user, data, social, settings]) => { setCurrentUser(user); const ordersPage = Array.isArray(data) ? data : data.data; setRows(ordersPage.map(normalizeApiOrder)); setSocialStats(social); const currency = String(settings.find((item) => item.key === 'store.currency')?.value ?? localeSettings.currency); const locale = String(settings.find((item) => item.key === 'store.locale')?.value ?? localeSettings.locale) as 'ar' | 'en'; if (currency !== localeSettings.currency || locale !== localeSettings.locale) setLocale(currency, locale) }).catch((error: unknown) => { if (error instanceof ApiError && error.status === 401) { setAuthenticated(false); setToast({ type: 'info', message: 'انتهت جلسة الدخول، يرجى تسجيل الدخول مجددًا' }) } else setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل بيانات الحساب من الـAPI' }) }).finally(() => setApiLoading(false)) }, [authenticated, localeSettings.currency, localeSettings.locale, setLocale, setRows])
 
-  const filteredOrders = useMemo(() => rows.filter((order) => {
-    const matchesStatus = statusFilter === 'الكل' || order.status === statusFilter
-    const matchesPayment = paymentFilter === 'كل طرق الدفع' || order.payment === paymentFilter
-    const matchesSearch = `${order.id} ${order.customer}`.includes(search.trim())
-    return matchesStatus && matchesPayment && matchesSearch && (dateFilter === 'كل التواريخ' || (dateFilter === 'اليوم' ? order.date.startsWith('اليوم') : !order.date.startsWith('اليوم')))
-  }), [rows, statusFilter, paymentFilter, search, dateFilter])
-
-  const dashboardStats = useMemo(() => { const totalSales = rows.reduce((sum, order) => sum + (order.totalAmount ?? Number.parseFloat(order.total.replace(/[^0-9.]/g, '') || '0')), 0); const newOrders = rows.filter((order) => order.status === 'جديد').length; const averageOrder = rows.length ? totalSales / rows.length : 0; return { totalSales, newOrders, averageOrder } }, [rows])
   const todayLabel = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const updateStatus = async (id: string, status: OrderStatus) => { const order = rows.find((item) => item.id === id); const nextBackendStatus = backendStatuses[statusOptions.indexOf(status)] || 'processing'; try { if (order?.apiId && getToken()) await updateOrderStatus(order.apiId, nextBackendStatus); setRows((current) => current.map((item) => item.id === id ? { ...item, status } : item)); setToast({ type: 'success', message: `تم تغيير حالة الطلب ${id}` }) } catch (error) { setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تغيير حالة الطلب' }) } }
