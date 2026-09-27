@@ -5,8 +5,8 @@ namespace App\Modules\Payment\Application\Outbox;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
-use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 
 final class PaymentOutboxHandler implements OutboxEventHandlerInterface
 {
@@ -14,7 +14,7 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
         private readonly PaymentRepositoryInterface $payments,
         private readonly PaymentGatewayInterface $gateway,
         private readonly PaymentOperationRepositoryInterface $operations,
-        private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly OutboxRepositoryInterface $outbox,
     ) {}
 
     public function supports(string $eventType): bool
@@ -26,7 +26,7 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
     {
         $payment = $this->payments->find((int) $event->aggregate_id);
         if (in_array($payment->status, ['provider_created', 'confirmed', 'paid', 'refunded', 'failed'], true)) {
-            $this->outbox->markDispatched((string) $event->deduplication_key);
+            $this->outbox->markProcessed((int) $event->id);
 
             return;
         }
@@ -38,7 +38,7 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
                 'provider_reference' => $previous['provider_reference'] ?? null,
                 'metadata' => $previous['metadata'] ?? $payment->metadata,
             ]);
-            $this->outbox->markDispatched((string) $event->deduplication_key);
+            $this->outbox->markProcessed((int) $event->id);
 
             return;
         }
@@ -53,11 +53,11 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
             'provider_reference' => $result['provider_reference'] ?? null,
             'metadata' => $result['metadata'] ?? $payment->metadata,
         ]);
-        $this->outbox->markDispatched((string) $event->deduplication_key);
+        $this->outbox->markProcessed((int) $event->id);
     }
 
     public function failed(object $event, \Throwable $exception): void
     {
-        $this->outbox->markFailed((string) $event->deduplication_key, $exception->getMessage());
+        $this->outbox->markFailed((int) $event->id, $exception->getMessage());
     }
 }

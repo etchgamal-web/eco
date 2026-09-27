@@ -3,8 +3,8 @@
 namespace App\Modules\Shipping\Application\Outbox;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
-use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
@@ -17,7 +17,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
         private readonly ShippingProviderInterface $providers,
         private readonly ShipmentOperationRepositoryInterface $operations,
         private readonly OrderRepositoryInterface $orders,
-        private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly OutboxRepositoryInterface $outbox,
     ) {}
 
     public function supports(string $eventType): bool
@@ -29,7 +29,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
     {
         $shipment = $this->shipments->find((int) $event->aggregate_id);
         if ($shipment->creation_status === 'created' || data_get($shipment->metadata, 'provider_reference')) {
-            $this->outbox->markDispatched((string) $event->deduplication_key);
+            $this->outbox->markProcessed((int) $event->id);
 
             return;
         }
@@ -41,7 +41,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
         $previous = $this->operations->successfulResponse((int) $shipment->id, 'create');
         if ($previous !== null) {
             $this->shipments->updateProviderData($shipment, $previous);
-            $this->outbox->markDispatched((string) $event->deduplication_key);
+            $this->outbox->markProcessed((int) $event->id);
 
             return;
         }
@@ -53,7 +53,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
             $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($recovered, 'metadata.provider_reference'), $recovered);
             $created = $this->shipments->updateProviderData($shipment, $recovered);
             $this->markOrderShipped($created);
-            $this->outbox->markDispatched((string) $event->deduplication_key);
+            $this->outbox->markProcessed((int) $event->id);
 
             return;
         }
@@ -64,7 +64,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
         $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($result, 'metadata.provider_reference'), $result);
         $created = $this->shipments->updateProviderData($shipment, $result);
         $this->markOrderShipped($created);
-        $this->outbox->markDispatched((string) $event->deduplication_key);
+        $this->outbox->markProcessed((int) $event->id);
     }
 
     private function markOrderShipped(object $shipment): void
@@ -79,6 +79,6 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
     {
         $shipment = $this->shipments->find((int) $event->aggregate_id);
         $this->shipments->markCreationFailed($shipment, $exception->getMessage());
-        $this->outbox->markFailed((string) $event->deduplication_key, $exception->getMessage());
+        $this->outbox->markFailed((int) $event->id, $exception->getMessage());
     }
 }

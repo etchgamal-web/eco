@@ -2,8 +2,8 @@
 
 namespace App\Modules\SocialCommerce\Application\Outbox;
 
-use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialMessagingProviderInterface;
@@ -15,7 +15,7 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
         private readonly SocialInteractionRepositoryInterface $interactions,
         private readonly SocialConnectionRepositoryInterface $connections,
         private readonly SocialMessagingProviderInterface $provider,
-        private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly OutboxRepositoryInterface $outbox,
     ) {}
 
     public function supports(string $eventType): bool
@@ -30,7 +30,7 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
         if ($type === 'social.message.send') {
             $message = $this->interactions->findMessage((int) $event->aggregate_id);
             if (! $message || $message->status === 'sent') {
-                $this->outbox->markDispatched((string) $event->deduplication_key);
+                $this->outbox->markProcessed((int) $event->id);
 
                 return;
             }
@@ -48,7 +48,7 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
         } else {
             $interaction = $this->interactions->find((int) $event->aggregate_id);
             if (! $interaction || $interaction->status === 'sent') {
-                $this->outbox->markDispatched((string) $event->deduplication_key);
+                $this->outbox->markProcessed((int) $event->id);
 
                 return;
             }
@@ -64,12 +64,12 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
                 'metadata' => array_merge((array) ($interaction->metadata ?? []), $result),
             ]);
         }
-        $this->outbox->markDispatched((string) $event->deduplication_key);
+        $this->outbox->markProcessed((int) $event->id);
     }
 
     public function failed(object $event, \Throwable $exception): void
     {
-        $exhausted = $this->outbox->markFailed((string) $event->deduplication_key, $exception->getMessage());
+        $exhausted = $this->outbox->markFailed((int) $event->id, $exception->getMessage());
         if ($event->event_type === 'social.message.send') {
             $this->interactions->updateMessageStatus((int) $event->aggregate_id, $exhausted ? 'failed' : 'retrying');
         } else {

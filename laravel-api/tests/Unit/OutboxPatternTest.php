@@ -2,10 +2,11 @@
 
 namespace Tests\Unit;
 
-use App\Modules\Shared\Application\Jobs\ProcessOutboxEvent;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
-use App\Modules\Shared\Infrastructure\Models\OutboxEvent;
-use App\Modules\Shared\Infrastructure\Persistence\EloquentOutboxEventRepository;
+use App\Shared\Infrastructure\Outbox\Processing\ProcessOutboxEvent;
+use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
+use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
+use App\Shared\Infrastructure\Outbox\Persistence\EloquentOutboxRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,12 +16,13 @@ final class OutboxPatternTest extends TestCase
 
     public function test_repository_records_an_event_idempotently(): void
     {
-        $repository = app(OutboxEventRepositoryInterface::class);
+        $repository = app(OutboxRepositoryInterface::class);
 
-        $first = $repository->record('payment', 7, 'payment.create.requested', 'payment:create:test-7', ['payment_id' => 7]);
-        $second = $repository->record('payment', 7, 'payment.create.requested', 'payment:create:test-7', ['payment_id' => 7]);
+        $message = new OutboxMessage('payment.create.requested', 'payment', 7, ['payment_id' => 7], deduplicationKey: 'payment:create:test-7');
+        $first = $repository->add($message);
+        $second = $repository->add($message);
 
-        $this->assertInstanceOf(EloquentOutboxEventRepository::class, $repository);
+        $this->assertInstanceOf(EloquentOutboxRepository::class, $repository);
         $this->assertSame($first->id, $second->id);
         $this->assertDatabaseCount('outbox_events', 1);
         $this->assertDatabaseHas('outbox_events', [
@@ -39,10 +41,12 @@ final class OutboxPatternTest extends TestCase
             'status' => 'pending',
             'payload' => ['payment_id' => 7],
         ]);
-        $repository = app(OutboxEventRepositoryInterface::class);
+        $repository = app(OutboxRepositoryInterface::class);
 
-        $this->assertTrue($repository->claim((int) $event->id));
-        $this->assertFalse($repository->claim((int) $event->id));
+        $claimed = $repository->claim(10);
+        $this->assertCount(1, $claimed);
+        $this->assertSame($event->id, $claimed[0]->id);
+        $this->assertCount(0, $repository->claim(10));
         $this->assertDatabaseHas('outbox_events', ['id' => $event->id, 'status' => 'processing']);
     }
 
@@ -57,15 +61,15 @@ final class OutboxPatternTest extends TestCase
             'status' => 'processing',
             'payload' => ['payment_id' => 9],
         ]);
-        $repository = app(OutboxEventRepositoryInterface::class);
+        $repository = app(OutboxRepositoryInterface::class);
 
-        self::assertFalse($repository->markFailed((string) $event->deduplication_key, 'temporary failure'));
+        self::assertFalse($repository->markFailed((int) $event->id, 'temporary failure'));
         $event->refresh();
         self::assertSame('pending', $event->status);
         self::assertSame(1, $event->attempt_count);
         self::assertNotNull($event->next_attempt_at);
 
-        self::assertTrue($repository->markFailed((string) $event->deduplication_key, 'final failure'));
+        self::assertTrue($repository->markFailed((int) $event->id, 'final failure'));
         $event->refresh();
         self::assertSame('failed', $event->status);
         self::assertSame(2, $event->attempt_count);

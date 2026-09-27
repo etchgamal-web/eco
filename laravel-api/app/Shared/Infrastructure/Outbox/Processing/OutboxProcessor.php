@@ -1,16 +1,17 @@
 <?php
 
-namespace App\Modules\Shared\Application\Outbox;
+declare(strict_types=1);
 
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+namespace App\Shared\Infrastructure\Outbox\Processing;
 
-final class OutboxEventDispatcher
+use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
+
+final class OutboxProcessor
 {
-    /**
-     * @param  iterable<OutboxEventHandlerInterface>  $handlers
-     */
+    /** @param iterable<OutboxEventHandlerInterface> $handlers */
     public function __construct(
-        private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly OutboxRepositoryInterface $outbox,
         private readonly iterable $handlers,
     ) {}
 
@@ -24,14 +25,12 @@ final class OutboxEventDispatcher
         foreach ($this->handlers as $handler) {
             if ($handler->supports((string) $event->event_type)) {
                 $handler->handle($event);
-
                 return;
             }
         }
 
-        // Some outbox rows are durable audit/integration records and do not
-        // represent a queued side effect. Preserve them without retrying.
-        $this->outbox->markDispatched((string) $event->deduplication_key);
+        // Durable records without a side-effect handler are complete by design.
+        $this->outbox->markProcessed($eventId);
     }
 
     public function failed(int $eventId, \Throwable $exception): void
@@ -44,11 +43,10 @@ final class OutboxEventDispatcher
         foreach ($this->handlers as $handler) {
             if ($handler->supports((string) $event->event_type)) {
                 $handler->failed($event, $exception);
-
                 return;
             }
         }
 
-        $this->outbox->markFailed((string) $event->deduplication_key, $exception->getMessage());
+        $this->outbox->markFailed($eventId, $exception->getMessage());
     }
 }

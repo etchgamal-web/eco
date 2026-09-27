@@ -2,7 +2,7 @@
 
 namespace App\Modules\SocialCommerce;
 
-use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use App\Modules\SocialCommerce\Application\Outbox\SocialCommerceOutboxHandler;
 use App\Modules\SocialCommerce\Domain\Contracts\AutomationRuleRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\MessageTemplateRepositoryInterface;

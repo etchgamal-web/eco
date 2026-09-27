@@ -3,7 +3,8 @@
 namespace App\Modules\SocialCommerce\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
@@ -11,7 +12,7 @@ use App\Modules\SocialCommerce\Domain\Exceptions\SocialCommerceException;
 
 final class ReplyToSocialComment
 {
-    public function __construct(private readonly SocialInteractionRepositoryInterface $interactions, private readonly SocialConnectionRepositoryInterface $connections, private readonly TransactionManagerInterface $transactions, private readonly AuthenticationServiceInterface $authentication, private readonly OutboxEventRepositoryInterface $outbox) {}
+    public function __construct(private readonly SocialInteractionRepositoryInterface $interactions, private readonly SocialConnectionRepositoryInterface $connections, private readonly TransactionManagerInterface $transactions, private readonly AuthenticationServiceInterface $authentication, private readonly OutboxRepositoryInterface $outbox) {}
 
     public function execute(int $interactionId, string $body, ?string $idempotencyKey = null): object
     {
@@ -44,7 +45,7 @@ final class ReplyToSocialComment
                 'responder_id' => $responder['id'], 'responder_name' => $responder['name'],
                 'metadata' => ['provider_comment_id' => $commentId, 'responder' => $responder],
             ]);
-            $this->outbox->record('social_comment', (int) $reply->id, 'social.comment.reply', $key, ['channel' => $connection->channel, 'comment_id' => $commentId, 'body' => $body]);
+            $this->outbox->add(new OutboxMessage('social.comment.reply', 'social_comment', (int) $reply->id, ['channel' => $connection->channel, 'comment_id' => $commentId, 'body' => $body], deduplicationKey: $key));
 
             return $reply;
         });

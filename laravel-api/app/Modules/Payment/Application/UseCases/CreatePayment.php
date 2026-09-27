@@ -13,7 +13,7 @@ use App\Modules\Payment\Domain\Exceptions\PaymentException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
 use App\Modules\Payment\Domain\Exceptions\PaymentInProgressException;
 use App\Modules\Payment\Domain\ValueObjects\PaymentData;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use Illuminate\Support\Str;
 
 final class CreatePayment
@@ -23,7 +23,7 @@ final class CreatePayment
         private readonly OrderRepositoryInterface $orders,
         private readonly PaymentRepositoryInterface $payments,
         private readonly PaymentOperationRepositoryInterface $operations,
-        private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly OutboxRepositoryInterface $outbox,
         private readonly PaymentGatewayInterface $gateway,
     ) {}
 
@@ -85,10 +85,12 @@ final class CreatePayment
             }
             $paymentStatus = ($result['status'] ?? null) === 'paid' ? 'confirmed' : (($result['status'] ?? null) === 'pending' ? 'pending' : (($result['provider_reference'] ?? null) !== null ? 'provider_created' : 'pending'));
             $this->operations->complete((int) $claim->payment->id, 'create', $paymentStatus, $result['provider_reference'] ?? null, $result);
-            $this->outbox->markDispatched('payment:create:'.$data->idempotencyKey);
         } catch (\Throwable $exception) {
             $this->operations->fail((int) $claim->payment->id, 'create', $exception->getMessage(), ! ($exception instanceof PaymentFailedException));
-            $this->outbox->markFailed('payment:create:'.$data->idempotencyKey, $exception->getMessage());
+            $event = $this->outbox->findByDeduplicationKey('payment:create:'.$data->idempotencyKey);
+            if ($event !== null) {
+                $this->outbox->markFailed((int) $event->id, $exception->getMessage());
+            }
             $this->payments->updateStatus($claim->payment, $exception instanceof PaymentFailedException ? 'failed' : 'processing', [
                 'metadata' => [
                     'failure' => $exception->getMessage(),

@@ -9,7 +9,8 @@ use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
 use Illuminate\Support\Str;
@@ -22,7 +23,7 @@ final class RefundPayment
         private readonly PaymentGatewayInterface $gateway,
         private readonly OrderRepositoryInterface $orders,
         private readonly TransactionManagerInterface $transactions,
-        private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly OutboxRepositoryInterface $outbox,
         private readonly AuthenticationServiceInterface $authentication,
         private readonly AuditLogRepositoryInterface $audit,
     ) {}
@@ -62,7 +63,7 @@ final class RefundPayment
                 throw new PaymentFailedException('Payment refund failed.');
             }
             $this->operations->complete((int) $payment->id, 'refund', 'confirmed', $payment->provider_reference, $result);
-            $this->outbox->record('payment', (int) $payment->id, 'payment.refund.completed', 'payment:refund:'.$payment->id, ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference]);
+            $this->outbox->add(new OutboxMessage('payment.refund.completed', 'payment', (int) $payment->id, ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference], deduplicationKey: 'payment:refund:'.$payment->id));
         } catch (\Throwable $exception) {
             $this->operations->fail((int) $payment->id, 'refund', $exception->getMessage(), ! ($exception instanceof PaymentFailedException));
             throw $exception;

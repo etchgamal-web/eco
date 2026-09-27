@@ -3,7 +3,8 @@
 namespace App\Modules\SocialCommerce\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
@@ -17,7 +18,7 @@ final class SendConversationMessage
         private readonly TransactionManagerInterface $transactions,
         private readonly GetSocialConversation $getConversation,
         private readonly AuthenticationServiceInterface $authentication,
-        private readonly OutboxEventRepositoryInterface $outbox,
+        private readonly OutboxRepositoryInterface $outbox,
     ) {}
 
     public function execute(int $id, string $body, ?string $idempotencyKey = null): object
@@ -43,7 +44,7 @@ final class SendConversationMessage
                 'responder_type' => $responder['type'], 'responder_id' => $responder['id'],
                 'responder_name' => $responder['name'], 'body' => $body, 'metadata' => ['responder' => $responder],
             ]);
-            $this->outbox->record('social_message', (int) $message->id, 'social.message.send', $key, ['channel' => $conversation->channel, 'recipient' => $conversation->provider_customer_id, 'body' => $body]);
+            $this->outbox->add(new OutboxMessage('social.message.send', 'social_message', (int) $message->id, ['channel' => $conversation->channel, 'recipient' => $conversation->provider_customer_id, 'body' => $body], deduplicationKey: $key));
 
             return $message;
         });

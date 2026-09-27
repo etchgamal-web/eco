@@ -2,7 +2,7 @@
 
 namespace App\Modules\Shipping;
 
-use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use App\Modules\Shipping\Application\Outbox\ShippingOutboxHandler;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;

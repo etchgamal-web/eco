@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Shared\Application\Jobs;
+namespace App\Shared\Infrastructure\Outbox\Processing;
 
-use App\Modules\Shared\Application\Outbox\OutboxEventDispatcher;
+use App\Shared\Infrastructure\Outbox\Processing\OutboxProcessor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -23,13 +23,13 @@ final class ProcessOutboxEvent implements ShouldQueue
         $this->timeout = (int) config('outbox.job_timeout_seconds', 120);
     }
 
-    public function handle(OutboxEventDispatcher $dispatcher): void
+    public function handle(OutboxProcessor $dispatcher): void
     {
         $dispatcher->dispatch($this->eventId);
     }
 
     public function failed(Throwable $exception): void
     {
-        app(OutboxEventDispatcher::class)->failed($this->eventId, $exception);
+        app(OutboxProcessor::class)->failed($this->eventId, $exception);
     }
 }

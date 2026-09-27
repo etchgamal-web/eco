@@ -6,13 +6,14 @@ use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\ReturnException;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReturn;
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Staff\Infrastructure\Models\AuditLog;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentReturnRepository implements ReturnRepositoryInterface
 {
-    public function __construct(private readonly OutboxEventRepositoryInterface $outbox) {}
+    public function __construct(private readonly OutboxRepositoryInterface $outbox) {}
 
     public function createForCustomer(int $userId, int $orderId, array $data): object
     {
@@ -64,7 +65,7 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
                 throw ReturnException::invalidTransition();
             }
             $return->update(['status' => 'approved']);
-            $this->outbox->record('order_return', (int) $return->id, 'order.return.approved', 'return:approved:'.$return->id, ['return_id' => $return->id, 'order_id' => $return->order_id, 'refund_amount' => $return->refund_amount]);
+            $this->outbox->add(new OutboxMessage('order.return.approved', 'order_return', (int) $return->id, ['return_id' => $return->id, 'order_id' => $return->order_id, 'refund_amount' => $return->refund_amount], deduplicationKey: 'return:approved:'.$return->id));
             AuditLog::query()->create(['actor_id' => auth()->id(), 'action' => 'order.return.approved', 'target_type' => OrderReturn::class, 'target_id' => $return->id, 'metadata' => ['refund_amount' => $return->refund_amount]]);
 
             return $return->fresh('items');
@@ -105,7 +106,7 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
             }
             $return->update(['status' => $accepted ? 'inspected_accepted' : 'inspected_rejected', 'inspected_at' => now(), 'inspection_notes' => $notes]);
             $event = $accepted ? 'order.return.inspection.accepted' : 'order.return.inspection.rejected';
-            $this->outbox->record('order_return', (int) $return->id, $event, 'return:inspection:'.$return->id, ['return_id' => $return->id, 'order_id' => $return->order_id, 'refund_amount' => $return->refund_amount]);
+            $this->outbox->add(new OutboxMessage($event, 'order_return', (int) $return->id, ['return_id' => $return->id, 'order_id' => $return->order_id, 'refund_amount' => $return->refund_amount], deduplicationKey: 'return:inspection:'.$return->id));
             AuditLog::query()->create(['actor_id' => auth()->id(), 'action' => $event, 'target_type' => OrderReturn::class, 'target_id' => $return->id, 'metadata' => ['notes' => $notes]]);
 
             return $return->fresh('items');

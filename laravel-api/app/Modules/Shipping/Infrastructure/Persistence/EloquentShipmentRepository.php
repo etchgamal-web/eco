@@ -2,7 +2,8 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Modules\Shared\Domain\Contracts\OutboxEventRepositoryInterface;
+use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShipmentNotFoundException;
 use App\Modules\Shipping\Domain\StateMachines\ShipmentStateMachine;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentShipmentRepository implements ShipmentRepositoryInterface
 {
-    public function __construct(private readonly OutboxEventRepositoryInterface $outbox) {}
+    public function __construct(private readonly OutboxRepositoryInterface $outbox) {}
 
     public function find(int $id): object
     {
@@ -71,11 +72,11 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
                 throw $exception;
             }
 
-            $this->outbox->record('shipment', (int) $shipment->id, 'shipment.create.requested', 'shipment:create:'.$attributes['idempotency_key'], [
+            $this->outbox->add(new OutboxMessage('shipment.create.requested', 'shipment', (int) $shipment->id, [
                 'shipment_id' => $shipment->id,
                 'idempotency_key' => $attributes['idempotency_key'],
                 'provider_code' => $attributes['provider_code'],
-            ]);
+            ], deduplicationKey: 'shipment:create:'.$attributes['idempotency_key']));
 
             return $shipment;
         });

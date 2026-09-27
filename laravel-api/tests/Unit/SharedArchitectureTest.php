@@ -10,7 +10,7 @@ final class SharedArchitectureTest extends TestCase
 {
     public function test_shared_outbox_dispatcher_depends_only_on_shared_abstractions(): void
     {
-        $file = dirname(__DIR__, 2).'/app/Modules/Shared/Application/Outbox/OutboxEventDispatcher.php';
+        $file = dirname(__DIR__, 2).'/app/Shared/Infrastructure/Outbox/Processing/OutboxProcessor.php';
         $source = file_get_contents($file);
 
         self::assertIsString($source);

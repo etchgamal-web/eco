@@ -19,7 +19,7 @@ use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentRepository;
 use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentWebhookEventRepository;
 use App\Modules\Payment\Infrastructure\Webhooks\KashierWebhookVerifier;
 use App\Modules\Payment\Infrastructure\Webhooks\PaymobWebhookVerifier;
-use App\Modules\Shared\Application\Outbox\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use Illuminate\Support\ServiceProvider;
 
 final class PaymentServiceProvider extends ServiceProvider
