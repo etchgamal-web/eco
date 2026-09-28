@@ -2,6 +2,7 @@
 
 namespace App\Support\Observability;
 
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -10,6 +11,8 @@ use Throwable;
 
 final class PrometheusMetrics
 {
+    public function __construct(private readonly OutboxRepositoryInterface $outbox) {}
+
     public function recordHttpRequest(Request $request, Response $response, float $durationMs): void
     {
         if (! config('observability.metrics_enabled') || $request->is('metrics')) {
@@ -109,7 +112,8 @@ final class PrometheusMetrics
     private function pendingOutboxCount(): ?int
     {
         try {
-            return DB::table('outbox_events')->whereIn('status', ['pending', 'failed'])->count();
+            $counts = $this->outbox->countByStatus();
+            return ($counts['pending'] ?? 0) + ($counts['failed'] ?? 0);
         } catch (Throwable) {
             return null;
         }
