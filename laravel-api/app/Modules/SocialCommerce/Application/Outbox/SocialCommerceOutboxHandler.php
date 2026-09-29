@@ -30,7 +30,11 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
         $type = (string) $event->event_type;
         if ($type === 'social.message.send') {
             $message = $this->interactions->findMessage((int) $event->aggregate_id);
-            if (! $message || $message->status === 'sent') {
+            if (! $message || $message->status === 'sent' || in_array((string) ($message->operation_status ?? ''), ['sent', 'ambiguous', 'failed'], true)) {
+                if ($message?->operation_status === 'ambiguous') {
+                    $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, (string) ($message->operation_last_error ?? 'Social operation is ambiguous.'));
+                    return;
+                }
                 $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
                 return;
@@ -51,7 +55,11 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
             ]);
         } else {
             $interaction = $this->interactions->find((int) $event->aggregate_id);
-            if (! $interaction || $interaction->status === 'sent') {
+            if (! $interaction || $interaction->status === 'sent' || in_array((string) ($interaction->operation_status ?? ''), ['sent', 'ambiguous', 'failed'], true)) {
+                if ($interaction?->operation_status === 'ambiguous') {
+                    $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, (string) ($interaction->operation_last_error ?? 'Social operation is ambiguous.'));
+                    return;
+                }
                 $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
                 return;
@@ -79,19 +87,9 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
         if ($exception instanceof AmbiguousExternalResultException) {
             $this->interactions->failOperation((string) $event->event_type, (int) $event->aggregate_id, (string) $event->claim_token, 'ambiguous', $exception->getMessage());
             $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, $exception->getMessage());
-            if ($event->event_type === 'social.message.send') {
-                $this->interactions->updateMessageStatus((int) $event->aggregate_id, 'ambiguous');
-            } else {
-                $this->interactions->updateInteractionStatus((int) $event->aggregate_id, 'ambiguous');
-            }
             return;
         }
         $exhausted = $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
         $this->interactions->failOperation((string) $event->event_type, (int) $event->aggregate_id, (string) $event->claim_token, $exhausted ? 'failed' : 'processing', $exception->getMessage());
-        if ($event->event_type === 'social.message.send') {
-            $this->interactions->updateMessageStatus((int) $event->aggregate_id, $exhausted ? 'failed' : 'retrying');
-        } else {
-            $this->interactions->updateInteractionStatus((int) $event->aggregate_id, $exhausted ? 'failed' : 'retrying');
-        }
     }
 }

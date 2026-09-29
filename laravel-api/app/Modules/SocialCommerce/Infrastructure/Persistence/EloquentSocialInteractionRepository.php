@@ -159,12 +159,16 @@ final class EloquentSocialInteractionRepository implements SocialInteractionRepo
 
     public function failOperation(string $type, int $id, string $token, string $status, string $error): bool
     {
-        return $this->operationQuery($type, $id)->where('operation_lease_token', $token)->where('operation_lease_expires_at', '>', now())->update([
-            'operation_status' => $status,
-            'operation_last_error' => $error,
-            'operation_lease_token' => null,
-            'operation_lease_expires_at' => null,
-        ]) === 1;
+        return DB::transaction(function () use ($type, $id, $token, $status, $error): bool {
+            $query = $this->operationQuery($type, $id)->where('operation_lease_token', $token)->where('operation_lease_expires_at', '>', now());
+            return $query->lockForUpdate()->update([
+                'status' => $status === 'processing' ? 'retrying' : $status,
+                'operation_status' => $status,
+                'operation_last_error' => $error,
+                'operation_lease_token' => null,
+                'operation_lease_expires_at' => null,
+            ]) === 1;
+        });
     }
 
     private function operationModel(string $type, int $id): Model

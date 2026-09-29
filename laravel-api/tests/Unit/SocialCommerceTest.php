@@ -7,11 +7,36 @@ use App\Modules\SocialCommerce\Domain\ValueObjects\RenderedTemplate;
 use App\Modules\SocialCommerce\Infrastructure\Providers\FacebookMessagingProvider;
 use App\Modules\SocialCommerce\Infrastructure\Providers\InstagramMessagingProvider;
 use App\Modules\SocialCommerce\Infrastructure\Providers\WhatsAppMessagingProvider;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation;
+use App\Modules\SocialCommerce\Infrastructure\Persistence\EloquentSocialInteractionRepository;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 final class SocialCommerceTest extends TestCase
 {
+    use RefreshDatabase;
+
+    public function test_stale_social_worker_cannot_complete_a_new_operation_lease(): void
+    {
+        $conversation = SocialConversation::query()->create(['channel' => 'facebook', 'provider_conversation_id' => 'conv-fence', 'mode' => 'automated']);
+        $message = $this->app->make(EloquentSocialInteractionRepository::class)->addMessage([
+            'conversation_id' => $conversation->id,
+            'direction' => 'outbound',
+            'sender' => 'automation',
+            'status' => 'processing',
+            'body' => 'hello',
+        ]);
+        $repository = $this->app->make(EloquentSocialInteractionRepository::class);
+        $repository->startOperation('social.message.send', (int) $message->id, 'social:fence');
+        self::assertTrue($repository->acquireOperationLease('social.message.send', (int) $message->id, 'worker-a', 300));
+        $message->forceFill(['operation_lease_expires_at' => now()->subSecond()])->save();
+        self::assertTrue($repository->acquireOperationLease('social.message.send', (int) $message->id, 'worker-b', 300));
+        self::assertFalse($repository->completeOperation('social.message.send', (int) $message->id, 'worker-a', ['provider_message_id' => 'stale']));
+        self::assertTrue($repository->completeOperation('social.message.send', (int) $message->id, 'worker-b', ['provider_message_id' => 'current']));
+        self::assertSame('current', $message->fresh()->provider_message_id);
+    }
+
     public function test_template_renders_only_declared_variables(): void
     {
         $rendered = RenderedTemplate::render('Hello {customer_name}, price: {product_price}', [
