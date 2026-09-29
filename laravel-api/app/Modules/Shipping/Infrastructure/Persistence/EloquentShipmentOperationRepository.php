@@ -11,7 +11,7 @@ final class EloquentShipmentOperationRepository implements ShipmentOperationRepo
     public function start(int $shipmentId, string $operation, string $idempotencyKey): void
     {
         $record = ShipmentOperation::query()->firstOrNew(['shipment_id' => $shipmentId, 'operation' => $operation, 'idempotency_key' => $idempotencyKey]);
-        if ($record->exists && in_array($record->status, ['provider_created', 'confirmed', 'failed'], true)) return;
+        if ($record->exists && in_array($record->status, ['provider_created', 'confirmed', 'failed', 'ambiguous'], true)) return;
         $record->status = 'processing';
         $record->attempt_count = ((int) $record->attempt_count) + 1;
         $record->next_retry_at = null;
@@ -61,5 +61,12 @@ final class EloquentShipmentOperationRepository implements ShipmentOperationRepo
         $query = ShipmentOperation::query()->where('shipment_id', $shipmentId)->where('operation', $operation);
         if ($leaseToken !== null) $query->where('lease_token', $leaseToken)->where('lease_expires_at', '>', now());
         return $query->update(['status' => 'processing', 'last_error' => $error, 'next_retry_at' => now()->addMinutes(5), 'lease_token' => null, 'lease_expires_at' => null]) === 1;
+    }
+
+    public function failAmbiguous(int $shipmentId, string $operation, string $error, ?string $leaseToken = null): bool
+    {
+        $query = ShipmentOperation::query()->where('shipment_id', $shipmentId)->where('operation', $operation);
+        if ($leaseToken !== null) $query->where('lease_token', $leaseToken)->where('lease_expires_at', '>', now());
+        return $query->update(['status' => 'ambiguous', 'last_error' => $error, 'next_retry_at' => null, 'lease_token' => null, 'lease_expires_at' => null]) === 1;
     }
 }

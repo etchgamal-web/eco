@@ -26,5 +26,5 @@ interface PaymentRepositoryInterface
 
     public function claim(string $idempotencyKey, array $attributes): PaymentClaim;
 
-    public function updateStatus(object $payment, string $status, array $attributes = []): object;
+    public function updateStatus(object $payment, string $status, array $attributes = [], ?string $operationLeaseToken = null): object;
 }

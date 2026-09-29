@@ -47,6 +47,9 @@ $this->outbox->add(new OutboxMessage(
 - الـPaymentOperation والـShipmentOperation يستخدمان lease token مستقلًا؛ تحديث aggregate أو operation بعد استدعاء provider يتطلب بقاء ملكية الـclaim والـoperation.
 - event بدون handler لا تُعتبر ناجحة؛ تتحول إلى retry/dead-letter عبر `markFailed` مع تسجيل `event_type` في `last_error`.
 - نتيجة provider الغامضة (مثل timeout بعد إرسال create) تتحول إلى `ambiguous` عبر `markAmbiguous`، ولا تعود إلى `pending` ولا تعيد الإنشاء تلقائيًا.
+- تحديث Payment وShipment aggregate بعد provider call يتم داخل transaction تقفل operation وتتحقق من `lease_token` و`lease_expires_at` قبل الكتابة؛ لذلك لا يكفي فحص `ownsLease()` منفصلًا.
+- Payment لا يستدعي `createPayment()` إذا كانت عملية الإنشاء حاولت سابقًا؛ يجب تشغيل `reconcilePayment()` أولًا، ولا يسمح بإنشاء جديد إلا عندما يثبت recovery أن المحاولة السابقة لم تنشئ عملية خارجية.
+- Social messages وinteractions لها operation lease مستقل (`operation_lease_token`) بالإضافة إلى Outbox claim. إتمام العملية يحدّث السجل المحلي ويفك lease ذريًا، وأي timeout أو نتيجة غير مؤكدة تتحول إلى `ambiguous` بدل إعادة إرسال الرسالة تلقائيًا.
 
 قيمة lease الافتراضية خمس دقائق ويمكن ضبطها عبر `OUTBOX_LEASE_MINUTES`. مهلة الـjob الافتراضية دقيقتان (`OUTBOX_JOB_TIMEOUT_SECONDS=120`) بينما نافذة إعادة تسليم database queue الافتراضية ثلاث دقائق (`DB_QUEUE_RETRY_AFTER=180`). يجب أن تظل نافذة queue أكبر من timeout، وأن تكون lease أكبر من أطول استدعاء خارجي متوقع.
 

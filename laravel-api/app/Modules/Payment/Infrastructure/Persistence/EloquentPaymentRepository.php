@@ -7,7 +7,8 @@ use App\Modules\Payment\Domain\Exceptions\PaymentNotFoundException;
 use App\Modules\Payment\Domain\StateMachines\PaymentStateMachine;
 use App\Modules\Payment\Domain\ValueObjects\PaymentClaim;
 use App\Modules\Payment\Infrastructure\Models\Payment;
-use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -112,11 +113,20 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
         });
     }
 
-    public function updateStatus(object $payment, string $status, array $attributes = []): object
+    public function updateStatus(object $payment, string $status, array $attributes = [], ?string $operationLeaseToken = null): object
     {
-        PaymentStateMachine::assert((string) $payment->status, $status);
-        $payment->update(array_merge($attributes, ['status' => $status]));
-
-        return $payment->fresh(['order']);
+        if ($operationLeaseToken === null) {
+            PaymentStateMachine::assert((string) $payment->status, $status);
+            $payment->update(array_merge($attributes, ['status' => $status]));
+            return $payment->fresh(['order']);
+        }
+        return DB::transaction(function () use ($payment, $status, $attributes, $operationLeaseToken): object {
+            $owns = PaymentOperation::query()->lockForUpdate()->where('payment_id', $payment->id)->where('operation', 'create')->where('lease_token', $operationLeaseToken)->where('lease_expires_at', '>', now())->exists();
+            if (! $owns) throw new \RuntimeException('Payment operation lease is no longer valid.');
+            $locked = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            PaymentStateMachine::assert((string) $locked->status, $status);
+            $locked->update(array_merge($attributes, ['status' => $status]));
+            return $locked->fresh(['order']);
+        });
     }
 }

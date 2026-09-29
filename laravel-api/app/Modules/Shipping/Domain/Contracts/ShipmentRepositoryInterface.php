@@ -18,7 +18,7 @@ interface ShipmentRepositoryInterface
 
     public function create(array $attributes): object;
 
-    public function updateProviderData(object $shipment, array $data): object;
+    public function updateProviderData(object $shipment, array $data, ?string $operationLeaseToken = null): object;
 
     public function markCreationPending(object $shipment): object;
 
@@ -26,5 +26,5 @@ interface ShipmentRepositoryInterface
 
     public function updateProviderStatus(object $shipment, string $status, ?string $note = null): object;
 
-    public function updateStatus(object $shipment, string $status, ?int $actorId, ?string $note = null): object;
+    public function updateStatus(object $shipment, string $status, ?int $actorId, ?string $note = null, ?string $operationLeaseToken = null): object;
 }

@@ -7,6 +7,8 @@ use App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialInteraction;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialMessage;
 use App\Modules\SocialCommerce\Infrastructure\Models\SocialWebhookEvent;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 final class EloquentSocialInteractionRepository implements SocialInteractionRepositoryInterface
 {
@@ -112,5 +114,66 @@ final class EloquentSocialInteractionRepository implements SocialInteractionRepo
     public function markWebhookProcessed(object $event): void
     {
         $event->update(['status' => 'processed', 'processed_at' => now()]);
+    }
+
+    public function startOperation(string $type, int $id, string $idempotencyKey): void
+    {
+        $model = $this->operationModel($type, $id);
+        $model->update([
+            'operation_idempotency_key' => $idempotencyKey,
+            'operation_status' => 'processing',
+            'operation_attempt_count' => ((int) $model->operation_attempt_count) + 1,
+            'operation_last_error' => null,
+        ]);
+    }
+
+    public function acquireOperationLease(string $type, int $id, string $token, int $seconds = 300): bool
+    {
+        $now = now();
+        return $this->operationQuery($type, $id)
+            ->where(function ($query) use ($token, $now): void {
+                $query->whereNull('operation_lease_token')->orWhere('operation_lease_expires_at', '<=', $now)->orWhere('operation_lease_token', $token);
+            })
+            ->update(['operation_lease_token' => $token, 'operation_lease_expires_at' => $now->addSeconds($seconds)]) === 1;
+    }
+
+    public function ownsOperationLease(string $type, int $id, string $token): bool
+    {
+        return $this->operationQuery($type, $id)->where('operation_lease_token', $token)->where('operation_lease_expires_at', '>', now())->exists();
+    }
+
+    public function completeOperation(string $type, int $id, string $token, array $attributes): bool
+    {
+        return DB::transaction(function () use ($type, $id, $token, $attributes): bool {
+            $query = $this->operationQuery($type, $id)->where('operation_lease_token', $token)->where('operation_lease_expires_at', '>', now());
+            if ($query->lockForUpdate()->update(array_merge($attributes, [
+                'status' => 'sent',
+                'operation_status' => 'sent',
+                'operation_lease_token' => null,
+                'operation_lease_expires_at' => null,
+                'operation_last_error' => null,
+            ])) !== 1) return false;
+            return true;
+        });
+    }
+
+    public function failOperation(string $type, int $id, string $token, string $status, string $error): bool
+    {
+        return $this->operationQuery($type, $id)->where('operation_lease_token', $token)->where('operation_lease_expires_at', '>', now())->update([
+            'operation_status' => $status,
+            'operation_last_error' => $error,
+            'operation_lease_token' => null,
+            'operation_lease_expires_at' => null,
+        ]) === 1;
+    }
+
+    private function operationModel(string $type, int $id): Model
+    {
+        return $this->operationQuery($type, $id)->firstOrFail();
+    }
+
+    private function operationQuery(string $type, int $id)
+    {
+        return ($type === 'social.message.send' ? SocialMessage::query() : SocialInteraction::query())->whereKey($id);
     }
 }

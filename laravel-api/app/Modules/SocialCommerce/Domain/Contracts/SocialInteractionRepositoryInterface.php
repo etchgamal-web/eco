@@ -39,4 +39,9 @@ interface SocialInteractionRepositoryInterface
     public function recordWebhookEvent(array $data): object;
 
     public function markWebhookProcessed(object $event): void;
+    public function startOperation(string $type, int $id, string $idempotencyKey): void;
+    public function acquireOperationLease(string $type, int $id, string $token, int $seconds = 300): bool;
+    public function ownsOperationLease(string $type, int $id, string $token): bool;
+    public function completeOperation(string $type, int $id, string $token, array $attributes): bool;
+    public function failOperation(string $type, int $id, string $token, string $status, string $error): bool;
 }

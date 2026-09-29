@@ -12,4 +12,5 @@ interface ShipmentOperationRepositoryInterface
     public function hasAttempted(int $shipmentId, string $operation): bool;
     public function complete(int $shipmentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null): bool;
     public function fail(int $shipmentId, string $operation, string $error, ?string $leaseToken = null): bool;
+    public function failAmbiguous(int $shipmentId, string $operation, string $error, ?string $leaseToken = null): bool;
 }

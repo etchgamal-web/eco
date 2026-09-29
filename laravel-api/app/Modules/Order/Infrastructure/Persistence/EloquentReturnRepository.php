@@ -6,7 +6,7 @@ use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\ReturnException;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReturn;
-use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Staff\Infrastructure\Models\AuditLog;
 use Illuminate\Support\Facades\DB;

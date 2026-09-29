@@ -11,7 +11,7 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
     public function start(int $paymentId, string $operation, string $idempotencyKey): void
     {
         $record = PaymentOperation::query()->firstOrNew(['payment_id' => $paymentId, 'operation' => $operation, 'idempotency_key' => $idempotencyKey]);
-        if ($record->exists && in_array($record->status, ['provider_created', 'confirmed', 'failed'], true)) return;
+        if ($record->exists && in_array($record->status, ['provider_created', 'confirmed', 'failed', 'ambiguous'], true)) return;
         $record->status = 'processing';
         $record->attempt_count = ((int) $record->attempt_count) + 1;
         $record->next_retry_at = null;
@@ -44,6 +44,11 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         return array_merge((array) $record->response_payload, ['_operation_status' => $record->status]);
     }
 
+    public function hasAttempted(int $paymentId, string $operation): bool
+    {
+        return PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->where('attempt_count', '>', 0)->exists();
+    }
+
     public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null): bool
     {
         $query = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation);
@@ -56,5 +61,12 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         $query = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation);
         if ($leaseToken !== null) $query->where('lease_token', $leaseToken)->where('lease_expires_at', '>', now());
         return $query->update(['status' => $retryable ? 'processing' : 'failed', 'last_error' => $error, 'next_retry_at' => $retryable ? now()->addMinutes(5) : null, 'lease_token' => null, 'lease_expires_at' => null]) === 1;
+    }
+
+    public function failAmbiguous(int $paymentId, string $operation, string $error, ?string $leaseToken = null): bool
+    {
+        $query = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation);
+        if ($leaseToken !== null) $query->where('lease_token', $leaseToken)->where('lease_expires_at', '>', now());
+        return $query->update(['status' => 'ambiguous', 'last_error' => $error, 'next_retry_at' => null, 'lease_token' => null, 'lease_expires_at' => null]) === 1;
     }
 }

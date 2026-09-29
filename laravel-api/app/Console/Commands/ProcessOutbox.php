@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Shared\Infrastructure\Outbox\Processing\ProcessOutboxEvent;
-use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use Illuminate\Console\Command;
 
 final class ProcessOutbox extends Command

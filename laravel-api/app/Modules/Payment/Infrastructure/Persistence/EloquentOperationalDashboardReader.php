@@ -6,7 +6,7 @@ use App\Modules\Payment\Domain\Contracts\OperationalDashboardReaderInterface;
 use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Payment\Infrastructure\Models\PaymentWebhookEvent;
 use App\Modules\Payment\Infrastructure\Models\ProviderCircuitBreaker;
-use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentOperationalDashboardReader implements OperationalDashboardReaderInterface

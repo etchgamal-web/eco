@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Shared\Infrastructure\Outbox\Processing\ProcessOutboxEvent;
-use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
 use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
 use App\Shared\Infrastructure\Outbox\Persistence\EloquentOutboxRepository;
