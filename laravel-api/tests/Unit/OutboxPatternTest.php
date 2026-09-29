@@ -7,6 +7,9 @@ use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
 use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
 use App\Shared\Infrastructure\Outbox\Persistence\EloquentOutboxRepository;
+use App\Shared\Infrastructure\Outbox\Processing\OutboxProcessor;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
+use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentOperationRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -127,5 +130,57 @@ final class OutboxPatternTest extends TestCase
         self::assertSame('pending', $event->status);
         self::assertSame(1, $event->attempt_count);
         self::assertSame('worker timeout', $event->last_error);
+    }
+
+    public function test_unsupported_event_is_not_marked_as_dispatched(): void
+    {
+        $event = OutboxEvent::query()->create([
+            'aggregate_type' => 'payment',
+            'aggregate_id' => 12,
+            'event_type' => 'payment.typoed.event',
+            'deduplication_key' => 'payment:unsupported:12',
+            'status' => 'processing',
+            'claim_token' => 'unsupported-token',
+            'payload' => [],
+        ]);
+
+        app(OutboxProcessor::class)->dispatch((int) $event->id, 'unsupported-token');
+
+        $event->refresh();
+        self::assertNotSame('dispatched', $event->status);
+        self::assertStringContainsString('Unsupported outbox event type', (string) $event->last_error);
+    }
+
+    public function test_stale_payment_operation_cannot_complete_after_new_lease(): void
+    {
+        $user = \App\Modules\Auth\Infrastructure\Models\User::factory()->create();
+        $order = \App\Modules\Order\Infrastructure\Models\CustomerOrder::query()->create([
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'total_amount' => 100,
+            'currency' => 'EGP',
+        ]);
+        $payment = \App\Modules\Payment\Infrastructure\Models\Payment::query()->create([
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'method' => 'cash_on_delivery',
+            'amount' => 100,
+            'currency' => 'EGP',
+            'status' => 'processing',
+            'idempotency_key' => 'operation-fence-test',
+        ]);
+        PaymentOperation::query()->create([
+            'payment_id' => $payment->id,
+            'operation' => 'create',
+            'status' => 'processing',
+            'idempotency_key' => 'operation-fence-test',
+            'attempt_count' => 1,
+        ]);
+        $operations = app(EloquentPaymentOperationRepository::class);
+        self::assertTrue($operations->acquireLease((int) $payment->id, 'create', 'payment-old', 1));
+        PaymentOperation::query()->where('payment_id', $payment->id)->update(['lease_expires_at' => now()->subSecond()]);
+        self::assertTrue($operations->acquireLease((int) $payment->id, 'create', 'payment-new', 300));
+        self::assertFalse($operations->complete((int) $payment->id, 'create', 'confirmed', 'old-ref', [], 'payment-old'));
+        self::assertTrue($operations->complete((int) $payment->id, 'create', 'confirmed', 'new-ref', [], 'payment-new'));
     }
 }

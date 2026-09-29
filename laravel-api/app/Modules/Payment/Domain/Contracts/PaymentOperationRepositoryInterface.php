@@ -10,9 +10,11 @@ interface PaymentOperationRepositoryInterface
 
     public function releaseLease(int $paymentId, string $operation, string $token): void;
 
+    public function ownsLease(int $paymentId, string $operation, string $token): bool;
+
     public function successfulResponse(int $paymentId, string $operation): ?array;
 
-    public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response): void;
+    public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null): bool;
 
-    public function fail(int $paymentId, string $operation, string $error, bool $retryable = true): void;
+    public function fail(int $paymentId, string $operation, string $error, bool $retryable = true, ?string $leaseToken = null): bool;
 }

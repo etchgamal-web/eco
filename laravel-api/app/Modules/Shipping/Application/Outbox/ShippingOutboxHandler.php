@@ -38,9 +38,16 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
         }
 
         $key = (string) $shipment->idempotency_key;
+        $operationToken = (string) $event->claim_token;
+        $this->operations->start((int) $shipment->id, 'create', $key);
+        if (! $this->operations->acquireLease((int) $shipment->id, 'create', $operationToken) || ! $this->outbox->ownsClaim((int) $event->id, $operationToken)) {
+            return;
+        }
         $previous = $this->operations->successfulResponse((int) $shipment->id, 'create');
         if ($previous !== null) {
+            if (! $this->outbox->ownsClaim((int) $event->id, $operationToken)) return;
             $this->shipments->updateProviderData($shipment, $previous);
+            $this->operations->releaseLease((int) $shipment->id, 'create', $operationToken);
             $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
             return;
@@ -50,20 +57,23 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
             if ($recovered === null) {
                 throw new RuntimeException('Shipment creation was previously attempted, but the provider could not recover an existing shipment safely.');
             }
-            $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($recovered, 'metadata.provider_reference'), $recovered);
+            if (! $this->operations->ownsLease((int) $shipment->id, 'create', $operationToken) || ! $this->outbox->ownsClaim((int) $event->id, $operationToken)) return;
             $created = $this->shipments->updateProviderData($shipment, $recovered);
             $this->markOrderShipped($created);
+            $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($recovered, 'metadata.provider_reference'), $recovered, $operationToken);
             $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
             return;
         }
 
         $this->shipments->markCreationPending($shipment);
-        $this->operations->start((int) $shipment->id, 'create', $key);
         $result = $this->providers->create($shipment);
-        $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($result, 'metadata.provider_reference'), $result);
+        if (! $this->operations->ownsLease((int) $shipment->id, 'create', $operationToken) || ! $this->outbox->ownsClaim((int) $event->id, $operationToken)) {
+            return;
+        }
         $created = $this->shipments->updateProviderData($shipment, $result);
         $this->markOrderShipped($created);
+        $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($result, 'metadata.provider_reference'), $result, $operationToken);
         $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
     }
 
@@ -78,7 +88,11 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
     public function failed(object $event, \Throwable $exception): void
     {
         $shipment = $this->shipments->find((int) $event->aggregate_id);
+        if (! $this->operations->ownsLease((int) $event->aggregate_id, 'create', (string) $event->claim_token)) {
+            return;
+        }
         $this->shipments->markCreationFailed($shipment, $exception->getMessage());
+        $this->operations->fail((int) $event->aggregate_id, 'create', $exception->getMessage(), (string) $event->claim_token);
         $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
     }
 }

@@ -40,6 +40,7 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
             }
             $this->interactions->updateMessageStatus((int) $event->aggregate_id, 'processing');
             $result = $this->provider->sendMessage($connection, (string) $payload['recipient'], (string) $payload['body']);
+            if (! $this->outbox->ownsClaim((int) $event->id, (string) $event->claim_token)) return;
             $this->interactions->updateMessage((int) $event->aggregate_id, [
                 'status' => 'sent',
                 'provider_message_id' => $result['provider_message_id'] ?? null,
@@ -58,6 +59,7 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
             }
             $this->interactions->updateInteractionStatus((int) $event->aggregate_id, 'processing');
             $result = $this->provider->replyToComment($connection, (string) $payload['comment_id'], (string) $payload['body']);
+            if (! $this->outbox->ownsClaim((int) $event->id, (string) $event->claim_token)) return;
             $this->interactions->updateInteraction((int) $event->aggregate_id, [
                 'status' => 'sent',
                 'provider_interaction_id' => $result['provider_message_id'] ?? null,

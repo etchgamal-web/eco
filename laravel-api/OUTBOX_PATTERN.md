@@ -44,6 +44,8 @@ $this->outbox->add(new OutboxMessage(
 - `processing` مع lease منتهٍ يمكن استعادته.
 - تحديث الحجز مشروط بالحالة الحالية لمنع تنفيذ event نفسها بالتوازي.
 - `markProcessed(eventId, claimToken)` و`markFailed(eventId, claimToken, error)` يرفضان أي كتابة من worker قديم بعد انتهاء lease وإعادة claim.
+- الـPaymentOperation والـShipmentOperation يستخدمان lease token مستقلًا؛ تحديث aggregate أو operation بعد استدعاء provider يتطلب بقاء ملكية الـclaim والـoperation.
+- event بدون handler لا تُعتبر ناجحة؛ تتحول إلى retry/dead-letter عبر `markFailed` مع تسجيل `event_type` في `last_error`.
 
 قيمة lease الافتراضية خمس دقائق ويمكن ضبطها عبر `OUTBOX_LEASE_MINUTES`. مهلة الـjob الافتراضية دقيقتان (`OUTBOX_JOB_TIMEOUT_SECONDS=120`) بينما نافذة إعادة تسليم database queue الافتراضية ثلاث دقائق (`DB_QUEUE_RETRY_AFTER=180`). يجب أن تظل نافذة queue أكبر من timeout، وأن تكون lease أكبر من أطول استدعاء خارجي متوقع.
 

@@ -8,6 +8,7 @@ use App\Shared\Infrastructure\Outbox\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
 use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -25,17 +26,23 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
 
     public function add(OutboxMessage $message): OutboxEvent
     {
-        return OutboxEvent::query()->firstOrCreate(
-            ['deduplication_key' => $message->key()],
-            [
-                'aggregate_type' => $message->aggregateType,
-                'aggregate_id' => $message->aggregateId,
-                'event_type' => $message->eventType,
-                'status' => 'pending',
-                'payload' => $message->payload,
-                'next_attempt_at' => $message->availableAt,
-            ],
-        );
+        try {
+            return OutboxEvent::query()->firstOrCreate(
+                ['deduplication_key' => $message->key()],
+                [
+                    'aggregate_type' => $message->aggregateType,
+                    'aggregate_id' => $message->aggregateId,
+                    'event_type' => $message->eventType,
+                    'status' => 'pending',
+                    'payload' => $message->payload,
+                    'next_attempt_at' => $message->availableAt,
+                ],
+            );
+        } catch (QueryException $exception) {
+            $existing = $this->findByDeduplicationKey($message->key());
+            if ($existing !== null) return $existing;
+            throw $exception;
+        }
     }
 
     public function claim(int $limit): array
@@ -93,6 +100,15 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
     public function countByStatus(): array
     {
         return OutboxEvent::query()->select('status')->selectRaw('count(*) as count')->groupBy('status')->pluck('count', 'status')->map(static fn ($count): int => (int) $count)->all();
+    }
+
+    public function ownsClaim(int $eventId, string $claimToken): bool
+    {
+        return OutboxEvent::query()
+            ->whereKey($eventId)
+            ->where('status', 'processing')
+            ->where('claim_token', $claimToken)
+            ->exists();
     }
 
     public function markProcessed(int $eventId, string $claimToken): bool

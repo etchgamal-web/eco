@@ -29,14 +29,13 @@ final class OutboxProcessor
             }
         }
 
-        // Durable records without a side-effect handler are complete by design.
-        $this->outbox->markProcessed($eventId, $claimToken);
+        $this->outbox->markFailed($eventId, $claimToken, 'Unsupported outbox event type: '.(string) $event->event_type);
     }
 
     public function failed(int $eventId, string $claimToken, \Throwable $exception): void
     {
         $event = $this->outbox->find($eventId);
-        if ($event === null) {
+        if ($event === null || $event->status !== 'processing' || $event->claim_token !== $claimToken) {
             return;
         }
 
