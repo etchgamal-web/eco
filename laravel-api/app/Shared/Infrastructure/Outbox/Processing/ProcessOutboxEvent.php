@@ -18,18 +18,18 @@ final class ProcessOutboxEvent implements ShouldQueue
 
     public int $timeout;
 
-    public function __construct(public readonly int $eventId)
+    public function __construct(public readonly int $eventId, public readonly string $claimToken)
     {
         $this->timeout = (int) config('outbox.job_timeout_seconds', 120);
     }
 
     public function handle(OutboxProcessor $dispatcher): void
     {
-        $dispatcher->dispatch($this->eventId);
+        $dispatcher->dispatch($this->eventId, $this->claimToken);
     }
 
     public function failed(Throwable $exception): void
     {
-        app(OutboxProcessor::class)->failed($this->eventId, $exception);
+        app(OutboxProcessor::class)->failed($this->eventId, $this->claimToken, $exception);
     }
 }

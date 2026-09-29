@@ -26,7 +26,7 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
     {
         $payment = $this->payments->find((int) $event->aggregate_id);
         if (in_array($payment->status, ['provider_created', 'confirmed', 'paid', 'refunded', 'failed'], true)) {
-            $this->outbox->markProcessed((int) $event->id);
+            $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
             return;
         }
@@ -38,7 +38,7 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
                 'provider_reference' => $previous['provider_reference'] ?? null,
                 'metadata' => $previous['metadata'] ?? $payment->metadata,
             ]);
-            $this->outbox->markProcessed((int) $event->id);
+            $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
             return;
         }
@@ -53,11 +53,11 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
             'provider_reference' => $result['provider_reference'] ?? null,
             'metadata' => $result['metadata'] ?? $payment->metadata,
         ]);
-        $this->outbox->markProcessed((int) $event->id);
+        $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
     }
 
     public function failed(object $event, \Throwable $exception): void
     {
-        $this->outbox->markFailed((int) $event->id, $exception->getMessage());
+        $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
     }
 }

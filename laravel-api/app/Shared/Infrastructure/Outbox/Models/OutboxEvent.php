@@ -8,7 +8,7 @@ class OutboxEvent extends Model
 {
     protected $fillable = [
         'aggregate_type', 'aggregate_id', 'event_type', 'deduplication_key', 'status',
-        'attempt_count', 'payload', 'last_error', 'next_attempt_at', 'lease_until', 'dispatched_at',
+        'attempt_count', 'payload', 'last_error', 'next_attempt_at', 'lease_until', 'claim_token', 'dispatched_at',
     ];
 
     protected function casts(): array

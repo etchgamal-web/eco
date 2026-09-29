@@ -9,6 +9,7 @@ use App\Shared\Domain\Data\OutboxMessage;
 use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 final class EloquentOutboxRepository implements OutboxRepositoryInterface
 {
@@ -58,6 +59,7 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
             ->limit($limit)
             ->pluck('id')
             ->each(function (int $id) use (&$events, $leaseUntil): void {
+                $claimToken = (string) Str::uuid();
                 $claimed = OutboxEvent::query()
                     ->whereKey($id)
                     ->where(function (Builder $query): void {
@@ -70,7 +72,12 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
                             $processing->where('status', 'processing')->where('lease_until', '<=', now());
                         });
                     })
-                    ->update(['status' => 'processing', 'lease_until' => $leaseUntil, 'updated_at' => now()]);
+                    ->update([
+                        'status' => 'processing',
+                        'claim_token' => $claimToken,
+                        'lease_until' => $leaseUntil,
+                        'updated_at' => now(),
+                    ]);
 
                 if ($claimed === 1) {
                     $event = $this->find($id);
@@ -88,20 +95,30 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
         return OutboxEvent::query()->select('status')->selectRaw('count(*) as count')->groupBy('status')->pluck('count', 'status')->map(static fn ($count): int => (int) $count)->all();
     }
 
-    public function markProcessed(int $eventId): void
+    public function markProcessed(int $eventId, string $claimToken): bool
     {
-        OutboxEvent::query()->whereKey($eventId)->update([
-            'status' => 'dispatched',
-            'dispatched_at' => now(),
-            'lease_until' => null,
-            'last_error' => null,
-        ]);
+        return OutboxEvent::query()
+            ->whereKey($eventId)
+            ->where('status', 'processing')
+            ->where('claim_token', $claimToken)
+            ->update([
+                'status' => 'dispatched',
+                'dispatched_at' => now(),
+                'lease_until' => null,
+                'claim_token' => null,
+                'last_error' => null,
+            ]) === 1;
     }
 
-    public function markFailed(int $eventId, string $error): bool
+    public function markFailed(int $eventId, string $claimToken, string $error): bool
     {
-        return DB::transaction(function () use ($eventId, $error): bool {
-            $event = OutboxEvent::query()->lockForUpdate()->whereKey($eventId)->whereIn('status', ['pending', 'processing'])->first();
+        return DB::transaction(function () use ($eventId, $claimToken, $error): bool {
+            $event = OutboxEvent::query()
+                ->lockForUpdate()
+                ->whereKey($eventId)
+                ->where('status', 'processing')
+                ->where('claim_token', $claimToken)
+                ->first();
             if ($event === null) {
                 return false;
             }
@@ -113,6 +130,7 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
                 'attempt_count' => $attempts,
                 'last_error' => $error,
                 'lease_until' => null,
+                'claim_token' => null,
                 'next_attempt_at' => $exhausted ? null : now()->addMinutes((int) config('outbox.retry_delay_minutes', 5)),
             ]);
 

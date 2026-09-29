@@ -15,6 +15,6 @@ interface OutboxRepositoryInterface
     public function claim(int $limit): array;
     /** @return array<string, int> */
     public function countByStatus(): array;
-    public function markProcessed(int $eventId): void;
-    public function markFailed(int $eventId, string $error): bool;
+    public function markProcessed(int $eventId, string $claimToken): bool;
+    public function markFailed(int $eventId, string $claimToken, string $error): bool;
 }

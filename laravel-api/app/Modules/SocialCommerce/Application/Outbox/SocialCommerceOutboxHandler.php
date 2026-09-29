@@ -30,7 +30,7 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
         if ($type === 'social.message.send') {
             $message = $this->interactions->findMessage((int) $event->aggregate_id);
             if (! $message || $message->status === 'sent') {
-                $this->outbox->markProcessed((int) $event->id);
+                $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
                 return;
             }
@@ -48,7 +48,7 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
         } else {
             $interaction = $this->interactions->find((int) $event->aggregate_id);
             if (! $interaction || $interaction->status === 'sent') {
-                $this->outbox->markProcessed((int) $event->id);
+                $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
                 return;
             }
@@ -64,12 +64,12 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
                 'metadata' => array_merge((array) ($interaction->metadata ?? []), $result),
             ]);
         }
-        $this->outbox->markProcessed((int) $event->id);
+        $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
     }
 
     public function failed(object $event, \Throwable $exception): void
     {
-        $exhausted = $this->outbox->markFailed((int) $event->id, $exception->getMessage());
+        $exhausted = $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
         if ($event->event_type === 'social.message.send') {
             $this->interactions->updateMessageStatus((int) $event->aggregate_id, $exhausted ? 'failed' : 'retrying');
         } else {

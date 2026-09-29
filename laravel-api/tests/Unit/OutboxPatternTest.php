@@ -50,6 +50,34 @@ final class OutboxPatternTest extends TestCase
         $this->assertDatabaseHas('outbox_events', ['id' => $event->id, 'status' => 'processing']);
     }
 
+    public function test_stale_worker_cannot_complete_or_fail_a_newer_claim(): void
+    {
+        $event = OutboxEvent::query()->create([
+            'aggregate_type' => 'payment',
+            'aggregate_id' => 11,
+            'event_type' => 'payment.create.requested',
+            'deduplication_key' => 'payment:create:stale-worker',
+            'status' => 'pending',
+            'payload' => ['payment_id' => 11],
+        ]);
+        $repository = app(OutboxRepositoryInterface::class);
+        $firstClaim = $repository->claim(1);
+        self::assertSame('processing', $firstClaim[0]->status);
+        $oldToken = (string) $firstClaim[0]->claim_token;
+
+        $event->update(['lease_until' => now()->subSecond()]);
+        $secondClaim = $repository->claim(1);
+        $newToken = (string) $secondClaim[0]->claim_token;
+        self::assertNotSame($oldToken, $newToken);
+
+        self::assertFalse($repository->markProcessed((int) $event->id, $oldToken));
+        self::assertFalse($repository->markFailed((int) $event->id, $oldToken, 'stale worker'));
+        $event->refresh();
+        self::assertSame('processing', $event->status);
+        self::assertSame($newToken, $event->claim_token);
+        self::assertTrue($repository->markProcessed((int) $event->id, $newToken));
+    }
+
     public function test_failed_event_retries_through_outbox_and_then_exhausts(): void
     {
         config(['outbox.max_attempts' => 2, 'outbox.retry_delay_minutes' => 5]);
@@ -59,17 +87,21 @@ final class OutboxPatternTest extends TestCase
             'event_type' => 'payment.create.requested',
             'deduplication_key' => 'payment:create:retry-test',
             'status' => 'processing',
+            'claim_token' => 'token-retry',
             'payload' => ['payment_id' => 9],
         ]);
         $repository = app(OutboxRepositoryInterface::class);
 
-        self::assertFalse($repository->markFailed((int) $event->id, 'temporary failure'));
+        self::assertFalse($repository->markFailed((int) $event->id, 'token-retry', 'temporary failure'));
         $event->refresh();
         self::assertSame('pending', $event->status);
         self::assertSame(1, $event->attempt_count);
         self::assertNotNull($event->next_attempt_at);
 
-        self::assertTrue($repository->markFailed((int) $event->id, 'final failure'));
+        $event->update(['next_attempt_at' => now()->subSecond()]);
+        $secondClaim = $repository->claim(1);
+        self::assertCount(1, $secondClaim);
+        self::assertTrue($repository->markFailed((int) $event->id, (string) $secondClaim[0]->claim_token, 'final failure'));
         $event->refresh();
         self::assertSame('failed', $event->status);
         self::assertSame(2, $event->attempt_count);
@@ -85,10 +117,11 @@ final class OutboxPatternTest extends TestCase
             'event_type' => 'payment.create.requested',
             'deduplication_key' => 'payment:create:timeout-test',
             'status' => 'processing',
+            'claim_token' => 'token-retry',
             'payload' => ['payment_id' => 10],
         ]);
 
-        (new ProcessOutboxEvent((int) $event->id))->failed(new \RuntimeException('worker timeout'));
+        (new ProcessOutboxEvent((int) $event->id, 'token-retry'))->failed(new \RuntimeException('worker timeout'));
 
         $event->refresh();
         self::assertSame('pending', $event->status);

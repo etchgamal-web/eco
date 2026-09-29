@@ -16,7 +16,7 @@ final class ProcessOutbox extends Command
     {
         $events = $outbox->claim((int) $this->option('limit'));
         foreach ($events as $event) {
-            ProcessOutboxEvent::dispatch((int) $event->id);
+            ProcessOutboxEvent::dispatch((int) $event->id, (string) $event->claim_token);
         }
 
         $this->info('Dispatched '.count($events).' outbox event(s).');

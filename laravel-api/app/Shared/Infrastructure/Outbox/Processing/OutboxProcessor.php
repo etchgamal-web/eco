@@ -15,10 +15,10 @@ final class OutboxProcessor
         private readonly iterable $handlers,
     ) {}
 
-    public function dispatch(int $eventId): void
+    public function dispatch(int $eventId, string $claimToken): void
     {
         $event = $this->outbox->find($eventId);
-        if ($event === null || $event->status === 'dispatched') {
+        if ($event === null || $event->status !== 'processing' || $event->claim_token !== $claimToken) {
             return;
         }
 
@@ -30,10 +30,10 @@ final class OutboxProcessor
         }
 
         // Durable records without a side-effect handler are complete by design.
-        $this->outbox->markProcessed($eventId);
+        $this->outbox->markProcessed($eventId, $claimToken);
     }
 
-    public function failed(int $eventId, \Throwable $exception): void
+    public function failed(int $eventId, string $claimToken, \Throwable $exception): void
     {
         $event = $this->outbox->find($eventId);
         if ($event === null) {
@@ -47,6 +47,6 @@ final class OutboxProcessor
             }
         }
 
-        $this->outbox->markFailed($eventId, $exception->getMessage());
+        $this->outbox->markFailed($eventId, $claimToken, $exception->getMessage());
     }
 }

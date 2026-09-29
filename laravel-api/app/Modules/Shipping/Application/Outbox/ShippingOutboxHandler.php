@@ -29,7 +29,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
     {
         $shipment = $this->shipments->find((int) $event->aggregate_id);
         if ($shipment->creation_status === 'created' || data_get($shipment->metadata, 'provider_reference')) {
-            $this->outbox->markProcessed((int) $event->id);
+            $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
             return;
         }
@@ -41,7 +41,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
         $previous = $this->operations->successfulResponse((int) $shipment->id, 'create');
         if ($previous !== null) {
             $this->shipments->updateProviderData($shipment, $previous);
-            $this->outbox->markProcessed((int) $event->id);
+            $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
             return;
         }
@@ -53,7 +53,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
             $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($recovered, 'metadata.provider_reference'), $recovered);
             $created = $this->shipments->updateProviderData($shipment, $recovered);
             $this->markOrderShipped($created);
-            $this->outbox->markProcessed((int) $event->id);
+            $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
             return;
         }
@@ -64,7 +64,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
         $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($result, 'metadata.provider_reference'), $result);
         $created = $this->shipments->updateProviderData($shipment, $result);
         $this->markOrderShipped($created);
-        $this->outbox->markProcessed((int) $event->id);
+        $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
     }
 
     private function markOrderShipped(object $shipment): void
@@ -79,6 +79,6 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
     {
         $shipment = $this->shipments->find((int) $event->aggregate_id);
         $this->shipments->markCreationFailed($shipment, $exception->getMessage());
-        $this->outbox->markFailed((int) $event->id, $exception->getMessage());
+        $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
     }
 }
