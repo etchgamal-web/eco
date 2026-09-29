@@ -13,13 +13,14 @@ final class ShipmentStateMachine
         }
         $allowed = [
             'pending' => ['processing', 'provider_created', 'cancelled'],
-            'processing' => ['provider_created', 'failed', 'cancelled'],
+            'processing' => ['provider_created', 'failed', 'cancelled', 'ambiguous'],
             'provider_created' => ['picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'cancelled'],
             'picked_up' => ['in_transit', 'out_for_delivery', 'cancelled'],
             'in_transit' => ['out_for_delivery', 'delivered', 'cancelled'],
             'out_for_delivery' => ['delivered', 'cancelled'],
             'delivered' => [],
-            'failed' => ['processing', 'provider_created'],
+            'failed' => ['processing', 'provider_created', 'ambiguous'],
+            'ambiguous' => ['processing', 'provider_created', 'failed'],
             'cancelled' => [],
         ];
         if (! in_array($to, $allowed[$from] ?? [], true)) {

@@ -4,6 +4,8 @@ namespace App\Modules\SocialCommerce\Infrastructure\Providers;
 
 use App\Modules\SocialCommerce\Domain\Contracts\SocialMessagingProviderInterface;
 use App\Modules\SocialCommerce\Domain\Exceptions\SocialCommerceException;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 abstract class MetaChannelMessagingProvider implements SocialMessagingProviderInterface
@@ -59,10 +61,14 @@ abstract class MetaChannelMessagingProvider implements SocialMessagingProviderIn
             throw new SocialCommerceException("No send URL configured for {$channel}.");
         }
 
-        $response = Http::timeout((int) config('services.social.timeout', 15))
-            ->withToken($connection->access_token)
-            ->acceptJson()
-            ->post($url, $this->messagePayload($recipient, $text));
+        try {
+            $response = Http::timeout((int) config('services.social.timeout', 15))
+                ->withToken($connection->access_token)
+                ->acceptJson()
+                ->post($url, $this->messagePayload($recipient, $text));
+        } catch (ConnectionException $exception) {
+            throw new AmbiguousExternalResultException('Social message send result is unknown after a connection failure.', 0, $exception);
+        }
 
         if ($response->failed()) {
             throw new SocialCommerceException('Social provider message send failed: '.$response->status());
@@ -86,10 +92,14 @@ abstract class MetaChannelMessagingProvider implements SocialMessagingProviderIn
             throw new SocialCommerceException("No comment reply URL configured for {$this->channel()}.");
         }
 
-        $response = Http::timeout((int) config('services.social.timeout', 15))
-            ->withToken($connection->access_token)
-            ->acceptJson()
-            ->post($url, ['message' => $text]);
+        try {
+            $response = Http::timeout((int) config('services.social.timeout', 15))
+                ->withToken($connection->access_token)
+                ->acceptJson()
+                ->post($url, ['message' => $text]);
+        } catch (ConnectionException $exception) {
+            throw new AmbiguousExternalResultException('Social comment reply result is unknown after a connection failure.', 0, $exception);
+        }
 
         if ($response->failed()) {
             throw new SocialCommerceException('Social comment reply failed: '.$response->status());

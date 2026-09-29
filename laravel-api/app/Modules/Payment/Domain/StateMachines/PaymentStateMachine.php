@@ -13,11 +13,12 @@ final class PaymentStateMachine
         }
         $allowed = [
             'pending' => ['processing', 'provider_created', 'confirmed', 'paid', 'failed'],
-            'processing' => ['pending', 'provider_created', 'confirmed', 'paid', 'failed'],
+            'processing' => ['pending', 'provider_created', 'confirmed', 'paid', 'failed', 'ambiguous'],
             'provider_created' => ['confirmed', 'paid', 'failed'],
             'confirmed' => ['refunded'],
             'paid' => ['confirmed', 'refunded'],
             'failed' => ['processing', 'confirmed'],
+            'ambiguous' => ['processing', 'confirmed', 'failed'],
             'refunded' => [],
         ];
         if (! in_array($to, $allowed[$from] ?? [], true)) {

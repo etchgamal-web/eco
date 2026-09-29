@@ -8,6 +8,7 @@ use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
 use RuntimeException;
 
 final class ShippingOutboxHandler implements OutboxEventHandlerInterface
@@ -89,6 +90,12 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
     {
         $shipment = $this->shipments->find((int) $event->aggregate_id);
         if (! $this->operations->ownsLease((int) $event->aggregate_id, 'create', (string) $event->claim_token)) {
+            return;
+        }
+        if ($exception instanceof AmbiguousExternalResultException) {
+            $this->operations->fail((int) $event->aggregate_id, 'create', $exception->getMessage(), (string) $event->claim_token);
+            $this->shipments->updateStatus($shipment, 'ambiguous', null, $exception->getMessage());
+            $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, $exception->getMessage());
             return;
         }
         $this->shipments->markCreationFailed($shipment, $exception->getMessage());

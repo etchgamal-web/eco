@@ -5,6 +5,8 @@ namespace App\Modules\Payment\Infrastructure\Gateways;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Exceptions\PaymentException;
 use App\Modules\Payment\Infrastructure\Configuration\PaymentGatewaySettings;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -57,7 +59,11 @@ final class PaymobGateway implements PaymentGatewayInterface
             'redirection_url' => $this->settings->value('paymob', 'redirection_url', config('services.paymob.redirection_url')),
         ];
 
-        $response = $this->client($secretKey)->post('/v1/intention/', $payload)->throw()->json();
+        try {
+            $response = $this->client($secretKey)->post('/v1/intention/', $payload)->throw()->json();
+        } catch (ConnectionException $exception) {
+            throw new AmbiguousExternalResultException('Paymob payment creation result is unknown after a connection failure.', 0, $exception);
+        }
         $clientSecret = (string) ($response['client_secret'] ?? '');
         $intentionId = $response['id'] ?? $response['order_id'] ?? null;
         if ($clientSecret === '' || $intentionId === null) {

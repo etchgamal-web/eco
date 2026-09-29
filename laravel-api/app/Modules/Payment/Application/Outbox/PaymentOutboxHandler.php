@@ -7,6 +7,7 @@ use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
 
 final class PaymentOutboxHandler implements OutboxEventHandlerInterface
 {
@@ -67,6 +68,15 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
 
     public function failed(object $event, \Throwable $exception): void
     {
+        if ($exception instanceof AmbiguousExternalResultException) {
+            if ($this->operations->ownsLease((int) $event->aggregate_id, 'create', (string) $event->claim_token)) {
+                $this->operations->fail((int) $event->aggregate_id, 'create', $exception->getMessage(), false, (string) $event->claim_token);
+                $payment = $this->payments->find((int) $event->aggregate_id);
+                if ($payment->status === 'processing') $this->payments->updateStatus($payment, 'ambiguous');
+            }
+            $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, $exception->getMessage());
+            return;
+        }
         $retryable = true;
         if ($this->operations->ownsLease((int) $event->aggregate_id, 'create', (string) $event->claim_token)) {
             $this->operations->fail((int) $event->aggregate_id, 'create', $exception->getMessage(), $retryable, (string) $event->claim_token);

@@ -5,7 +5,9 @@ namespace App\Modules\Shipping\Infrastructure\Providers;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
 use App\Modules\Shipping\Infrastructure\Configuration\ShippingProviderSettings;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 final class BostaShippingProvider implements ShippingProviderInterface
@@ -62,7 +64,11 @@ final class BostaShippingProvider implements ShippingProviderInterface
             ],
         ];
 
-        $response = $this->client($apiKey)->post('/api/v2/deliveries?apiVersion=1', $payload)->throw()->json();
+        try {
+            $response = $this->client($apiKey)->post('/api/v2/deliveries?apiVersion=1', $payload)->throw()->json();
+        } catch (ConnectionException $exception) {
+            throw new AmbiguousExternalResultException('Bosta shipment creation result is unknown after a connection failure.', 0, $exception);
+        }
         $data = (array) ($response['data'] ?? []);
         if (($response['success'] ?? false) !== true || ($data['_id'] ?? '') === '') {
             throw new ShippingException((string) ($response['message'] ?? 'Bosta delivery creation failed.'));
@@ -82,7 +88,7 @@ final class BostaShippingProvider implements ShippingProviderInterface
 
     public function recover(object $shipment): ?array
     {
-        throw new ShippingException('Bosta does not expose a documented recovery lookup by businessReference; manual reconciliation is required before retrying this shipment.');
+        throw new AmbiguousExternalResultException('Bosta creation result is ambiguous; manual reconciliation is required before retrying this shipment.');
     }
 
     public function track(object $shipment): array

@@ -5,6 +5,8 @@ namespace App\Modules\Payment\Infrastructure\Gateways;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Exceptions\PaymentException;
 use App\Modules\Payment\Infrastructure\Configuration\PaymentGatewaySettings;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -52,7 +54,11 @@ final class KashierGateway implements PaymentGatewayInterface
             'serverWebhook' => $this->settings->value('kashier', 'webhook_url', config('services.kashier.webhook_url')),
         ];
 
-        $response = $this->apiClient($secretKey, $paymentApiKey)->post('/v3/payment/sessions', $payload)->throw()->json();
+        try {
+            $response = $this->apiClient($secretKey, $paymentApiKey)->post('/v3/payment/sessions', $payload)->throw()->json();
+        } catch (ConnectionException $exception) {
+            throw new AmbiguousExternalResultException('Kashier payment creation result is unknown after a connection failure.', 0, $exception);
+        }
         $sessionUrl = (string) ($response['sessionUrl'] ?? '');
         $sessionId = (string) ($response['_id'] ?? '');
         if ($sessionUrl === '' || $sessionId === '') {

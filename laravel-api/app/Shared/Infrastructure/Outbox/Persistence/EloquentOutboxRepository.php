@@ -153,4 +153,19 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
             return $exhausted;
         });
     }
+
+    public function markAmbiguous(int $eventId, string $claimToken, string $error): bool
+    {
+        return OutboxEvent::query()
+            ->whereKey($eventId)
+            ->where('status', 'processing')
+            ->where('claim_token', $claimToken)
+            ->update([
+                'status' => 'ambiguous',
+                'last_error' => $error,
+                'lease_until' => null,
+                'claim_token' => null,
+                'next_attempt_at' => null,
+            ]) === 1;
+    }
 }

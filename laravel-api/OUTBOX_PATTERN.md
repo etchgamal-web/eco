@@ -46,10 +46,11 @@ $this->outbox->add(new OutboxMessage(
 - `markProcessed(eventId, claimToken)` و`markFailed(eventId, claimToken, error)` يرفضان أي كتابة من worker قديم بعد انتهاء lease وإعادة claim.
 - الـPaymentOperation والـShipmentOperation يستخدمان lease token مستقلًا؛ تحديث aggregate أو operation بعد استدعاء provider يتطلب بقاء ملكية الـclaim والـoperation.
 - event بدون handler لا تُعتبر ناجحة؛ تتحول إلى retry/dead-letter عبر `markFailed` مع تسجيل `event_type` في `last_error`.
+- نتيجة provider الغامضة (مثل timeout بعد إرسال create) تتحول إلى `ambiguous` عبر `markAmbiguous`، ولا تعود إلى `pending` ولا تعيد الإنشاء تلقائيًا.
 
 قيمة lease الافتراضية خمس دقائق ويمكن ضبطها عبر `OUTBOX_LEASE_MINUTES`. مهلة الـjob الافتراضية دقيقتان (`OUTBOX_JOB_TIMEOUT_SECONDS=120`) بينما نافذة إعادة تسليم database queue الافتراضية ثلاث دقائق (`DB_QUEUE_RETRY_AFTER=180`). يجب أن تظل نافذة queue أكبر من timeout، وأن تكون lease أكبر من أطول استدعاء خارجي متوقع.
 
-بعد النجاح تصبح الحالة `dispatched`. عند الفشل تعود إلى `pending` مع `attempt_count` و`next_attempt_at` و`last_error`. الـQueue job لديه محاولة Laravel واحدة فقط؛ إعادة المحاولة تتم حصريًا بواسطة Outbox، حتى لا يتنافس Laravel retry مع إعادة enqueue من scheduler. بعد بلوغ `OUTBOX_MAX_ATTEMPTS` تتحول الحالة إلى `failed` وتظل قابلة للمراجعة من operational dashboard وPrometheus metrics.
+بعد النجاح تصبح الحالة `dispatched`. عند الفشل تعود إلى `pending` مع `attempt_count` و`next_attempt_at` و`last_error`. الـQueue job لديه محاولة Laravel واحدة فقط؛ إعادة المحاولة تتم حصريًا بواسطة Outbox، حتى لا يتنافس Laravel retry مع إعادة enqueue من scheduler. بعد بلوغ `OUTBOX_MAX_ATTEMPTS` تتحول الحالة إلى `failed` وتظل قابلة للمراجعة من operational dashboard وPrometheus metrics. أما `ambiguous` فهي حالة نهائية مؤقتة للمراجعة اليدوية؛ لا يلتقطها scheduler.
 
 ## إضافة نوع event جديد
 
@@ -57,7 +58,7 @@ $this->outbox->add(new OutboxMessage(
 2. أضف handler داخل module المناسب في `app/Modules/<Module>/Application/Outbox`.
 3. سجّل handler في service provider باستخدام `OutboxEventHandlerInterface` من `Shared\\Domain\\Contracts`.
 4. اجعل التنفيذ idempotent عبر provider idempotency key أو operation record قبل استدعاء مزود خارجي.
-5. إذا انتهت محاولة خارجية دون حفظ النتيجة محليًا، يجب استدعاء `recover` المخصص للمزود فقط؛ لا يجوز إعادة `create` تلقائيًا. إذا لم يدعم المزود lookup موثقًا، تتوقف العملية وتحتاج reconciliation يدويًا.
+5. إذا انتهت محاولة خارجية دون حفظ النتيجة محليًا، يجب استدعاء `recover` المخصص للمزود فقط؛ لا يجوز إعادة `create` تلقائيًا. إذا لم يدعم المزود lookup موثقًا، تتحول العملية إلى `ambiguous` وتحتاج reconciliation يدويًا. ينطبق ذلك على الدفع والشحن وSocial Commerce.
 6. أضف اختبارات للتسجيل مرة واحدة، والـretry، والـclaim، وعدم إعادة `create` دون recovery آمن.
 
 لا ترسل side effect خارجيًا داخل transaction الأساسية؛ الـOutbox مسؤول عن الفصل بين commit المحلي والتنفيذ الخارجي.

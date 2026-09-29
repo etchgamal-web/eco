@@ -151,6 +151,27 @@ final class OutboxPatternTest extends TestCase
         self::assertStringContainsString('Unsupported outbox event type', (string) $event->last_error);
     }
 
+    public function test_ambiguous_event_is_terminal_until_manual_reconciliation(): void
+    {
+        $event = OutboxEvent::query()->create([
+            'aggregate_type' => 'shipment',
+            'aggregate_id' => 20,
+            'event_type' => 'shipment.create.requested',
+            'deduplication_key' => 'shipment:ambiguous:20',
+            'status' => 'processing',
+            'claim_token' => 'ambiguous-token',
+            'payload' => [],
+        ]);
+
+        self::assertTrue(app(\App\Shared\Infrastructure\Outbox\Persistence\EloquentOutboxRepository::class)
+            ->markAmbiguous((int) $event->id, 'ambiguous-token', 'provider result is unknown'));
+
+        $event->refresh();
+        self::assertSame('ambiguous', $event->status);
+        self::assertNull($event->claim_token);
+        self::assertNull($event->next_attempt_at);
+    }
+
     public function test_stale_payment_operation_cannot_complete_after_new_lease(): void
     {
         $user = \App\Modules\Auth\Infrastructure\Models\User::factory()->create();

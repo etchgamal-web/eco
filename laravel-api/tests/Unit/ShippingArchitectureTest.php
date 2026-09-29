@@ -7,6 +7,8 @@ use App\Modules\Shipping\Domain\Contracts\ShippingWebhookEventRepositoryInterfac
 use App\Modules\Shipping\Domain\Exceptions\InvalidShipmentTransitionException;
 use App\Modules\Shipping\Domain\StateMachines\ShipmentStateMachine;
 use App\Modules\Shipping\Infrastructure\Persistence\EloquentShippingWebhookEventRepository;
+use App\Modules\Shipping\Infrastructure\Providers\BostaShippingProvider;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
 use Tests\TestCase;
 
 final class ShippingArchitectureTest extends TestCase
@@ -25,6 +27,13 @@ final class ShippingArchitectureTest extends TestCase
         $this->assertIsString($source);
         $this->assertStringContainsString('businessReference', $source);
         $this->assertStringContainsString('updateProviderData', $source);
+    }
+
+    public function test_bosta_unknown_creation_result_requires_manual_reconciliation(): void
+    {
+        $this->expectException(AmbiguousExternalResultException::class);
+
+        app(BostaShippingProvider::class)->recover((object) ['idempotency_key' => 'shipment-unknown']);
     }
 
     public function test_bosta_webhook_use_case_depends_on_domain_contracts_not_eloquent_models(): void

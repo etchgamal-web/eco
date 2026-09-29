@@ -7,6 +7,7 @@ use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialMessagingProviderInterface;
+use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
 use RuntimeException;
 
 final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
@@ -71,6 +72,15 @@ final class SocialCommerceOutboxHandler implements OutboxEventHandlerInterface
 
     public function failed(object $event, \Throwable $exception): void
     {
+        if ($exception instanceof AmbiguousExternalResultException) {
+            $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, $exception->getMessage());
+            if ($event->event_type === 'social.message.send') {
+                $this->interactions->updateMessageStatus((int) $event->aggregate_id, 'ambiguous');
+            } else {
+                $this->interactions->updateInteractionStatus((int) $event->aggregate_id, 'ambiguous');
+            }
+            return;
+        }
         $exhausted = $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
         if ($event->event_type === 'social.message.send') {
             $this->interactions->updateMessageStatus((int) $event->aggregate_id, $exhausted ? 'failed' : 'retrying');
