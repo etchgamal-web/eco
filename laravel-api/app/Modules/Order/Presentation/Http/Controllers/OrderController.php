@@ -10,11 +10,13 @@ use App\Modules\Order\Application\UseCases\GetOrder;
 use App\Modules\Order\Application\UseCases\GetOrderTimeline;
 use App\Modules\Order\Application\UseCases\ListCustomerOrders;
 use App\Modules\Order\Application\UseCases\ListOrders;
+use App\Modules\Order\Application\UseCases\RecordOrderActivity;
 use App\Modules\Order\Application\UseCases\RecordOrderContact;
 use App\Modules\Order\Application\UseCases\SetOrderShippingCharge;
 use App\Modules\Order\Application\UseCases\StartOrderReview;
 use App\Modules\Order\Application\UseCases\UpdateOrderStatus;
 use App\Modules\Order\Presentation\Http\Requests\OrderRequest;
+use App\Modules\Order\Presentation\Http\Requests\OrderNoteRequest;
 use App\Modules\Order\Presentation\Http\Requests\OrderTimelineRequest;
 use App\Modules\Order\Presentation\Http\Requests\OrderWorkflowRequest;
 use Illuminate\Http\JsonResponse;
@@ -89,6 +91,13 @@ final class OrderController extends Controller
         $data = $request->validated();
 
         return response()->json(['data' => $record->execute($id, (string) $data['contact_result'], $data['notes'] ?? null)]);
+    }
+
+    public function note(OrderNoteRequest $request, int $id, RecordOrderActivity $record): JsonResponse
+    {
+        $note = (string) $request->validated('notes');
+
+        return response()->json(['data' => $record->execute($id, 'internal_note', $request->user(), 'admin', metadata: ['note' => $note])], 201);
     }
 
     public function confirm(OrderWorkflowRequest $request, int $id, ConfirmOrder $confirm): JsonResponse

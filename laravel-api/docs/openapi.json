@@ -21808,6 +21808,93 @@
           "RATE_LIMITED"
         ]
       }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "get dashboard statistics",
+        "operationId": "dashboard_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.view"
+      }
+    },
+    "/shipping-providers": {
+      "get": {
+        "tags": [
+          "Shipping"
+        ],
+        "summary": "list active shipping providers",
+        "operationId": "shipping_providers_get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "shipping.view"
+      }
+    },
+    "/orders/{orderId}/notes": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "record an internal order note",
+        "operationId": "orders_notes_post",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {
+                    "notes": "Internal note for the operations team."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "orders.manage"
+      }
     }
   },
   "components": {

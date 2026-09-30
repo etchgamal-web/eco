@@ -11,6 +11,7 @@ Route::prefix('v1')->group(function (): void {
     require __DIR__.'/api/catalog.php';
     require __DIR__.'/api/inventory.php';
     require __DIR__.'/api/orders.php';
+    Route::middleware('auth:sanctum')->get('dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'stats'])->name('dashboard.stats');
     require __DIR__.'/api/monitoring.php';
     require __DIR__.'/api/settlements.php';
     require __DIR__.'/api/payments.php';

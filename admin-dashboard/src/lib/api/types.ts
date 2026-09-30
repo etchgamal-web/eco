@@ -16,3 +16,4 @@ export type ApiProductPage = { data: ApiProduct[]; current_page: number; last_pa
 export type ApiInventory = { product_id: number; variant_id?: number | null; on_hand?: number; available?: number; reserved?: number; product?: ApiProduct | null; variant?: { sku?: string | null } | null; movements?: Array<{ id: number; quantity: number; on_hand_after: number; reason?: string; note?: string | null; created_at?: string; actor?: { name?: string | null } | null }> }
 export type ApiCustomer = { id: number; name?: string | null; email?: string | null; phone?: string | null; status?: string | null; created_at?: string | null; orders_count?: number; total_spent?: number }
 export type ApiOrderPage = { data: ApiOrder[]; current_page: number; last_page: number; per_page: number; total: number }
+export type ApiShippingProvider = { id: number; code: string; name: string; metadata?: Record<string, unknown> | null }

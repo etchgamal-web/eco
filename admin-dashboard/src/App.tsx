@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, cancelOrder, downloadOrdersCsv, getOrder, getOrderTimeline, getToken, listOrders, listSettings, socialSummary, logout, me, updateOrderStatus } from './lib/api'
 import { DeleteModal, ToastViewport } from './components/shared/DashboardWidgets'
@@ -16,6 +17,7 @@ import { OrderDrawer } from './features/orders/components/OrderDrawer'
 import { CommandPalette } from './features/search/components/CommandPalette'
 import { DashboardShell } from './features/dashboard/components/DashboardShell'
 import { DashboardContent } from './features/dashboard/components/DashboardContent'
+import { getDashboardStats } from './lib/api/dashboard'
 type SessionUser = { name?: string; email?: string; status?: string; roles?: string[]; permissions?: string[] }
 
 function PageLoading() {
@@ -41,6 +43,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(null)
   const [socialStats, setSocialStats] = useState<Record<string, unknown>>({})
   const { localeSettings, theme, setLocale, toggleTheme } = useDashboardPreferences()
+  const dashboardQuery = useQuery({ queryKey: ['dashboard', 'stats'], queryFn: getDashboardStats, enabled: authenticated })
   const visibleNavItems = useMemo(() => { if (!authenticated || !currentUser) return navItems; const roles = currentUser.roles ?? []; const permissions = new Set(currentUser.permissions ?? []); if (roles.some((role) => ['owner', 'admin'].includes(role))) return navItems; return navItems.filter((item) => !item.permission || permissions.has(item.permission)) }, [authenticated, currentUser])
 
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), toast.duration ?? (toast.type === 'error' ? 8000 : 4000)); return () => window.clearTimeout(timer) }, [toast])
@@ -49,7 +52,7 @@ function App() {
 
   // The effect synchronizes the authenticated view with the external Laravel API.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { if (!authenticated) { setApiLoading(false); setCurrentUser(null); return } Promise.all([me(), listOrders({ page: 1, per_page: 100 }), socialSummary(), listSettings()]).then(([user, data, social, settings]) => { setCurrentUser(user); const ordersPage = Array.isArray(data) ? data : data.data; setRows(ordersPage.map(normalizeApiOrder)); setSocialStats(social); const currency = String(settings.find((item) => item.key === 'store.currency')?.value ?? localeSettings.currency); const locale = String(settings.find((item) => item.key === 'store.locale')?.value ?? localeSettings.locale) as 'ar' | 'en'; if (currency !== localeSettings.currency || locale !== localeSettings.locale) setLocale(currency, locale) }).catch((error: unknown) => { if (error instanceof ApiError && error.status === 401) { setAuthenticated(false); setToast({ type: 'info', message: 'انتهت جلسة الدخول، يرجى تسجيل الدخول مجددًا' }) } else setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل بيانات الحساب من الـAPI' }) }).finally(() => setApiLoading(false)) }, [authenticated, localeSettings.currency, localeSettings.locale, setLocale, setRows])
+  useEffect(() => { if (!authenticated) { setApiLoading(false); setCurrentUser(null); return } Promise.all([me(), listOrders({ page: 1, per_page: 20 }), socialSummary(), listSettings()]).then(([user, data, social, settings]) => { setCurrentUser(user); const ordersPage = Array.isArray(data) ? data : data.data; setRows(ordersPage.map(normalizeApiOrder)); setSocialStats(social); const currency = String(settings.find((item) => item.key === 'store.currency')?.value ?? localeSettings.currency); const locale = String(settings.find((item) => item.key === 'store.locale')?.value ?? localeSettings.locale) as 'ar' | 'en'; if (currency !== localeSettings.currency || locale !== localeSettings.locale) setLocale(currency, locale) }).catch((error: unknown) => { if (error instanceof ApiError && error.status === 401) { setAuthenticated(false); setToast({ type: 'info', message: 'انتهت جلسة الدخول، يرجى تسجيل الدخول مجددًا' }) } else setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل بيانات الحساب من الـAPI' }) }).finally(() => setApiLoading(false)) }, [authenticated, localeSettings.currency, localeSettings.locale, setLocale, setRows])
 
   const todayLabel = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -66,7 +69,7 @@ function App() {
   }
   const closeOrderDrawer = () => { setSelectedOrder(null); setSelectedOrderDetails(null); setSelectedOrderTimeline([]) }
   const printDashboardOrder = (order: Order) => { const popup = window.open('', '_blank', 'width=760,height=800'); if (!popup) { setToast({ type: 'error', message: 'السماح بالنوافذ المنبثقة مطلوب للطباعة' }); return } const safe = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character] ?? character)); popup.document.write(`<html dir="rtl"><head><title>طلب ${safe(order.id)}</title><style>body{font-family:Arial,sans-serif;padding:36px;color:#172033}h1{font-size:24px}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{border-bottom:1px solid #ddd;padding:12px;text-align:right}small{color:#667085}</style></head><body><h1>ملخص الطلب ${safe(order.id)}</h1><small>${safe(order.date)}</small><table><tbody><tr><th>العميل</th><td>${safe(order.customer)}</td></tr><tr><th>طريقة الدفع</th><td>${safe(order.payment)}</td></tr><tr><th>الحالة</th><td>${safe(order.status)}</td></tr><tr><th>الإجمالي</th><td>${safe(order.total)}</td></tr></tbody></table></body></html>`); popup.document.close(); popup.focus(); popup.print() }
-  const removeOrder = async (id: string) => { const order = rows.find((item) => item.id === id); try { if (order?.apiId && getToken()) await cancelOrder(order.apiId); setRows((current) => current.filter((item) => item.id !== id)); setPendingDelete(null); setToast({ type: 'success', message: `تمت أرشفة الطلب ${id} ويمكن استرجاعه خلال ٣٠ يوماً` }) } catch (error) { setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر إلغاء الطلب' }) } }
+  const removeOrder = async (id: string) => { const order = rows.find((item) => item.id === id); try { if (order?.apiId && getToken()) await cancelOrder(order.apiId); setRows((current) => current.map((item) => item.id === id ? { ...item, status: 'ملغي' } : item)); setPendingDelete(null); setToast({ type: 'success', message: `تم إلغاء الطلب ${id}` }) } catch (error) { setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر إلغاء الطلب' }) } }
 
   if (!authenticated) return <LoginScreen onSuccess={() => setAuthenticated(true)} />
   const isSettingsSection = location.pathname.startsWith('/settings/')
@@ -76,7 +79,7 @@ function App() {
   return <DashboardShell navItems={visibleNavItems} activeNav={activeNav} currentUser={currentUser} orders={rows} localeSettings={localeSettings} theme={theme} search={search} mobileNav={mobileNav} sidebarPinned={sidebarPinned} notificationsOpen={notificationsOpen} profileMenuOpen={profileMenuOpen}
     onNavigate={navigate} onMobileNavChange={setMobileNav} onSidebarPinnedChange={(next) => { setSidebarPinned(next); window.localStorage.setItem('souqi-sidebar-pinned', String(next)) }} onToast={(message, type) => setToast({ type: type ?? 'info', message })} onLocaleChange={setLocale} onToggleTheme={toggleTheme} onSearchChange={setSearch} onCommandOpen={() => setCommandOpen(true)} onNotificationsChange={setNotificationsOpen} onProfileMenuChange={setProfileMenuOpen} onLogout={() => void handleLogout()}><Suspense fallback={<PageLoading />}><DashboardContent
       activeNav={activeNav} pathname={location.pathname} currentUser={currentUser} onToast={(message, type) => setToast({ type: type ?? 'success', message })} onUserUpdated={setCurrentUser}
-      navigate={navigate} apiLoading={apiLoading} todayLabel={todayLabel} dashboardStats={dashboardStats} currency={localeSettings.currency} socialStats={socialStats}
+      navigate={navigate} apiLoading={apiLoading || dashboardQuery.isLoading} todayLabel={todayLabel} dashboardStats={dashboardQuery.data ? { totalSales: dashboardQuery.data.sales.total, newOrders: dashboardQuery.data.orders.new, averageOrder: dashboardQuery.data.average_order } : dashboardStats} currency={localeSettings.currency} socialStats={dashboardQuery.data ? { ...socialStats, orders: dashboardQuery.data.orders.total } : socialStats}
       rows={rows} filteredOrders={filteredOrders} statusFilter={statusFilter} setStatusFilter={setStatusFilter} paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter}
       dateFilter={dateFilter} setDateFilter={setDateFilter} setSearch={setSearch} statusOptions={statusOptions} updateStatus={updateStatus}
       exportOrders={exportOrders} openOrderDrawer={openOrderDrawer} printDashboardOrder={printDashboardOrder} onPendingDelete={setPendingDelete}

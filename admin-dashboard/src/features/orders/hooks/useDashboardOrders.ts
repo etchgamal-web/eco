@@ -3,18 +3,18 @@ import { getToken } from '../../../lib/api'
 import type { ApiOrder } from '../../../lib/api/types'
 import type { Order, OrderStatus } from '../types'
 
-export const statusOptions: OrderStatus[] = ['جديد', 'قيد التجهيز', 'تم الشحن', 'مكتمل']
-export const backendStatuses = ['pending', 'processing', 'shipped', 'delivered']
+export const statusOptions: OrderStatus[] = ['جديد', 'مراجعة', 'مؤكد', 'قيد التجهيز', 'تم الشحن', 'تم التسليم']
+export const backendStatuses = ['pending', 'reviewing', 'confirmed', 'processing', 'shipped', 'delivered']
 const statusLabels: Record<string, OrderStatus> = {
-  pending: 'جديد', reviewing: 'جديد', confirmed: 'جديد', processing: 'قيد التجهيز', shipped: 'تم الشحن',
-  delivered: 'مكتمل', cancelled: 'مكتمل', refunded: 'مكتمل',
+  pending: 'جديد', reviewing: 'مراجعة', confirmed: 'مؤكد', processing: 'قيد التجهيز', shipped: 'تم الشحن',
+  delivered: 'تم التسليم', cancelled: 'ملغي', refunded: 'مسترد',
 }
 
 export const demoOrders: Order[] = [
   { id: '#ORD-8294', customer: 'سارة العتيبي', initials: 'سع', date: 'اليوم، ١٠:٤٢ ص', total: '٥٩٧ ر.س', payment: 'مدى', status: 'جديد' },
   { id: '#ORD-8293', customer: 'محمد القحطاني', initials: 'مق', date: 'اليوم، ٠٩:١٨ ص', total: '١,٢٤٠ ر.س', payment: 'Apple Pay', status: 'قيد التجهيز' },
   { id: '#ORD-8292', customer: 'نورة الحربي', initials: 'نه', date: 'أمس، ٠٦:٣٥ م', total: '٣٩٩ ر.س', payment: 'بطاقة ائتمانية', status: 'تم الشحن' },
-  { id: '#ORD-8291', customer: 'خالد الشهري', initials: 'خش', date: 'أمس، ٠٢:١١ م', total: '٨٧٥ ر.س', payment: 'مدى', status: 'مكتمل' },
+  { id: '#ORD-8291', customer: 'خالد الشهري', initials: 'خش', date: 'أمس، ٠٢:١١ م', total: '٨٧٥ ر.س', payment: 'مدى', status: 'تم التسليم' },
   { id: '#ORD-8290', customer: 'ريم الغامدي', initials: 'رغ', date: '٢٠ أغسطس، ١١:٠٣ ص', total: '٢١٠ ر.س', payment: 'الدفع عند الاستلام', status: 'قيد التجهيز' },
 ]
 

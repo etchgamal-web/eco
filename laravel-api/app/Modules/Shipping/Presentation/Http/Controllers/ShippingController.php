@@ -10,6 +10,7 @@ use App\Modules\Shipping\Application\UseCases\GetShippingMethod;
 use App\Modules\Shipping\Application\UseCases\ListAllShippingMethods;
 use App\Modules\Shipping\Application\UseCases\ListOrderShipments;
 use App\Modules\Shipping\Application\UseCases\ListShippingMethods;
+use App\Modules\Shipping\Application\UseCases\ListShippingProviders;
 use App\Modules\Shipping\Application\UseCases\UpdateShipmentStatus;
 use App\Modules\Shipping\Application\UseCases\UpdateShippingMethod;
 use App\Modules\Shipping\Domain\ValueObjects\CreateShipmentData;
@@ -18,6 +19,11 @@ use Illuminate\Http\JsonResponse;
 
 final class ShippingController extends Controller
 {
+    public function providers(ShippingRequest $request, ListShippingProviders $providers): JsonResponse
+    {
+        return response()->json(['data' => $providers->execute()]);
+    }
+
     public function customerMethods(ShippingRequest $request, ListShippingMethods $methods): JsonResponse
     {
         return response()->json(['data' => $methods->execute()]);

@@ -10,6 +10,7 @@ use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingPricingCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
+use App\Modules\Shipping\Domain\Contracts\ShippingProviderReaderInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingRateCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingWebhookAuthenticatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingWebhookEventRepositoryInterface;
@@ -18,6 +19,7 @@ use App\Modules\Shipping\Infrastructure\Persistence\EloquentShipmentOperationRep
 use App\Modules\Shipping\Infrastructure\Persistence\EloquentShipmentPricingSnapshotRepository;
 use App\Modules\Shipping\Infrastructure\Persistence\EloquentShipmentRepository;
 use App\Modules\Shipping\Infrastructure\Persistence\EloquentShippingMethodRepository;
+use App\Modules\Shipping\Infrastructure\Persistence\EloquentShippingProviderReader;
 use App\Modules\Shipping\Infrastructure\Persistence\EloquentShippingWebhookEventRepository;
 use App\Modules\Shipping\Infrastructure\Providers\ShippingProviderRouter;
 use App\Modules\Shipping\Infrastructure\Webhooks\ShippingWebhookAuthenticator;
@@ -27,6 +29,7 @@ final class ShippingServiceProvider extends ServiceProvider
 {
     public array $bindings = [
         ShippingMethodRepositoryInterface::class => EloquentShippingMethodRepository::class,
+        ShippingProviderReaderInterface::class => EloquentShippingProviderReader::class,
         ShippingPricingCalculatorInterface::class => DatabaseShippingRateCalculator::class,
         ShipmentPricingSnapshotRepositoryInterface::class => EloquentShipmentPricingSnapshotRepository::class,
         ShippingRateCalculatorInterface::class => DatabaseShippingRateCalculator::class,

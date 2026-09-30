@@ -10,6 +10,7 @@ Route::get('public/shipments/{tracking_token}', [PublicTrackingController::class
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('shipping-methods', [ShippingController::class, 'index'])->name('shipping-methods.index');
+    Route::get('shipping-providers', [ShippingController::class, 'providers'])->name('shipping-providers.index');
     Route::get('shipping-methods/{shippingMethodId}', [ShippingController::class, 'show'])->name('shipping-methods.show');
     Route::post('shipping-methods', [ShippingController::class, 'store'])->name('shipping-methods.store');
     Route::match(['put', 'patch'], 'shipping-methods/{shippingMethodId}', [ShippingController::class, 'update'])->name('shipping-methods.update');

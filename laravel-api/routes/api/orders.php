@@ -13,6 +13,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::patch('orders/{orderId}/shipping-charge', [OrderController::class, 'setShippingCharge'])->whereNumber('orderId')->name('orders.shipping-charge');
     Route::post('orders/{orderId}/review', [OrderController::class, 'review'])->whereNumber('orderId')->name('orders.review');
     Route::post('orders/{orderId}/contact', [OrderController::class, 'contact'])->whereNumber('orderId')->name('orders.contact');
+    Route::post('orders/{orderId}/notes', [OrderController::class, 'note'])->whereNumber('orderId')->name('orders.notes');
     Route::post('orders/{orderId}/confirm', [OrderController::class, 'confirm'])->whereNumber('orderId')->name('orders.confirm');
     Route::post('orders/{orderId}/cancel', [OrderController::class, 'cancel'])->whereNumber('orderId')->name('orders.cancel');
     Route::get('returns', [ReturnController::class, 'index'])->name('returns.index');
