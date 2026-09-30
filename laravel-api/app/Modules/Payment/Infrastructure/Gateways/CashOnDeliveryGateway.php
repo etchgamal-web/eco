@@ -35,4 +35,9 @@ final class CashOnDeliveryGateway implements PaymentGatewayInterface
     {
         return ['status' => 'refunded', 'metadata' => ['refunded_by' => 'cash_on_delivery']];
     }
+
+    public function reconcileRefund(object $payment): array
+    {
+        return ['status' => 'refunded', 'provider_reference' => $payment->provider_reference, 'metadata' => ['reconciled_by' => 'cash_on_delivery']];
+    }
 }

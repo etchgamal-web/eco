@@ -16,7 +16,10 @@ if (! class_exists(__NAMESPACE__.'\\ReconcileStalePayments', false)) {
         public function handle(): int
         {
             $count = 0;
-            Payment::query()->whereIn('status', ['processing', 'provider_created'])
+            Payment::query()->where(function ($query): void {
+                $query->whereIn('status', ['processing', 'provider_created'])
+                    ->orWhereHas('operations', fn ($operations) => $operations->where('status', 'ambiguous'));
+            })
                 ->where('updated_at', '<=', now()->subMinutes((int) $this->option('minutes')))
                 ->orderBy('id')->limit(100)->pluck('id')->each(function (int $paymentId) use (&$count): void {
                     try {

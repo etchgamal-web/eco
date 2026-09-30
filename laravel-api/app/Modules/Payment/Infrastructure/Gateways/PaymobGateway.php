@@ -123,6 +123,12 @@ final class PaymobGateway implements PaymentGatewayInterface
         ];
     }
 
+    public function reconcileRefund(object $payment): array
+    {
+        $result = $this->reconcilePayment($payment);
+        return ['status' => $result['status'] === 'confirmed' ? 'refunded' : ($result['status'] === 'failed' ? 'failed' : 'ambiguous'), 'provider_reference' => $result['provider_reference'] ?? $payment->provider_reference, 'metadata' => ['provider' => 'paymob', 'refund_reconciliation' => $result['metadata'] ?? []]];
+    }
+
     private function client(string $secretKey): PendingRequest
     {
         return Http::baseUrl(rtrim((string) $this->settings->value('paymob', 'base_url', config('services.paymob.base_url')), '/'))

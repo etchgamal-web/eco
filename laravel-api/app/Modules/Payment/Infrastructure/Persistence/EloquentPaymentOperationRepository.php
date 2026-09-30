@@ -49,6 +49,11 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         return PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->where('attempt_count', '>', 0)->exists();
     }
 
+    public function ambiguousOperation(int $paymentId): ?string
+    {
+        return PaymentOperation::query()->where('payment_id', $paymentId)->where('status', 'ambiguous')->latest('updated_at')->value('operation');
+    }
+
     public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null): bool
     {
         $query = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation);

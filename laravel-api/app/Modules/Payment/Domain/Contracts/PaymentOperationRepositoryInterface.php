@@ -16,6 +16,8 @@ interface PaymentOperationRepositoryInterface
 
     public function hasAttempted(int $paymentId, string $operation): bool;
 
+    public function ambiguousOperation(int $paymentId): ?string;
+
     public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null): bool;
 
     public function fail(int $paymentId, string $operation, string $error, bool $retryable = true, ?string $leaseToken = null): bool;

@@ -115,6 +115,12 @@ final class KashierGateway implements PaymentGatewayInterface
         return ['status' => 'refunded', 'metadata' => ['provider' => 'kashier', 'refund_response' => $response]];
     }
 
+    public function reconcileRefund(object $payment): array
+    {
+        $result = $this->reconcilePayment($payment);
+        return ['status' => $result['status'] === 'confirmed' ? 'refunded' : ($result['status'] === 'failed' ? 'failed' : 'ambiguous'), 'provider_reference' => $result['provider_reference'] ?? $payment->provider_reference, 'metadata' => ['provider' => 'kashier', 'refund_reconciliation' => $result['metadata'] ?? []]];
+    }
+
     private function apiClient(string $secretKey, string $paymentApiKey): PendingRequest
     {
         return Http::baseUrl(rtrim((string) $this->settings->value('kashier', 'api_base_url', config('services.kashier.api_base_url')), '/'))
