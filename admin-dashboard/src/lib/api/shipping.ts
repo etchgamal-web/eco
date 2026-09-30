@@ -1,5 +1,10 @@
 import { request } from './client'
 
+export async function listShipments(params: Record<string, string | number> = {}) {
+  const query = new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)]))
+  return (await request<{ data: Array<Record<string, unknown>>; meta?: Record<string, unknown> }>(`/shipments?${query}`))
+}
+
 export async function updateShipmentStatus(id: number, status: string, note?: string) { return (await request<{ data: Record<string, unknown> }>(`/shipments/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, note }) })).data }
 
 export async function listShippingMethods() { return (await request<{ data: Array<Record<string, unknown>> }>('/shipping-methods')).data }

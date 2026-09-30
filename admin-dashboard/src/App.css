@@ -512,3 +512,7 @@ html[data-theme='dark'] .global-search kbd, html[data-theme='dark'] .filter-chip
 html[data-theme='dark'] .nav-icon:hover, html[data-theme='dark'] .notification-button:hover, html[data-theme='dark'] tbody tr:hover { background: #172338; }
 html[data-theme='dark'] .theme-toggle { border-color: #334155; background: #111b2e; color: #fbbf24; }
 html[data-theme='dark'] .drawer-overlay { background: rgb(2 6 23 / 70%); } html[data-theme='dark'] .order-drawer { background: #111b2e; } html[data-theme='dark'] .notification-item { border-color: #243149; background: #111b2e; } html[data-theme='dark'] .notification-item:hover { background: #172338; }
+
+.filter-select-control { min-width: 170px; height: 40px; border: 1px solid var(--line, #e2e8f0); border-radius: 10px; background: #fff; color: #334155; padding: 0 12px; outline: 0; font-size: 11px; }
+.filter-select-control:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgb(59 130 246 / 20%); }
+@media (max-width: 760px) { .filter-select-control { width: 100%; } }

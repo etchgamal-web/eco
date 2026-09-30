@@ -16,6 +16,8 @@ interface ShipmentRepositoryInterface
 
     public function listForUserOrder(int $userId, int $orderId): iterable;
 
+    public function listForAdmin(array $filters = []): object;
+
     public function create(array $attributes): object;
 
     public function updateProviderData(object $shipment, array $data, ?string $operationLeaseToken = null): object;

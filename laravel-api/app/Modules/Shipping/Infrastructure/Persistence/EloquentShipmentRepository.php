@@ -60,6 +60,22 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
         return Shipment::query()->with(['method', 'events'])->where('user_id', $userId)->where('order_id', $orderId)->latest()->get();
     }
 
+    public function listForAdmin(array $filters = []): object
+    {
+        return Shipment::query()->with(['order:id,order_number,total_amount,currency', 'user:id,name,email', 'method:id,name,carrier'])
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['provider_code'] ?? null, fn ($query, $provider) => $query->where('provider_code', $provider))
+            ->when($filters['search'] ?? null, function ($query, $search): void {
+                $query->where(function ($nested) use ($search): void {
+                    $nested->where('tracking_number', 'like', '%'.$search.'%')
+                        ->orWhere('provider_code', 'like', '%'.$search.'%')
+                        ->orWhereHas('order', fn ($order) => $order->where('order_number', 'like', '%'.$search.'%'))
+                        ->orWhereHas('user', fn ($user) => $user->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%'));
+                });
+            })
+            ->latest()->paginate(min(50, max(1, (int) ($filters['per_page'] ?? 15))));
+    }
+
     public function create(array $attributes): object
     {
         return DB::transaction(function () use ($attributes): object {

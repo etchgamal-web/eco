@@ -8,6 +8,7 @@ use App\Modules\Shipping\Application\UseCases\CreateShippingMethod;
 use App\Modules\Shipping\Application\UseCases\DeleteShippingMethod;
 use App\Modules\Shipping\Application\UseCases\GetShippingMethod;
 use App\Modules\Shipping\Application\UseCases\ListAllShippingMethods;
+use App\Modules\Shipping\Application\UseCases\ListAdminShipments;
 use App\Modules\Shipping\Application\UseCases\ListOrderShipments;
 use App\Modules\Shipping\Application\UseCases\ListShippingMethods;
 use App\Modules\Shipping\Application\UseCases\ListShippingProviders;
@@ -32,6 +33,11 @@ final class ShippingController extends Controller
     public function customerShipments(ShippingRequest $request, int $orderId, ListOrderShipments $shipments): JsonResponse
     {
         return response()->json(['data' => $shipments->execute($orderId)]);
+    }
+
+    public function adminShipments(ShippingRequest $request, ListAdminShipments $shipments): JsonResponse
+    {
+        return response()->json($shipments->execute($request->query()));
     }
 
     public function createShipment(ShippingRequest $request, int $orderId, CreateShipment $create): JsonResponse
