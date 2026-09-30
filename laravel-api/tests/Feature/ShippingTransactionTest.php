@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Shipping\Application\UseCases\CreateShipment;
+use App\Modules\Shipping\Application\Outbox\ShippingOutboxHandler;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;
 use App\Modules\Shipping\Domain\ValueObjects\CreateShipmentData;
+use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
 use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
@@ -53,6 +55,38 @@ final class ShippingTransactionTest extends TestCase
         }
 
         $this->assertDatabaseMissing('shipments', ['idempotency_key' => 'atomic-shipment']);
-        $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'shipping_cost' => 0]);
+        self::assertDatabaseHas('customer_orders', ['id' => $order->id, 'shipping_cost' => 0]);
+    }
+
+    public function test_replaying_created_shipment_repairs_processing_order_before_outbox_completion(): void
+    {
+        $user = User::factory()->create();
+        $method = ShippingMethod::query()->create([
+            'code' => 'bosta-replay', 'name' => 'Bosta Replay', 'carrier' => 'bosta', 'base_fee' => 150,
+            'currency' => 'EGP', 'is_active' => true,
+        ]);
+        $order = CustomerOrder::query()->create([
+            'user_id' => $user->id, 'status' => 'processing', 'total_amount' => 1000,
+            'subtotal_amount' => 1000, 'discount_amount' => 0, 'tax_amount' => 0,
+            'shipping_amount' => 0, 'shipping_cost' => 0, 'shipping_subsidy' => 0,
+            'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo'],
+        ]);
+        $shipment = \App\Modules\Shipping\Infrastructure\Models\Shipment::query()->create([
+            'order_id' => $order->id, 'user_id' => $user->id, 'shipping_method_id' => $method->id,
+            'method_code' => $method->code, 'provider_code' => 'bosta', 'fee' => 150, 'currency' => 'EGP',
+            'status' => 'provider_created', 'creation_status' => 'created', 'tracking_number' => 'BOSTA-REPLAY',
+            'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'replay-shipment-'.$order->id,
+            'metadata' => ['provider_reference' => 'BOSTA-REPLAY'],
+        ]);
+        $event = OutboxEvent::query()->create([
+            'aggregate_type' => 'shipment', 'aggregate_id' => $shipment->id,
+            'event_type' => 'shipment.create.requested', 'deduplication_key' => 'shipment:replay:'.$shipment->id,
+            'status' => 'processing', 'claim_token' => 'replay-claim', 'payload' => [],
+        ]);
+
+        app(ShippingOutboxHandler::class)->handle($event);
+
+        self::assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'shipped']);
+        self::assertDatabaseHas('outbox_events', ['id' => $event->id, 'status' => 'dispatched']);
     }
 }

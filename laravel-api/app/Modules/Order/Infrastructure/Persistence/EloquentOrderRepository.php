@@ -70,7 +70,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
             OrderStateMachine::assert((string) $order->status, $status);
             if ($status === 'shipped') {
                 $hasReadyShipment = Shipment::query()->where('order_id', $order->id)
-                    ->whereIn('status', ['picked_up', 'in_transit', 'out_for_delivery', 'delivered'])
+                    ->whereIn('status', ['provider_created', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered'])
                     ->where('creation_status', 'created')
                     ->exists();
                 if (! $hasReadyShipment) {
