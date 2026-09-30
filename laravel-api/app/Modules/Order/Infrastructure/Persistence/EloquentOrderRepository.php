@@ -25,7 +25,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function listAll(array $filters = []): iterable
     {
-        $query = CustomerOrder::query()->with(['user', 'items.product', 'payments:id,order_id,method,amount,currency,status', 'review.reviewer', 'review.confirmer'])
+        $query = CustomerOrder::query()->with(['user', 'items.product', 'payments:id,order_id,method,amount,currency,status', 'shipments:id,order_id,status,tracking_number,provider_code', 'returns:id,order_id,status,refund_amount,actual_customer_refund', 'review.reviewer', 'review.confirmer'])
             ->when($filters['search'] ?? null, fn ($orders, $search) => $orders->where(function ($inner) use ($search): void {
                 $inner->where('order_number', 'like', '%'.$search.'%')->orWhereHas('user', fn ($users) => $users->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%'));
             }))

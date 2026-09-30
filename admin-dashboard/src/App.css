@@ -526,3 +526,6 @@ html[data-theme='dark'] .drawer-overlay { background: rgb(2 6 23 / 70%); } html[
 .alert-tile small { color: #64748b; font-size: 9px; }
 .alert-tile.danger strong { color: #dc2626; }.alert-tile.warning strong { color: #d97706; }
 @media (max-width: 900px) { .alert-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.order-meta-badge { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; padding: 5px 8px; font-size: 10px; white-space: nowrap; }
+.order-meta-badge.return { background: #fff7ed; color: #c2410c; }
