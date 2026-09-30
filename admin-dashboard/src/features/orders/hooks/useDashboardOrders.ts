@@ -4,7 +4,7 @@ import type { ApiOrder } from '../../../lib/api/types'
 import type { Order, OrderStatus } from '../types'
 
 export const statusOptions: OrderStatus[] = ['جديد', 'مراجعة', 'مؤكد', 'قيد التجهيز', 'تم الشحن', 'تم التسليم']
-export const backendStatuses = ['pending', 'reviewing', 'confirmed', 'processing', 'shipped', 'delivered']
+export const statusMap: Record<OrderStatus, string> = { 'جديد': 'pending', 'مراجعة': 'reviewing', 'مؤكد': 'confirmed', 'قيد التجهيز': 'processing', 'تم الشحن': 'shipped', 'تم التسليم': 'delivered', 'ملغي': 'cancelled', 'مسترد': 'refunded' }
 const statusLabels: Record<string, OrderStatus> = {
   pending: 'جديد', reviewing: 'مراجعة', confirmed: 'مؤكد', processing: 'قيد التجهيز', shipped: 'تم الشحن',
   delivered: 'تم التسليم', cancelled: 'ملغي', refunded: 'مسترد',
@@ -32,7 +32,7 @@ export function useDashboardOrders() {
   const [paymentFilter, setPaymentFilter] = useState('كل طرق الدفع')
   const [dateFilter, setDateFilter] = useState('كل التواريخ')
   const [search, setSearch] = useState('')
-  const [rows, setRows] = useState<Order[]>(() => getToken() ? [] : demoOrders)
+  const [rows, setRows] = useState<Order[]>(() => getToken() ? [] : [])
   const filteredOrders = useMemo(() => rows.filter((order) => {
     const matchesStatus = statusFilter === 'الكل' || order.status === statusFilter
     const matchesPayment = paymentFilter === 'كل طرق الدفع' || order.payment === paymentFilter
