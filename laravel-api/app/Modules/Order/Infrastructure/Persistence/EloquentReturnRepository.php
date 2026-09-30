@@ -34,8 +34,11 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
                 if ($orderItem === null || $quantity < 1 || $quantity > $orderItem->quantity) {
                     throw ReturnException::invalidItems();
                 }
-                $refund += $orderItem->unit_price * $quantity;
-                $items[] = ['order_item_id' => $orderItem->id, 'product_id' => $orderItem->product_id, 'quantity' => $quantity, 'unit_price' => $orderItem->unit_price];
+                $snapshotUnit = $orderItem->quantity > 0 && $orderItem->total_amount !== null
+                    ? intdiv((int) $orderItem->total_amount, (int) $orderItem->quantity)
+                    : (int) $orderItem->unit_price;
+                $refund += $snapshotUnit * $quantity;
+                $items[] = ['order_item_id' => $orderItem->id, 'product_id' => $orderItem->product_id, 'variant_id' => $orderItem->variant_id, 'quantity' => $quantity, 'unit_price' => $snapshotUnit];
             }
             if ($items === []) {
                 throw ReturnException::invalidItems();
@@ -81,6 +84,25 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
         $return->update(['status' => 'rejected', 'rejection_reason' => $reason]);
 
         return $return->fresh('items');
+    }
+
+    public function findForWorkflow(int $returnId): object
+    {
+        return OrderReturn::query()->with(['items.orderItem', 'order.payments'])->lockForUpdate()->findOrFail($returnId);
+    }
+
+    public function markRestocked(int $returnId, int $actualRefund): object
+    {
+        $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
+        if ($return->restocked_at === null) $return->update(['restocked_at' => now(), 'actual_customer_refund' => $actualRefund]);
+        return $return->fresh(['items.orderItem', 'order.payments']);
+    }
+
+    public function markCompleted(int $returnId): object
+    {
+        $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
+        if ($return->status !== 'completed') $return->update(['status' => 'completed', 'completed_at' => now()]);
+        return $return;
     }
 
     public function receive(int $returnId): object

@@ -9,6 +9,8 @@ use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\OrderReviewRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
+use App\Modules\Order\Application\Outbox\ReturnOutboxHandler;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReview;
 use App\Modules\Order\Infrastructure\Observers\CustomerOrderObserver;
@@ -40,5 +42,6 @@ final class OrderServiceProvider extends ServiceProvider
     {
         CustomerOrder::observe(CustomerOrderObserver::class);
         OrderReview::observe(OrderReviewObserver::class);
+        $this->app->tag(ReturnOutboxHandler::class, OutboxEventHandlerInterface::class);
     }
 }

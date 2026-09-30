@@ -9,7 +9,7 @@ class OrderReturnItem extends Model
 {
     protected $table = 'order_return_items';
 
-    protected $fillable = ['return_id', 'order_item_id', 'product_id', 'quantity', 'unit_price'];
+    protected $fillable = ['return_id', 'order_item_id', 'product_id', 'variant_id', 'quantity', 'unit_price'];
 
     protected function casts(): array
     {

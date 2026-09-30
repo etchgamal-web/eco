@@ -12,11 +12,11 @@ class OrderReturn extends Model
 {
     protected $table = 'order_returns';
 
-    protected $fillable = ['order_id', 'shipment_id', 'user_id', 'status', 'reason', 'notes', 'refund_amount', 'return_shipping_fee', 'rejection_reason', 'received_at', 'inspected_at', 'inspection_notes'];
+    protected $fillable = ['order_id', 'shipment_id', 'user_id', 'status', 'reason', 'notes', 'refund_amount', 'actual_customer_refund', 'return_shipping_fee', 'rejection_reason', 'received_at', 'inspected_at', 'inspection_notes', 'restocked_at', 'refund_requested_at', 'completed_at'];
 
     protected function casts(): array
     {
-        return ['refund_amount' => 'integer', 'return_shipping_fee' => 'integer', 'received_at' => 'datetime', 'inspected_at' => 'datetime'];
+        return ['refund_amount' => 'integer', 'actual_customer_refund' => 'integer', 'return_shipping_fee' => 'integer', 'received_at' => 'datetime', 'inspected_at' => 'datetime', 'restocked_at' => 'datetime', 'refund_requested_at' => 'datetime', 'completed_at' => 'datetime'];
     }
 
     public function order(): BelongsTo

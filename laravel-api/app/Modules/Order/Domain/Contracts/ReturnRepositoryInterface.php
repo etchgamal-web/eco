@@ -17,4 +17,10 @@ interface ReturnRepositoryInterface
     public function inspect(int $returnId, bool $accepted, ?string $notes = null): object;
 
     public function reject(int $returnId, string $reason): object;
+
+    public function findForWorkflow(int $returnId): object;
+
+    public function markRestocked(int $returnId, int $actualRefund): object;
+
+    public function markCompleted(int $returnId): object;
 }
