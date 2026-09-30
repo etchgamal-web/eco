@@ -115,7 +115,7 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
 
     public function completeRefundForPayment(int $paymentId, int $actualRefund): void
     {
-        OrderReturn::query()->where('payment_id', $paymentId)->whereIn('status', ['inspected_accepted', 'received'])->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund]);
+        OrderReturn::query()->where('payment_id', $paymentId)->where('status', 'inspected_accepted')->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund]);
     }
 
     public function receive(int $returnId): object
