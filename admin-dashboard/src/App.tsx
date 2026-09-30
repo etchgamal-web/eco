@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ApiError, downloadOrdersCsv, getOrder, getOrderTimeline, getToken, listOrders, listSettings, socialSummary, logout, me, updateOrderStatus } from './lib/api'
+import { ApiError, downloadOrdersCsv, getOrder, getOrderTimeline, getToken, listOrders, listSettings, logout, me, updateOrderStatus } from './lib/api'
 import { ToastViewport } from './components/shared/DashboardWidgets'
 import type { ToastMessage } from './components/shared/DashboardWidgets'
 import { LoginScreen } from './features/auth/components/LoginScreen'
@@ -41,7 +41,7 @@ function App() {
   const [commandOpen, setCommandOpen] = useState(false)
   const [apiLoading, setApiLoading] = useState(Boolean(getToken()))
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(null)
-  const [socialStats, setSocialStats] = useState<Record<string, unknown>>({})
+  const [socialStats] = useState<Record<string, unknown>>({})
   const { localeSettings, theme, setLocale, toggleTheme } = useDashboardPreferences()
   const dashboardQuery = useQuery({ queryKey: ['dashboard', 'stats'], queryFn: getDashboardStats, enabled: authenticated })
   const visibleNavItems = useMemo(() => { if (!authenticated || !currentUser) return navItems; const roles = currentUser.roles ?? []; const permissions = new Set(currentUser.permissions ?? []); if (roles.some((role) => ['owner', 'admin'].includes(role))) return navItems; return navItems.filter((item) => !item.permission || permissions.has(item.permission)) }, [authenticated, currentUser])
@@ -52,7 +52,7 @@ function App() {
 
   // The effect synchronizes the authenticated view with the external Laravel API.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { if (!authenticated) { setApiLoading(false); setCurrentUser(null); return } Promise.all([me(), listOrders({ page: 1, per_page: 20 }), socialSummary(), listSettings()]).then(([user, data, social, settings]) => { setCurrentUser(user); const ordersPage = Array.isArray(data) ? data : data.data; setOrdersTotal(Array.isArray(data) ? data.length : data.total); setRows(ordersPage.map(normalizeApiOrder)); setSocialStats(social); const currency = String(settings.find((item) => item.key === 'store.currency')?.value ?? localeSettings.currency); const locale = String(settings.find((item) => item.key === 'store.locale')?.value ?? localeSettings.locale) as 'ar' | 'en'; if (currency !== localeSettings.currency || locale !== localeSettings.locale) setLocale(currency, locale) }).catch((error: unknown) => { if (error instanceof ApiError && error.status === 401) { setAuthenticated(false); setToast({ type: 'info', message: 'انتهت جلسة الدخول، يرجى تسجيل الدخول مجددًا' }) } else setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل بيانات الحساب من الـAPI' }) }).finally(() => setApiLoading(false)) }, [authenticated, localeSettings.currency, localeSettings.locale, setLocale, setRows])
+  useEffect(() => { if (!authenticated) { setApiLoading(false); setCurrentUser(null); return } Promise.all([me(), listOrders({ page: 1, per_page: 20 }), listSettings()]).then(([user, data, settings]) => { setCurrentUser(user); const ordersPage = Array.isArray(data) ? data : data.data; setOrdersTotal(Array.isArray(data) ? data.length : data.total); setRows(ordersPage.map(normalizeApiOrder)); const currency = String(settings.find((item) => item.key === 'store.currency')?.value ?? localeSettings.currency); const locale = String(settings.find((item) => item.key === 'store.locale')?.value ?? localeSettings.locale) as 'ar' | 'en'; if (currency !== localeSettings.currency || locale !== localeSettings.locale) setLocale(currency, locale) }).catch((error: unknown) => { if (error instanceof ApiError && error.status === 401) { setAuthenticated(false); setToast({ type: 'info', message: 'انتهت جلسة الدخول، يرجى تسجيل الدخول مجددًا' }) } else setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل بيانات الحساب من الـAPI' }) }).finally(() => setApiLoading(false)) }, [authenticated, localeSettings.currency, localeSettings.locale, setLocale, setRows])
 
   const todayLabel = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -83,7 +83,7 @@ function App() {
   return <DashboardShell navItems={visibleNavItems} activeNav={activeNav} currentUser={currentUser} orders={rows} localeSettings={localeSettings} theme={theme} search={search} mobileNav={mobileNav} sidebarPinned={sidebarPinned} notificationsOpen={notificationsOpen} profileMenuOpen={profileMenuOpen}
     onNavigate={navigate} onMobileNavChange={setMobileNav} onSidebarPinnedChange={(next) => { setSidebarPinned(next); window.localStorage.setItem('souqi-sidebar-pinned', String(next)) }} onToast={(message, type) => setToast({ type: type ?? 'info', message })} onLocaleChange={setLocale} onToggleTheme={toggleTheme} onSearchChange={setSearch} onCommandOpen={() => setCommandOpen(true)} onNotificationsChange={setNotificationsOpen} onProfileMenuChange={setProfileMenuOpen} onLogout={() => void handleLogout()}><Suspense fallback={<PageLoading />}><DashboardContent
       activeNav={activeNav} pathname={location.pathname} currentUser={currentUser} onToast={(message, type) => setToast({ type: type ?? 'success', message })} onUserUpdated={setCurrentUser}
-      navigate={navigate} apiLoading={apiLoading || dashboardQuery.isLoading} todayLabel={todayLabel} dashboardStats={dashboardQuery.data ? { totalSales: dashboardQuery.data.sales.total, newOrders: dashboardQuery.data.orders.new, averageOrder: dashboardQuery.data.average_order } : dashboardStats} currency={localeSettings.currency} socialStats={dashboardQuery.data ? { ...socialStats, orders: dashboardQuery.data.orders.total } : socialStats}
+      navigate={navigate} apiLoading={apiLoading || dashboardQuery.isLoading} todayLabel={todayLabel} dashboardStats={dashboardQuery.data ? { totalSales: dashboardQuery.data.sales.total, newOrders: dashboardQuery.data.orders.new, averageOrder: dashboardQuery.data.average_order } : dashboardStats} currency={localeSettings.currency} socialStats={dashboardQuery.data?.social ?? socialStats}
       rows={rows} ordersTotal={ordersTotal} filteredOrders={filteredOrders} statusFilter={statusFilter} setStatusFilter={setStatusFilter} paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter}
       dateFilter={dateFilter} setDateFilter={setDateFilter} setSearch={setSearch} statusOptions={statusOptions} updateStatus={updateStatus}
       exportOrders={exportOrders} openOrderDrawer={openOrderDrawer} printDashboardOrder={printDashboardOrder} canEditOrders={canEditOrders} canAdvanceOrder={canAdvanceOrder}

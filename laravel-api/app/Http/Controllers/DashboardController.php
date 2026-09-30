@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DashboardRequest;
+use App\Modules\SocialCommerce\Application\UseCases\GetSocialSummary;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 final class DashboardController extends Controller
 {
-    public function stats(DashboardRequest $request): JsonResponse
+    public function stats(DashboardRequest $request, GetSocialSummary $socialSummary): JsonResponse
     {
         $activeOrders = CustomerOrder::query()->whereNotIn('status', ['cancelled', 'refunded']);
         $sales = (float) (clone $activeOrders)->sum('total_amount');
@@ -24,6 +25,7 @@ final class DashboardController extends Controller
             ],
             'average_order' => $orders > 0 ? round($sales / $orders, 2) : 0,
             'currency' => (string) config('app.currency', 'SAR'),
+            'social' => $socialSummary->execute(),
         ]]);
     }
 }
