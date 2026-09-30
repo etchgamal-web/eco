@@ -90,6 +90,22 @@ final class ShippingApiTest extends TestCase
         $this->actingAs($owner)->deleteJson('/api/v1/shipping-methods/'.$deletable['id'])->assertNoContent();
     }
 
+    public function test_owner_can_filter_admin_shipments_but_customers_cannot_list_them(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $owner = $this->userWithRole('owner');
+        $customer = $this->userWithRole('customer');
+        $method = ShippingMethod::query()->create(['code' => 'admin-list', 'name' => 'Admin List', 'base_fee' => 120, 'currency' => 'EGP', 'is_active' => true]);
+        $order = CustomerOrder::query()->create(['user_id' => $owner->id, 'order_number' => 'ORD-LIST-1', 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo']]);
+        $otherOrder = CustomerOrder::query()->create(['user_id' => $owner->id, 'order_number' => 'ORD-LIST-2', 'status' => 'processing', 'total_amount' => 1000, 'currency' => 'EGP', 'shipping_address' => ['city' => 'Giza']]);
+        Shipment::query()->create(['order_id' => $order->id, 'user_id' => $owner->id, 'shipping_method_id' => $method->id, 'method_code' => $method->code, 'provider_code' => 'manual', 'tracking_number' => 'LIST-TRACK-1', 'fee' => 120, 'currency' => 'EGP', 'status' => 'in_transit', 'creation_status' => 'created', 'address_snapshot' => ['city' => 'Cairo'], 'idempotency_key' => 'admin-list-1']);
+        Shipment::query()->create(['order_id' => $otherOrder->id, 'user_id' => $owner->id, 'shipping_method_id' => $method->id, 'method_code' => $method->code, 'provider_code' => 'bosta', 'fee' => 120, 'currency' => 'EGP', 'status' => 'failed', 'creation_status' => 'creation_failed', 'address_snapshot' => ['city' => 'Giza'], 'idempotency_key' => 'admin-list-2']);
+
+        $this->actingAs($owner)->getJson('/api/v1/shipments?search=LIST-TRACK-1&status=in_transit')
+            ->assertOk()->assertJsonPath('data.0.tracking_number', 'LIST-TRACK-1')->assertJsonPath('total', 1)->assertJsonPath('current_page', 1);
+        $this->actingAs($customer)->getJson('/api/v1/shipments')->assertForbidden();
+    }
+
     public function test_delivered_shipment_completes_shipped_order(): void
     {
         $this->seed(RbacSeeder::class);
