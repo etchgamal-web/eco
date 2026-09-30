@@ -32,6 +32,9 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
     {
         $shipment = $this->shipments->find((int) $event->aggregate_id);
         if ($shipment->creation_status === 'created' || data_get($shipment->metadata, 'provider_reference')) {
+            if (! $this->outbox->ownsClaim((int) $event->id, (string) $event->claim_token)) {
+                return;
+            }
             $this->markOrderShipped($shipment);
             $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
 
