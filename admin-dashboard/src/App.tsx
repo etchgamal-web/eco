@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ApiError, downloadOrdersCsv, getOrder, getOrderTimeline, getToken, listOrders, listSettings, logout, me, updateOrderStatus } from './lib/api'
+import { ApiError, confirmOrder, downloadOrdersCsv, getOrder, getOrderTimeline, getToken, listOrders, listSettings, logout, me, reviewOrder, updateOrderStatus } from './lib/api'
 import { ToastViewport } from './components/shared/DashboardWidgets'
 import type { ToastMessage } from './components/shared/DashboardWidgets'
 import { LoginScreen } from './features/auth/components/LoginScreen'
@@ -12,7 +12,7 @@ import { NotAuthorized, NotFound } from './app/guards/RouteFallbacks'
 import './App.css'
 
 import type { Order, OrderStatus } from './features/orders/types'
-import { statusOptions, normalizeApiOrder, useDashboardOrders, statusMap } from './features/orders/hooks/useDashboardOrders'
+import { statusOptions, normalizeApiOrder, useDashboardOrders, statusMap, orderWorkflowPermissions } from './features/orders/hooks/useDashboardOrders'
 import { OrderDrawer } from './features/orders/components/OrderDrawer'
 import { CommandPalette } from './features/search/components/CommandPalette'
 import { DashboardShell } from './features/dashboard/components/DashboardShell'
@@ -58,9 +58,8 @@ function App() {
   const todayLabel = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const canEditOrders = currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('orders.edit') === true
-  const workflowPermission: Record<string, string> = { pending: 'orders.review', reviewing: 'orders.confirm', confirmed: 'orders.process', processing: 'orders.manage', shipped: 'orders.manage' }
-  const canAdvanceOrder = (order: Order) => { const permission = workflowPermission[statusMap[order.status]]; return Boolean(currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || (permission && currentUser?.permissions?.includes(permission))) }
-  const updateStatus = async (id: string, status: OrderStatus) => { const order = rows.find((item) => item.id === id); if (!order || !canAdvanceOrder(order)) { setToast({ type: 'error', message: 'لا تملك صلاحية تنفيذ انتقال هذه المرحلة' }); return } const nextBackendStatus = statusMap[status]; try { if (order.apiId && getToken()) await updateOrderStatus(order.apiId, nextBackendStatus); setRows((current) => current.map((item) => item.id === id ? { ...item, status } : item)); setToast({ type: 'success', message: `تم تغيير حالة الطلب ${id}` }) } catch (error) { setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تغيير حالة الطلب' }) } }
+  const canAdvanceOrder = (order: Order) => { const permission = orderWorkflowPermissions[statusMap[order.status]]; return Boolean(currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || (permission && currentUser?.permissions?.includes(permission))) }
+  const updateStatus = async (id: string, status: OrderStatus) => { const order = rows.find((item) => item.id === id); if (!order || !canAdvanceOrder(order)) { setToast({ type: 'error', message: 'لا تملك صلاحية تنفيذ انتقال هذه المرحلة' }); return } const nextBackendStatus = statusMap[status]; try { if (order.apiId && getToken()) { if (statusMap[order.status] === 'pending') await reviewOrder(order.apiId); else if (statusMap[order.status] === 'reviewing') await confirmOrder(order.apiId); else await updateOrderStatus(order.apiId, nextBackendStatus) } setRows((current) => current.map((item) => item.id === id ? { ...item, status } : item)); setToast({ type: 'success', message: `تم تغيير حالة الطلب ${id}` }) } catch (error) { setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تغيير حالة الطلب' }) } }
   const handleLogout = async () => { try { await logout() } catch { /* The local token is cleared even if the remote logout is unavailable. */ } queryClient.removeQueries({ queryKey: ['dashboard', 'stats'] }); setCurrentUser(null); setRows([]); setOrdersTotal(0); setSelectedOrder(null); setSelectedOrderDetails(null); setSelectedOrderTimeline([]); setAuthenticated(false); navigate('/'); setToast({ type: 'success', message: 'تم تسجيل الخروج بنجاح' }) }
   const exportOrders = async () => { try { const blob = await downloadOrdersCsv(); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url); setToast({ type: 'success', message: 'تم تصدير تقرير الطلبات بنجاح' }) } catch (error) { setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تصدير تقرير الطلبات' }) } }
   const openOrderDrawer = async (order: Order) => {
@@ -88,6 +87,6 @@ function App() {
       rows={rows} ordersTotal={ordersTotal} filteredOrders={filteredOrders} statusFilter={statusFilter} setStatusFilter={setStatusFilter} paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter}
       dateFilter={dateFilter} setDateFilter={setDateFilter} setSearch={setSearch} statusOptions={statusOptions} updateStatus={updateStatus}
       exportOrders={exportOrders} openOrderDrawer={openOrderDrawer} printDashboardOrder={printDashboardOrder} canEditOrders={canEditOrders} canAdvanceOrder={canAdvanceOrder}
-    /></Suspense>{selectedOrder && <OrderDrawer key={`${selectedOrder.id}-${selectedOrderDetails ? 'loaded' : 'loading'}`} order={selectedOrder} details={selectedOrderDetails} timeline={selectedOrderTimeline} loading={orderDetailsLoading} canManageShipping={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipping.manage') === true} canManageOrders={canEditOrders} onClose={closeOrderDrawer} onToast={(message, type) => setToast({ message, type })} />}{commandOpen && <CommandPalette orders={rows} onClose={() => setCommandOpen(false)} onSelect={(path) => { setCommandOpen(false); navigate(path) }} onOrderSelect={(order) => { setCommandOpen(false); void openOrderDrawer(order) }} />}{toast && <ToastViewport toast={toast} onClose={() => setToast(null)} />}</DashboardShell>
+    /></Suspense>{selectedOrder && <OrderDrawer key={`${selectedOrder.id}-${selectedOrderDetails ? 'loaded' : 'loading'}`} order={selectedOrder} details={selectedOrderDetails} timeline={selectedOrderTimeline} loading={orderDetailsLoading} canCreateShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipments.create') === true} canManageShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipping.manage') === true} canManageOrders={canEditOrders} onClose={closeOrderDrawer} onToast={(message, type) => setToast({ message, type })} />}{commandOpen && <CommandPalette orders={rows} onClose={() => setCommandOpen(false)} onSelect={(path) => { setCommandOpen(false); navigate(path) }} onOrderSelect={(order) => { setCommandOpen(false); void openOrderDrawer(order) }} />}{toast && <ToastViewport toast={toast} onClose={() => setToast(null)} />}</DashboardShell>
 }
 export default App

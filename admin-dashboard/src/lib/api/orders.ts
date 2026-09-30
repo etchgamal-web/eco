@@ -8,6 +8,7 @@ export async function getOrder(id: number) { return (await request<{ data: ApiOr
 export async function getOrderTimeline(id: number) { return (await request<{ data: unknown[] }>(`/orders/${id}/timeline`)).data }
 
 export async function confirmOrder(id: number) { return (await request<{ data: ApiOrder }>(`/orders/${id}/confirm`, { method: 'POST' })).data }
+export async function reviewOrder(id: number) { return (await request<{ data: ApiOrder }>(`/orders/${id}/review`, { method: 'POST' })).data }
 
 export async function recordOrderContact(id: number, contact_result: string, notes?: string) { return (await request<{ data: Record<string, unknown> }>(`/orders/${id}/contact`, { method: 'POST', body: JSON.stringify({ contact_result, notes }) })).data }
 export async function recordOrderNote(id: number, notes: string) { return (await request<{ data: Record<string, unknown> }>(`/orders/${id}/notes`, { method: 'POST', body: JSON.stringify({ notes }) })).data }

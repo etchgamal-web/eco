@@ -40,7 +40,7 @@ final class ShippingRequest extends FormRequest
             ];
         }
         if ($this->route()?->getName() === 'shipments.status') {
-            return ['status' => ['required', 'string', 'in:pending,picked_up,in_transit,out_for_delivery,delivered,cancelled'], 'note' => ['nullable', 'string', 'max:1000']];
+            return ['status' => ['required', 'string', 'in:processing,provider_created,picked_up,in_transit,out_for_delivery,delivered,cancelled,failed,ambiguous'], 'note' => ['nullable', 'string', 'max:1000']];
         }
 
         return [];

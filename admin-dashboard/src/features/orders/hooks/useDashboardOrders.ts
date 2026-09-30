@@ -5,6 +5,8 @@ import type { Order, OrderStatus } from '../types'
 
 export const statusOptions: OrderStatus[] = ['جديد', 'مراجعة', 'مؤكد', 'قيد التجهيز', 'تم الشحن', 'تم التسليم']
 export const statusMap: Record<OrderStatus, string> = { 'جديد': 'pending', 'مراجعة': 'reviewing', 'مؤكد': 'confirmed', 'قيد التجهيز': 'processing', 'تم الشحن': 'shipped', 'تم التسليم': 'delivered', 'ملغي': 'cancelled', 'مسترد': 'refunded' }
+export const orderWorkflowPermissions: Record<string, string> = { pending: 'orders.review', reviewing: 'orders.confirm', confirmed: 'orders.process', processing: 'orders.manage', shipped: 'orders.manage' }
+export const nextOrderStatus: Record<string, string> = { pending: 'reviewing', reviewing: 'confirmed', confirmed: 'processing', processing: 'shipped', shipped: 'delivered' }
 const statusLabels: Record<string, OrderStatus> = {
   pending: 'جديد', reviewing: 'مراجعة', confirmed: 'مؤكد', processing: 'قيد التجهيز', shipped: 'تم الشحن',
   delivered: 'تم التسليم', cancelled: 'ملغي', refunded: 'مسترد',
