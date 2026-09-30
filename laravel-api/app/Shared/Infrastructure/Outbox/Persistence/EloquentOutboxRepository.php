@@ -168,4 +168,16 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
                 'next_attempt_at' => null,
             ]) === 1;
     }
+
+    public function retryFailed(int $eventId): bool
+    {
+        return OutboxEvent::query()->whereKey($eventId)->where('status', 'failed')->update([
+            'status' => 'pending',
+            'next_attempt_at' => now(),
+            'last_error' => null,
+            'lease_until' => null,
+            'claim_token' => null,
+            'dispatched_at' => null,
+        ]) === 1;
+    }
 }

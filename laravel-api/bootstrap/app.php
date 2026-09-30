@@ -95,6 +95,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('cart:mark-abandoned')->dailyAt($time)->withoutOverlapping();
         $schedule->command('outbox:dispatch')->everyMinute()->withoutOverlapping();
         $schedule->command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('payments:alert-ambiguous-refunds')->everyFifteenMinutes()->withoutOverlapping();
         $schedule->command('shipments:reconcile')->everyTenMinutes()->withoutOverlapping();
         $schedule->command('orders:detect-delays')->cron($monitoringCron)->withoutOverlapping();
         if ($backupEnabled) {

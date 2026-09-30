@@ -11,6 +11,8 @@ use App\Modules\Monitoring\Infrastructure\Models\OrderMonitoringSetting;
 use App\Modules\Monitoring\Infrastructure\Persistence\EloquentMonitoringRepository;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReturn;
+use App\Modules\Payment\Infrastructure\Models\Payment;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
 use App\Modules\Settlement\Infrastructure\Persistence\EloquentSettlementRepository;
 use App\Modules\Shipping\Infrastructure\Models\Shipment;
@@ -177,6 +179,25 @@ final class SettlementImportApiTest extends TestCase
         self::assertSame('matched', $item->status);
         self::assertSame(500, $settlement->expected_customer_refund);
         self::assertSame(40, $settlement->expected_return_fee);
+    }
+
+    public function test_refund_reconciliation_exposes_requested_confirmed_and_settlement_actual_amounts(): void
+    {
+        $shipment = $this->shipment('TRK-REFUND-RECON', 30, 'ORD-REFUND-RECON');
+        $payment = Payment::query()->create(['order_id' => $shipment->order_id, 'user_id' => $shipment->user_id, 'method' => 'cash_on_delivery', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'partially_refunded', 'idempotency_key' => 'settlement-refund-payment']);
+        $return = OrderReturn::query()->create(['order_id' => $shipment->order_id, 'shipment_id' => $shipment->id, 'payment_id' => $payment->id, 'user_id' => $shipment->user_id, 'status' => 'completed', 'reason' => 'customer_request', 'refund_amount' => 500, 'actual_customer_refund' => 480, 'return_shipping_fee' => 0]);
+        PaymentOperation::query()->create(['payment_id' => $payment->id, 'operation' => 'refund', 'status' => 'refunded', 'idempotency_key' => 'settlement-refund-operation', 'requested_amount' => 500, 'confirmed_amount' => 480]);
+
+        $settlement = app(EloquentSettlementRepository::class)->import($this->csv("order_number,tracking_number,order_amount,collected_amount,shipping_cost,customer_refund\nORD-REFUND-RECON,TRK-REFUND-RECON,100,100,30,480\n"), 'test-provider', null, null);
+        $item = $settlement->items()->first();
+
+        self::assertSame(500, $item->expected_customer_refund);
+        self::assertSame(500, $item->requested_customer_refund);
+        self::assertSame(480, $item->confirmed_customer_refund);
+        self::assertSame(480, $item->actual_customer_refund);
+        self::assertSame(0, $item->refund_reconciliation_difference);
+        self::assertSame('matched', $item->refund_reconciliation_status);
+        self::assertSame(-20, $item->customer_refund_difference);
     }
 
     public function test_delivered_shipment_without_settlement_creates_settlement_missing_alert(): void

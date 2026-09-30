@@ -19,4 +19,5 @@ interface OutboxRepositoryInterface
     public function markProcessed(int $eventId, string $claimToken): bool;
     public function markFailed(int $eventId, string $claimToken, string $error): bool;
     public function markAmbiguous(int $eventId, string $claimToken, string $error): bool;
+    public function retryFailed(int $eventId): bool;
 }

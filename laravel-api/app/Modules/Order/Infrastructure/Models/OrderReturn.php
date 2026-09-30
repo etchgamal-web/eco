@@ -13,11 +13,11 @@ class OrderReturn extends Model
 {
     protected $table = 'order_returns';
 
-    protected $fillable = ['order_id', 'payment_id', 'shipment_id', 'user_id', 'status', 'reason', 'notes', 'refund_amount', 'actual_customer_refund', 'return_shipping_fee', 'rejection_reason', 'received_at', 'inspected_at', 'inspection_notes', 'restocked_at', 'refund_requested_at', 'completed_at'];
+    protected $fillable = ['order_id', 'payment_id', 'shipment_id', 'user_id', 'status', 'reason', 'notes', 'refund_amount', 'actual_customer_refund', 'return_shipping_fee', 'rejection_reason', 'received_at', 'inspected_at', 'inspection_notes', 'restocked_at', 'refund_requested_at', 'completed_at', 'restock_status', 'refund_status', 'workflow_error', 'last_workflow_attempt_at'];
 
     protected function casts(): array
     {
-        return ['refund_amount' => 'integer', 'actual_customer_refund' => 'integer', 'return_shipping_fee' => 'integer', 'received_at' => 'datetime', 'inspected_at' => 'datetime', 'restocked_at' => 'datetime', 'refund_requested_at' => 'datetime', 'completed_at' => 'datetime'];
+        return ['refund_amount' => 'integer', 'actual_customer_refund' => 'integer', 'return_shipping_fee' => 'integer', 'received_at' => 'datetime', 'inspected_at' => 'datetime', 'restocked_at' => 'datetime', 'refund_requested_at' => 'datetime', 'completed_at' => 'datetime', 'last_workflow_attempt_at' => 'datetime'];
     }
 
     public function order(): BelongsTo

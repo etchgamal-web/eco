@@ -22,17 +22,20 @@ final class ReconcilePayment
         private readonly TransactionManagerInterface $transactions,
     ) {}
 
-    public function execute(int $paymentId): object
+    public function execute(int $paymentId, ?int $operationId = null): object
     {
         $payment = $this->payments->find($paymentId);
-        $operation = $this->operations->ambiguousOperation((int) $payment->id);
+        $operation = $operationId === null ? null : $this->operations->ambiguousOperation((int) $payment->id, $operationId);
+        if ($operationId !== null && $operation === null) {
+            throw new PaymentException('The requested reconciliation operation is not an unresolved operation for this payment.');
+        }
         if ($operation === null) {
             $operation = 'create';
             if (! in_array($payment->status, ['processing', 'provider_created'], true)) return $payment;
         }
 
         $leaseToken = (string) Str::uuid();
-        if (! $this->operations->acquireLease((int) $payment->id, $operation, $leaseToken)) {
+        if (! $this->operations->acquireLease((int) $payment->id, $operation, $leaseToken, 300, null, $operationId !== null)) {
             throw new PaymentException('Payment reconciliation is already in progress or blocked by an unresolved ambiguous operation.');
         }
 
@@ -96,9 +99,11 @@ final class ReconcilePayment
 
         return $this->transactions->run(function () use ($payment, $result, $leaseToken, $confirmedAmount): object {
             $locked = $this->payments->findForUpdate((int) $payment->id);
-            $refunded = $this->payments->updateStatus($locked, 'refunded', ['metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? []))]);
-            $this->operations->complete((int) $refunded->id, 'refund', 'confirmed', $result['provider_reference'] ?? $refunded->provider_reference, $result, $leaseToken);
-            if ($refunded->order->status === 'delivered') $this->orders->markRefunded((int) $refunded->order_id);
+            $refundedTotal = $this->operations->refundedAmount((int) $payment->id) + $confirmedAmount;
+            $nextStatus = $refundedTotal >= (int) $locked->amount ? 'refunded' : 'partially_refunded';
+            $refunded = $this->payments->updateStatus($locked, $nextStatus, ['metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? []))]);
+            $this->operations->complete((int) $refunded->id, 'refund', 'confirmed', $result['provider_reference'] ?? $refunded->provider_reference, $result, $leaseToken, $confirmedAmount);
+            if ($nextStatus === 'refunded' && $refunded->order->status === 'delivered') $this->orders->markRefunded((int) $refunded->order_id);
             $this->returns->completeRefundForPayment((int) $refunded->id, $confirmedAmount);
             return $refunded;
         });

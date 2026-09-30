@@ -36,6 +36,7 @@ final class ReturnOutboxHandler implements OutboxEventHandlerInterface
         $return = $this->transactions->run(function () use ($returnId): object {
             $return = $this->returns->findForWorkflow($returnId);
             if ($return->status === 'completed') return $return;
+            $this->returns->markWorkflowAttempt($returnId);
             if ($return->restocked_at === null) {
                 foreach ($return->items as $item) {
                     if ($item->product_id === null) continue;
@@ -47,12 +48,10 @@ final class ReturnOutboxHandler implements OutboxEventHandlerInterface
             return $return;
         });
 
-        $payment = $return->payment ?: $return->order->payments->whereIn('status', ['paid', 'confirmed', 'refunded'])->sortByDesc('id')->first();
+        $payment = $return->payment ?: $return->order->payments->whereIn('status', ['paid', 'confirmed', 'partially_refunded', 'refunded'])->sortByDesc('id')->first();
         if ($payment === null) throw new \RuntimeException('No refundable payment found for accepted return.');
         $this->transactions->run(fn (): object => $this->returns->markRefundRequested($returnId));
-        if ($payment->status !== 'refunded') {
-            $this->refunds->execute((int) $payment->id, (int) $return->refund_amount);
-        }
+        $this->refunds->execute((int) $payment->id, (int) $return->refund_amount);
 
         $payment = $payment->fresh();
         $actualRefund = (int) data_get($payment->metadata, 'refund_confirmed_amount', $return->refund_amount);
@@ -62,6 +61,7 @@ final class ReturnOutboxHandler implements OutboxEventHandlerInterface
 
     public function failed(object $event, \Throwable $exception): void
     {
+        $this->transactions->run(fn (): object => $this->returns->markWorkflowFailed((int) $event->aggregate_id, $exception->getMessage()));
         $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
     }
 }

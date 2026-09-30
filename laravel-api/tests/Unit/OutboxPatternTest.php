@@ -204,4 +204,44 @@ final class OutboxPatternTest extends TestCase
         self::assertFalse($operations->complete((int) $payment->id, 'create', 'confirmed', 'old-ref', [], 'payment-old'));
         self::assertTrue($operations->complete((int) $payment->id, 'create', 'confirmed', 'new-ref', [], 'payment-new'));
     }
+
+    public function test_ambiguous_reconciliation_is_selected_by_operation_id_not_latest_operation(): void
+    {
+        $user = \App\Modules\Auth\Infrastructure\Models\User::factory()->create();
+        $order = \App\Modules\Order\Infrastructure\Models\CustomerOrder::query()->create([
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'total_amount' => 100,
+            'currency' => 'EGP',
+        ]);
+        $payment = \App\Modules\Payment\Infrastructure\Models\Payment::query()->create([
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'method' => 'cash_on_delivery',
+            'amount' => 100,
+            'currency' => 'EGP',
+            'status' => 'processing',
+            'idempotency_key' => 'operation-selection-test',
+        ]);
+        $confirm = PaymentOperation::query()->create([
+            'payment_id' => $payment->id,
+            'operation' => 'confirm',
+            'status' => 'ambiguous',
+            'idempotency_key' => 'confirm-selection-test',
+            'attempt_count' => 1,
+        ]);
+        $refund = PaymentOperation::query()->create([
+            'payment_id' => $payment->id,
+            'operation' => 'refund',
+            'status' => 'ambiguous',
+            'idempotency_key' => 'refund-selection-test',
+            'attempt_count' => 1,
+        ]);
+
+        $operations = app(EloquentPaymentOperationRepository::class);
+
+        self::assertSame('confirm', $operations->ambiguousOperation((int) $payment->id, (int) $confirm->id));
+        self::assertSame('refund', $operations->ambiguousOperation((int) $payment->id, (int) $refund->id));
+        self::assertNull($operations->ambiguousOperation((int) $payment->id, (int) $refund->id + 1000));
+    }
 }

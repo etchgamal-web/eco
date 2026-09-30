@@ -21,6 +21,16 @@ final class ReturnException extends BusinessRuleException
         return new self('A return request already exists for this order.');
     }
 
+    public static function refundableAmountExceeded(): self
+    {
+        return new self('The requested refund exceeds the remaining refundable amount for this order payment.');
+    }
+
+    public static function itemQuantityExceeded(): self
+    {
+        return new self('The requested return quantity exceeds the quantity still eligible for return.');
+    }
+
     public static function invalidTransition(): self
     {
         return new self('This return request cannot be changed.');

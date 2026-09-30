@@ -6,6 +6,10 @@ use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Payment\Infrastructure\Models\Payment;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
+use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
+use App\Modules\Payment\Application\UseCases\RefundPayment;
+use App\Modules\Payment\Application\UseCases\ReconcilePayment;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -74,6 +78,115 @@ final class PaymentApiTest extends TestCase
         $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'pending']);
         $this->actingAs($owner)->postJson("/api/v1/payments/{$payment->id}/refund")
             ->assertConflict();
+    }
+
+    public function test_partial_refunds_can_be_repeated_until_payment_amount_is_exhausted(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $owner = $this->userWithRole('owner');
+        $order = $this->orderFor($customer, 1000);
+        $payment = Payment::query()->create([
+            'order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery',
+            'provider_reference' => 'partial-refund-test', 'amount' => 1000, 'currency' => 'EGP',
+            'status' => 'paid', 'idempotency_key' => 'partial-refund-payment',
+        ]);
+
+        $this->actingAs($owner);
+        $first = app(RefundPayment::class)->execute((int) $payment->id, 400);
+        $this->assertSame('partially_refunded', $first->status);
+        $second = app(RefundPayment::class)->execute((int) $payment->id, 600);
+        $this->assertSame('refunded', $second->status);
+        $this->expectException(\App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException::class);
+        app(RefundPayment::class)->execute((int) $payment->id, 1);
+    }
+
+    public function test_owner_can_view_operational_dashboard_and_retry_failed_outbox(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $owner = $this->userWithRole('owner');
+        $event = OutboxEvent::query()->create([
+            'aggregate_type' => 'payment', 'aggregate_id' => 77, 'event_type' => 'payment.create.requested',
+            'deduplication_key' => 'dashboard-retry-event', 'status' => 'failed', 'attempt_count' => 5,
+            'last_error' => 'provider timeout', 'payload' => [],
+        ]);
+
+        $this->actingAs($owner)->getJson('/api/v1/operations/dashboard')->assertOk()
+            ->assertJsonStructure(['data' => ['generated_at', 'payments', 'ambiguous_payments', 'ambiguous_refunds', 'stuck_returns', 'failed_outbox', 'circuits']]);
+        $this->actingAs($owner)->postJson('/api/v1/operations/outbox/'.$event->id.'/retry')->assertOk();
+        $this->assertDatabaseHas('outbox_events', ['id' => $event->id, 'status' => 'pending', 'last_error' => null]);
+    }
+
+    public function test_manual_reconcile_requires_a_specific_operation_id(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $owner = $this->userWithRole('owner');
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 100);
+        $payment = Payment::query()->create([
+            'order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery',
+            'provider_reference' => 'manual-reconcile-test', 'amount' => 100, 'currency' => 'EGP',
+            'status' => 'processing', 'idempotency_key' => 'manual-reconcile-payment',
+        ]);
+        PaymentOperation::query()->create([
+            'payment_id' => $payment->id, 'operation' => 'confirm', 'status' => 'ambiguous',
+            'idempotency_key' => 'manual-reconcile-operation', 'attempt_count' => 1,
+        ]);
+
+        $this->actingAs($owner)->postJson('/api/v1/operations/payments/'.$payment->id.'/reconcile')->assertUnprocessable();
+    }
+
+    public function test_refund_timeout_is_reconciled_using_the_specific_operation(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 1000);
+        $payment = Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'paid', 'idempotency_key' => 'refund-timeout-payment']);
+        $operation = PaymentOperation::query()->create(['payment_id' => $payment->id, 'operation' => 'refund', 'status' => 'ambiguous', 'idempotency_key' => 'refund-timeout-operation', 'requested_amount' => 300, 'attempt_count' => 1, 'last_error' => 'provider timeout']);
+
+        $result = app(ReconcilePayment::class)->execute((int) $payment->id, (int) $operation->id);
+
+        $this->assertSame('partially_refunded', $result->status);
+        $this->assertDatabaseHas('payment_operations', ['id' => $operation->id, 'status' => 'confirmed', 'confirmed_amount' => 300]);
+    }
+
+    public function test_failed_refund_can_be_retried_with_the_same_idempotency_key(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 1000);
+        $payment = Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'retry-refund', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'paid', 'idempotency_key' => 'retry-refund-payment']);
+        PaymentOperation::query()->create(['payment_id' => $payment->id, 'operation' => 'refund', 'status' => 'failed', 'idempotency_key' => 'refund:'.$payment->id.':250:retry-refund', 'requested_amount' => 250, 'attempt_count' => 1, 'last_error' => 'provider rejected']);
+
+        $result = app(RefundPayment::class)->execute((int) $payment->id, 250);
+
+        $this->assertSame('partially_refunded', $result->status);
+        $this->assertDatabaseHas('payment_operations', ['payment_id' => $payment->id, 'operation' => 'refund', 'status' => 'confirmed', 'confirmed_amount' => 250]);
+    }
+
+    public function test_payment_failed_then_a_later_paid_payment_is_kept_as_a_separate_record(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 1000);
+        $failed = Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'failed', 'idempotency_key' => 'failed-payment']);
+        $paid = Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'paid', 'idempotency_key' => 'paid-retry-payment']);
+
+        $this->assertDatabaseHas('payments', ['id' => $failed->id, 'status' => 'failed']);
+        $this->assertDatabaseHas('payments', ['id' => $paid->id, 'status' => 'paid']);
+        $this->assertNotSame($failed->id, $paid->id);
+    }
+
+    public function test_confirm_and_refund_ambiguous_operations_can_coexist(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 1000);
+        $payment = Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'ambiguous', 'idempotency_key' => 'both-ambiguous-payment']);
+        PaymentOperation::query()->create(['payment_id' => $payment->id, 'operation' => 'confirm', 'status' => 'ambiguous', 'idempotency_key' => 'both-ambiguous-confirm', 'attempt_count' => 1]);
+        PaymentOperation::query()->create(['payment_id' => $payment->id, 'operation' => 'refund', 'status' => 'ambiguous', 'idempotency_key' => 'both-ambiguous-refund', 'requested_amount' => 1000, 'attempt_count' => 1]);
+
+        $this->assertSame(2, PaymentOperation::query()->where('payment_id', $payment->id)->where('status', 'ambiguous')->count());
     }
 
     private function orderFor(User $user, int $amount): CustomerOrder

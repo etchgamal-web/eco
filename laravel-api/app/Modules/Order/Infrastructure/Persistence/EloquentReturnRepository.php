@@ -6,6 +6,9 @@ use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Order\Domain\Exceptions\ReturnException;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReturn;
+use App\Modules\Order\Infrastructure\Models\OrderReturnItem;
+use App\Modules\Payment\Infrastructure\Models\Payment;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Staff\Infrastructure\Models\AuditLog;
@@ -22,29 +25,47 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
             if ($order === null || $order->status !== 'delivered') {
                 throw ReturnException::notAllowed();
             }
-            if (OrderReturn::query()->where('order_id', $orderId)->whereIn('status', ['pending', 'approved'])->exists()) {
-                throw ReturnException::alreadyRequested();
-            }
             $orderItems = $order->items->keyBy('id');
             $refund = 0;
             $items = [];
+            $requestedQuantities = [];
             foreach ($data['items'] as $item) {
                 $orderItem = $orderItems->get((int) ($item['order_item_id'] ?? 0));
                 $quantity = (int) ($item['quantity'] ?? 0);
                 if ($orderItem === null || $quantity < 1 || $quantity > $orderItem->quantity) {
                     throw ReturnException::invalidItems();
                 }
-                $snapshotUnit = $orderItem->quantity > 0 && $orderItem->total_amount !== null
+                $snapshotUnit = $orderItem->quantity > 0 && (int) ($orderItem->total_amount ?? 0) > 0
                     ? intdiv((int) $orderItem->total_amount, (int) $orderItem->quantity)
                     : (int) $orderItem->unit_price;
                 $refund += $snapshotUnit * $quantity;
+                $requestedQuantities[$orderItem->id] = ($requestedQuantities[$orderItem->id] ?? 0) + $quantity;
                 $items[] = ['order_item_id' => $orderItem->id, 'product_id' => $orderItem->product_id, 'variant_id' => $orderItem->variant_id, 'quantity' => $quantity, 'unit_price' => $snapshotUnit];
             }
             if ($items === []) {
                 throw ReturnException::invalidItems();
             }
-            $payment = $order->payments()->whereIn('status', ['paid', 'confirmed'])->latest('id')->first();
-            $return = OrderReturn::query()->create(['order_id' => $orderId, 'payment_id' => $payment?->id, 'user_id' => $userId, 'status' => 'pending', 'reason' => $data['reason'], 'notes' => $data['notes'] ?? null, 'refund_amount' => $refund]);
+            $existingQuantities = OrderReturnItem::query()
+                ->whereIn('order_item_id', array_keys($requestedQuantities))
+                ->whereHas('returnRequest', fn ($query) => $query->where('order_id', $orderId)->whereNotIn('status', ['rejected', 'inspected_rejected']))
+                ->selectRaw('order_item_id, SUM(quantity) as quantity')
+                ->groupBy('order_item_id')
+                ->pluck('quantity', 'order_item_id');
+            foreach ($requestedQuantities as $orderItemId => $quantity) {
+                if ($quantity + (int) ($existingQuantities[$orderItemId] ?? 0) > (int) $orderItems->get($orderItemId)->quantity) {
+                    throw ReturnException::itemQuantityExceeded();
+                }
+            }
+
+            $payment = $order->payments()->whereIn('status', ['paid', 'confirmed', 'partially_refunded'])->lockForUpdate()->orderByDesc('id')->get()->first(function (Payment $candidate) use ($refund): bool {
+                $reserved = (int) OrderReturn::query()->where('payment_id', $candidate->id)->whereIn('status', ['pending', 'approved', 'received', 'inspected_accepted', 'completed'])->sum('refund_amount');
+                $confirmed = (int) PaymentOperation::query()->where('payment_id', $candidate->id)->where('operation', 'refund')->whereIn('status', ['confirmed', 'refunded'])->sum('confirmed_amount');
+                return (int) $candidate->amount - max($reserved, $confirmed) >= $refund;
+            });
+            if ($payment === null) {
+                throw ReturnException::refundableAmountExceeded();
+            }
+            $return = OrderReturn::query()->create(['order_id' => $orderId, 'payment_id' => $payment->id, 'user_id' => $userId, 'status' => 'pending', 'reason' => $data['reason'], 'notes' => $data['notes'] ?? null, 'refund_amount' => $refund]);
             $return->items()->createMany($items);
 
             return $return->load('items');
@@ -92,30 +113,71 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
         return OrderReturn::query()->with(['items.orderItem', 'order.payments', 'payment'])->lockForUpdate()->findOrFail($returnId);
     }
 
+    public function markWorkflowAttempt(int $returnId): object
+    {
+        $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
+        $return->update(['last_workflow_attempt_at' => now(), 'workflow_error' => null]);
+
+        return $return;
+    }
+
     public function markRestocked(int $returnId): object
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
-        if ($return->restocked_at === null) $return->update(['restocked_at' => now()]);
+        if ($return->restocked_at === null) $return->update(['restocked_at' => now(), 'restock_status' => 'completed']);
         return $return->fresh(['items.orderItem', 'order.payments']);
     }
 
     public function markRefundRequested(int $returnId): object
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
-        if ($return->refund_requested_at === null) $return->update(['refund_requested_at' => now()]);
+        $return->update(['refund_requested_at' => $return->refund_requested_at ?? now(), 'refund_status' => 'processing', 'workflow_error' => null]);
         return $return->fresh(['items.orderItem', 'order.payments', 'payment']);
     }
 
     public function markCompleted(int $returnId, int $actualRefund): object
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
-        if ($return->status !== 'completed') $return->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund]);
+        if ($return->status !== 'completed') $return->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund, 'refund_status' => 'refunded', 'workflow_error' => null]);
         return $return;
     }
 
-    public function completeRefundForPayment(int $paymentId, int $actualRefund): void
+    public function markWorkflowFailed(int $returnId, string $error): object
     {
-        OrderReturn::query()->where('payment_id', $paymentId)->where('status', 'inspected_accepted')->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund]);
+        $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
+        $attributes = ['workflow_error' => $error, 'last_workflow_attempt_at' => now()];
+        if ($return->restock_status !== 'completed') $attributes['restock_status'] = 'failed';
+        if ($return->restock_status === 'completed' && $return->refund_status !== 'refunded') $attributes['refund_status'] = 'failed';
+        $return->update($attributes);
+
+        return $return;
+    }
+
+    public function completeRefundForPayment(int $paymentId, int $confirmedAmount): void
+    {
+        if ($confirmedAmount <= 0) return;
+
+        $payment = Payment::query()->find($paymentId);
+        if ($payment === null) return;
+        $completedAmount = (int) OrderReturn::query()->where('payment_id', $paymentId)->whereNotNull('actual_customer_refund')->sum('actual_customer_refund');
+        if ($completedAmount + $confirmedAmount > (int) $payment->amount) return;
+
+        $return = OrderReturn::query()
+            ->where('payment_id', $paymentId)
+            ->where('status', 'inspected_accepted')
+            ->whereNotNull('refund_requested_at')
+            ->where('refund_amount', $confirmedAmount)
+            ->whereNull('completed_at')
+            ->lockForUpdate()
+            ->first();
+
+        if ($return === null) return;
+
+        $return->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'actual_customer_refund' => $confirmedAmount,
+        ]);
     }
 
     public function receive(int $returnId): object

@@ -4,6 +4,7 @@ namespace App\Modules\Settlement\Infrastructure\Persistence;
 
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReturn;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\Settlement\Domain\Contracts\SettlementRepositoryInterface;
 use App\Modules\Settlement\Domain\Exceptions\SettlementImportException;
@@ -132,6 +133,15 @@ final class EloquentSettlementRepository implements SettlementRepositoryInterfac
         $actualReturnFee = (int) round((float) $rawReturnFee);
         $expectedCustomerRefund = (int) ($return?->refund_amount ?? 0);
         $actualCustomerRefund = (int) round((float) $rawCustomerRefund);
+        $refundOperations = $return?->payment_id === null ? collect() : PaymentOperation::query()->where('payment_id', $return->payment_id)->where('operation', 'refund')->whereIn('status', ['processing', 'confirmed', 'refunded', 'ambiguous'])->get(['status', 'requested_amount', 'confirmed_amount']);
+        $requestedCustomerRefund = (int) $refundOperations->sum('requested_amount');
+        $confirmedCustomerRefund = $return?->actual_customer_refund !== null
+            ? (int) $return->actual_customer_refund
+            : (int) $refundOperations->whereIn('status', ['confirmed', 'refunded'])->sum('confirmed_amount');
+        $refundReconciliationDifference = $actualCustomerRefund - $confirmedCustomerRefund;
+        $refundReconciliationStatus = $confirmedCustomerRefund === 0
+            ? 'pending'
+            : ($refundReconciliationDifference === 0 ? 'matched' : 'mismatched');
         $orderDiff = $actualOrder - $expectedOrder;
         $collectionDiff = $actualCollection - $expectedCollection;
         $shippingDiff = $actualShipping - $expectedShipping;
@@ -140,7 +150,7 @@ final class EloquentSettlementRepository implements SettlementRepositoryInterfac
         $matched = max(abs($orderDiff), abs($collectionDiff), abs($shippingDiff), abs($returnFeeDiff), abs($refundDiff)) <= $config['tolerance'];
         $expectedTotal = $expectedShipping + $expectedReturnFee;
         $actualTotal = $actualShipping + $actualReturnFee;
-        ShippingSettlementItem::query()->create(['shipping_settlement_id' => $settlement->id, 'shipment_id' => $shipment->id, 'order_number' => $order->order_number ?? (string) $order->id, 'expected_order_amount' => $expectedOrder, 'actual_order_amount' => $actualOrder, 'order_amount_difference' => $orderDiff, 'expected_collection' => $expectedCollection, 'actual_collection' => $actualCollection, 'collection_difference' => $collectionDiff, 'expected_shipping_cost' => $expectedShipping, 'actual_shipping_cost' => $actualShipping, 'shipping_difference' => $shippingDiff, 'expected_return_fee' => $expectedReturnFee, 'actual_return_fee' => $actualReturnFee, 'return_difference' => $returnFeeDiff, 'expected_customer_refund' => $expectedCustomerRefund, 'actual_customer_refund' => $actualCustomerRefund, 'customer_refund_difference' => $refundDiff, 'expected_total' => $expectedTotal, 'actual_total' => $actualTotal, 'difference' => $actualTotal - $expectedTotal, 'status' => $matched ? 'matched' : 'mismatched', 'expected_charges' => ['order_amount' => $expectedOrder, 'collection' => $expectedCollection, 'shipping' => $expectedShipping, 'return_shipping_fee' => $expectedReturnFee, 'customer_refund' => $expectedCustomerRefund], 'actual_charges' => $row, 'metadata' => ['tracking_number' => $tracking, 'order_number' => $order->order_number ?? (string) $order->id, 'tolerance' => $config['tolerance']]]);
+        ShippingSettlementItem::query()->create(['shipping_settlement_id' => $settlement->id, 'shipment_id' => $shipment->id, 'order_number' => $order->order_number ?? (string) $order->id, 'expected_order_amount' => $expectedOrder, 'actual_order_amount' => $actualOrder, 'order_amount_difference' => $orderDiff, 'expected_collection' => $expectedCollection, 'actual_collection' => $actualCollection, 'collection_difference' => $collectionDiff, 'expected_shipping_cost' => $expectedShipping, 'actual_shipping_cost' => $actualShipping, 'shipping_difference' => $shippingDiff, 'expected_return_fee' => $expectedReturnFee, 'actual_return_fee' => $actualReturnFee, 'return_difference' => $returnFeeDiff, 'expected_customer_refund' => $expectedCustomerRefund, 'requested_customer_refund' => $requestedCustomerRefund, 'confirmed_customer_refund' => $confirmedCustomerRefund, 'actual_customer_refund' => $actualCustomerRefund, 'customer_refund_difference' => $refundDiff, 'refund_reconciliation_difference' => $refundReconciliationDifference, 'refund_reconciliation_status' => $refundReconciliationStatus, 'expected_total' => $expectedTotal, 'actual_total' => $actualTotal, 'difference' => $actualTotal - $expectedTotal, 'status' => $matched ? 'matched' : 'mismatched', 'expected_charges' => ['order_amount' => $expectedOrder, 'collection' => $expectedCollection, 'shipping' => $expectedShipping, 'return_shipping_fee' => $expectedReturnFee, 'customer_refund' => $expectedCustomerRefund], 'actual_charges' => $row, 'metadata' => ['tracking_number' => $tracking, 'order_number' => $order->order_number ?? (string) $order->id, 'tolerance' => $config['tolerance'], 'requested_customer_refund' => $requestedCustomerRefund, 'confirmed_customer_refund' => $confirmedCustomerRefund, 'refund_reconciliation_status' => $refundReconciliationStatus]]);
 
         return ['kind' => 'item', 'status' => $matched ? 'matched' : 'mismatched', 'order' => [$expectedOrder, $actualOrder], 'collection' => [$expectedCollection, $actualCollection], 'shipping' => [$expectedShipping, $actualShipping], 'return_fee' => [$expectedReturnFee, $actualReturnFee], 'refund' => [$expectedCustomerRefund, $actualCustomerRefund]];
     }
@@ -250,7 +260,7 @@ return $config;
         $settlements = $this->filteredSettlementQuery($filters);
         $settlementTotals = (clone $settlements)->selectRaw('COUNT(*) AS settlement_count, COALESCE(SUM(shipments_count), 0) AS shipments_count, COALESCE(SUM(total_rows), 0) AS total_rows, COALESCE(SUM(matched_rows), 0) AS matched_rows, COALESCE(SUM(mismatched_rows), 0) AS mismatched_rows, COALESCE(SUM(missing_orders), 0) AS missing_orders, COALESCE(SUM(duplicate_rows), 0) AS duplicate_rows, COALESCE(SUM(invalid_rows), 0) AS invalid_rows')->first();
         $itemTotals = ShippingSettlementItem::query()->whereIn('shipping_settlement_id', (clone $settlements)->select('shipping_settlements.id'))
-            ->selectRaw('COUNT(*) AS item_count, COALESCE(SUM(expected_order_amount), 0) AS expected_order_amount, COALESCE(SUM(actual_order_amount), 0) AS actual_order_amount, COALESCE(SUM(order_amount_difference), 0) AS order_amount_difference, COALESCE(SUM(expected_collection), 0) AS expected_collection, COALESCE(SUM(actual_collection), 0) AS actual_collection, COALESCE(SUM(collection_difference), 0) AS collection_difference, COALESCE(SUM(expected_shipping_cost), 0) AS expected_shipping_cost, COALESCE(SUM(actual_shipping_cost), 0) AS actual_shipping_cost, COALESCE(SUM(shipping_difference), 0) AS shipping_difference, COALESCE(SUM(expected_return_fee), 0) AS expected_return_fee, COALESCE(SUM(actual_return_fee), 0) AS actual_return_fee, COALESCE(SUM(return_difference), 0) AS return_difference, COALESCE(SUM(expected_customer_refund), 0) AS expected_customer_refund, COALESCE(SUM(actual_customer_refund), 0) AS actual_customer_refund, COALESCE(SUM(customer_refund_difference), 0) AS customer_refund_difference')->first();
+            ->selectRaw('COUNT(*) AS item_count, COALESCE(SUM(expected_order_amount), 0) AS expected_order_amount, COALESCE(SUM(actual_order_amount), 0) AS actual_order_amount, COALESCE(SUM(order_amount_difference), 0) AS order_amount_difference, COALESCE(SUM(expected_collection), 0) AS expected_collection, COALESCE(SUM(actual_collection), 0) AS actual_collection, COALESCE(SUM(collection_difference), 0) AS collection_difference, COALESCE(SUM(expected_shipping_cost), 0) AS expected_shipping_cost, COALESCE(SUM(actual_shipping_cost), 0) AS actual_shipping_cost, COALESCE(SUM(shipping_difference), 0) AS shipping_difference, COALESCE(SUM(expected_return_fee), 0) AS expected_return_fee, COALESCE(SUM(actual_return_fee), 0) AS actual_return_fee, COALESCE(SUM(return_difference), 0) AS return_difference, COALESCE(SUM(expected_customer_refund), 0) AS expected_customer_refund, COALESCE(SUM(requested_customer_refund), 0) AS requested_customer_refund, COALESCE(SUM(confirmed_customer_refund), 0) AS confirmed_customer_refund, COALESCE(SUM(actual_customer_refund), 0) AS actual_customer_refund, COALESCE(SUM(customer_refund_difference), 0) AS customer_refund_difference, COALESCE(SUM(refund_reconciliation_difference), 0) AS refund_reconciliation_difference')->first();
 
         return $this->reportPayload($settlementTotals, $itemTotals, $filters);
     }
@@ -282,7 +292,15 @@ return $config;
     private function reportPayload(object $settlements, object $items, array $filters): array
     {
         $differenceFields = ['order_amount' => 'order_amount_difference', 'collection' => 'collection_difference', 'shipping_cost' => 'shipping_difference', 'return_fee' => 'return_difference', 'customer_refund' => 'customer_refund_difference'];
-        $financial = fn (string $name): array => ['expected' => (int) $items->{'expected_'.$name}, 'actual' => (int) $items->{'actual_'.$name}, 'difference' => (int) $items->{$differenceFields[$name]}];
+        $financial = function (string $name) use ($items, $differenceFields): array {
+            $result = ['expected' => (int) $items->{'expected_'.$name}, 'actual' => (int) $items->{'actual_'.$name}, 'difference' => (int) $items->{$differenceFields[$name]}];
+            if ($name === 'customer_refund') {
+                $result['requested'] = (int) $items->requested_customer_refund;
+                $result['confirmed'] = (int) $items->confirmed_customer_refund;
+                $result['reconciliation_difference'] = (int) $items->refund_reconciliation_difference;
+            }
+            return $result;
+        };
 
         return [
             'filters' => $filters,

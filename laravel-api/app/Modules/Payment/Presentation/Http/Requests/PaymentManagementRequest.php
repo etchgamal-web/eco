@@ -16,6 +16,7 @@ final class PaymentManagementRequest extends FormRequest
             'customer.payments.index' => 'customer.orders.view',
             'payments.confirm' => 'payments.manage',
             'payments.refund' => 'payments.refund',
+            'operations.reconcile', 'operations.outbox.retry' => 'payments.manage',
             default => 'payments.view',
         };
 
@@ -24,6 +25,9 @@ final class PaymentManagementRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return match ($this->route()?->getName()) {
+            'operations.reconcile' => ['operation_id' => ['required', 'integer', 'min:1']],
+            default => [],
+        };
     }
 }

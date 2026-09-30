@@ -51,7 +51,7 @@ final class CreatePayment
             if ($claim->payment->order_id !== $order->id || $claim->payment->user_id !== $user->id) {
                 throw new PaymentException('Idempotency key belongs to another order.');
             }
-            if (in_array($claim->payment->status, ['pending', 'provider_created', 'confirmed', 'paid', 'refunded', 'failed'], true)) {
+            if (in_array($claim->payment->status, ['pending', 'provider_created', 'confirmed', 'paid', 'partially_refunded', 'refunded', 'failed'], true)) {
                 return $claim->payment;
             }
             if (! in_array($claim->payment->status, ['processing', 'initiating'], true)) {
