@@ -18,6 +18,7 @@ import { CommandPalette } from './features/search/components/CommandPalette'
 import { DashboardShell } from './features/dashboard/components/DashboardShell'
 import { DashboardContent } from './features/dashboard/components/DashboardContent'
 import { getDashboardStats } from './lib/api/dashboard'
+import { getOperationalDashboard } from './lib/api/payments'
 type SessionUser = { name?: string; email?: string; status?: string; roles?: string[]; permissions?: string[] }
 
 function PageLoading() {
@@ -45,6 +46,7 @@ function App() {
   const { localeSettings, theme, setLocale, toggleTheme } = useDashboardPreferences()
   const queryClient = useQueryClient()
   const dashboardQuery = useQuery({ queryKey: ['dashboard', 'stats', currentUser?.email ?? 'anonymous'], queryFn: getDashboardStats, enabled: authenticated && currentUser !== null })
+  const operationsQuery = useQuery({ queryKey: ['dashboard', 'operations', currentUser?.email ?? 'anonymous'], queryFn: getOperationalDashboard, enabled: authenticated && currentUser !== null, staleTime: 30_000 })
   const visibleNavItems = useMemo(() => { if (!authenticated || !currentUser) return navItems; const roles = currentUser.roles ?? []; const permissions = new Set(currentUser.permissions ?? []); if (roles.some((role) => ['owner', 'admin'].includes(role))) return navItems; return navItems.filter((item) => !item.permission || permissions.has(item.permission)) }, [authenticated, currentUser])
 
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), toast.duration ?? (toast.type === 'error' ? 8000 : 4000)); return () => window.clearTimeout(timer) }, [toast])
@@ -83,7 +85,7 @@ function App() {
   return <DashboardShell navItems={visibleNavItems} activeNav={activeNav} currentUser={currentUser} orders={rows} localeSettings={localeSettings} theme={theme} search={search} mobileNav={mobileNav} sidebarPinned={sidebarPinned} notificationsOpen={notificationsOpen} profileMenuOpen={profileMenuOpen}
     onNavigate={navigate} onMobileNavChange={setMobileNav} onSidebarPinnedChange={(next) => { setSidebarPinned(next); window.localStorage.setItem('souqi-sidebar-pinned', String(next)) }} onToast={(message, type) => setToast({ type: type ?? 'info', message })} onLocaleChange={setLocale} onToggleTheme={toggleTheme} onSearchChange={setSearch} onCommandOpen={() => setCommandOpen(true)} onNotificationsChange={setNotificationsOpen} onProfileMenuChange={setProfileMenuOpen} onLogout={() => void handleLogout()}><Suspense fallback={<PageLoading />}><DashboardContent
       activeNav={activeNav} pathname={location.pathname} currentUser={currentUser} onToast={(message, type) => setToast({ type: type ?? 'success', message })} onUserUpdated={setCurrentUser}
-      navigate={navigate} apiLoading={apiLoading || dashboardQuery.isLoading} todayLabel={todayLabel} dashboardStats={dashboardQuery.data ? { totalSales: dashboardQuery.data.sales.total, newOrders: dashboardQuery.data.orders.new, averageOrder: dashboardQuery.data.average_order } : dashboardStats} currency={localeSettings.currency} socialStats={dashboardQuery.data?.social ?? socialStats}
+      navigate={navigate} apiLoading={apiLoading || dashboardQuery.isLoading} todayLabel={todayLabel} dashboardStats={dashboardQuery.data ? { totalSales: dashboardQuery.data.sales.total, newOrders: dashboardQuery.data.orders.new, averageOrder: dashboardQuery.data.average_order } : dashboardStats} currency={localeSettings.currency} socialStats={dashboardQuery.data?.social ?? socialStats} operationalDashboard={operationsQuery.data}
       rows={rows} ordersTotal={ordersTotal} filteredOrders={filteredOrders} statusFilter={statusFilter} setStatusFilter={setStatusFilter} paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter}
       dateFilter={dateFilter} setDateFilter={setDateFilter} setSearch={setSearch} statusOptions={statusOptions} updateStatus={updateStatus}
       exportOrders={exportOrders} openOrderDrawer={openOrderDrawer} printDashboardOrder={printDashboardOrder} canEditOrders={canEditOrders} canAdvanceOrder={canAdvanceOrder}
