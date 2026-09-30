@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Order\Infrastructure\Models\OrderReturn;
 use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
@@ -99,6 +100,24 @@ final class PaymentApiTest extends TestCase
         $this->assertSame('refunded', $second->status);
         $this->expectException(\App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException::class);
         app(RefundPayment::class)->execute((int) $payment->id, 1);
+    }
+
+    public function test_returns_with_the_same_amount_on_one_payment_get_distinct_refund_operations(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 1000);
+        $payment = Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'same-amount-payment', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'paid', 'idempotency_key' => 'same-amount-payment']);
+        $firstReturn = OrderReturn::query()->create(['order_id' => $order->id, 'payment_id' => $payment->id, 'user_id' => $customer->id, 'status' => 'inspected_accepted', 'reason' => 'first', 'refund_amount' => 200]);
+        $secondReturn = OrderReturn::query()->create(['order_id' => $order->id, 'payment_id' => $payment->id, 'user_id' => $customer->id, 'status' => 'inspected_accepted', 'reason' => 'second', 'refund_amount' => 200]);
+
+        app(RefundPayment::class)->execute((int) $payment->id, 200, (int) $firstReturn->id);
+        app(RefundPayment::class)->execute((int) $payment->id, 200, (int) $secondReturn->id);
+
+        $this->assertDatabaseCount('payment_operations', 2);
+        $this->assertDatabaseHas('payment_operations', ['payment_id' => $payment->id, 'return_id' => $firstReturn->id, 'confirmed_amount' => 200]);
+        $this->assertDatabaseHas('payment_operations', ['payment_id' => $payment->id, 'return_id' => $secondReturn->id, 'confirmed_amount' => 200]);
+        $this->assertSame(2, PaymentOperation::query()->where('payment_id', $payment->id)->where('operation', 'refund')->where('status', 'confirmed')->count());
     }
 
     public function test_owner_can_view_operational_dashboard_and_retry_failed_outbox(): void

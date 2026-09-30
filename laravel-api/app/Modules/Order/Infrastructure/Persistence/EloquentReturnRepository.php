@@ -153,7 +153,7 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
         return $return;
     }
 
-    public function completeRefundForPayment(int $paymentId, int $confirmedAmount): void
+    public function completeRefundForPayment(int $paymentId, int $confirmedAmount, ?int $returnId = null): void
     {
         if ($confirmedAmount <= 0) return;
 
@@ -163,6 +163,7 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
         if ($completedAmount + $confirmedAmount > (int) $payment->amount) return;
 
         $return = OrderReturn::query()
+            ->when($returnId !== null, fn ($query) => $query->whereKey($returnId))
             ->where('payment_id', $paymentId)
             ->where('status', 'inspected_accepted')
             ->whereNotNull('refund_requested_at')

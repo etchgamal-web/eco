@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PaymentOperation extends Model
 {
     protected $fillable = [
-        'payment_id', 'operation', 'status', 'idempotency_key', 'provider_reference',
+        'payment_id', 'return_id', 'operation', 'status', 'idempotency_key', 'provider_reference',
         'attempt_count', 'request_payload', 'response_payload', 'last_error', 'next_retry_at', 'last_reconciliation_at', 'next_reconciliation_at', 'lease_token', 'lease_expires_at', 'requested_amount', 'confirmed_amount',
     ];
 
@@ -20,5 +20,10 @@ class PaymentOperation extends Model
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);
+    }
+
+    public function orderReturn(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Order\Infrastructure\Models\OrderReturn::class, 'return_id');
     }
 }

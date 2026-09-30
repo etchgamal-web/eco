@@ -28,14 +28,14 @@ final class RefundPayment
         private readonly AuditLogRepositoryInterface $audit,
     ) {}
 
-    public function execute(int $paymentId, ?int $requestedAmount = null): object
+    public function execute(int $paymentId, ?int $requestedAmount = null, ?int $returnId = null): object
     {
         $payment = $this->payments->find($paymentId);
         if (! in_array($payment->status, ['paid', 'confirmed', 'partially_refunded'], true)) {
             throw InvalidPaymentTransitionException::from($payment->status, 'refunded');
         }
         $refundAmount = $requestedAmount ?? (int) $payment->amount;
-        $operationKey = 'refund:'.$payment->id.':'.$refundAmount.':'.($payment->provider_reference ?: $payment->idempotency_key);
+        $operationKey = 'refund:'.$payment->id.':'.($returnId ?? 'payment').':'.$refundAmount.':'.($payment->provider_reference ?: $payment->idempotency_key);
         $previous = $this->operations->successfulResponse((int) $payment->id, 'refund', $operationKey);
         if ($previous !== null) {
             return $this->transactions->run(function () use ($paymentId, $payment, $previous, $refundAmount): object {
@@ -59,7 +59,7 @@ final class RefundPayment
         if ($refundAmount <= 0 || $refundAmount > $remainingAmount) {
             throw new PaymentFailedException('Refund amount exceeds the remaining refundable payment amount.');
         }
-        $this->operations->start((int) $payment->id, 'refund', $operationKey, $refundAmount);
+        $this->operations->start((int) $payment->id, 'refund', $operationKey, $refundAmount, $returnId);
         $leaseToken = (string) Str::uuid();
         if (! $this->operations->acquireLease((int) $payment->id, 'refund', $leaseToken, 300, $operationKey)) {
             throw new PaymentFailedException('Refund operation is already in progress.');
@@ -77,7 +77,7 @@ final class RefundPayment
             }
             $result['confirmed_amount'] = $confirmedAmount;
             $this->operations->complete((int) $payment->id, 'refund', 'confirmed', $payment->provider_reference, $result, $leaseToken, $confirmedAmount);
-            $this->outbox->add(new OutboxMessage('payment.refund.completed', 'payment', (int) $payment->id, ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference, 'confirmed_amount' => $confirmedAmount], deduplicationKey: 'payment:'.$operationKey));
+            $this->outbox->add(new OutboxMessage('payment.refund.completed', 'payment', (int) $payment->id, ['payment_id' => $payment->id, 'return_id' => $returnId, 'provider_reference' => $payment->provider_reference, 'confirmed_amount' => $confirmedAmount], deduplicationKey: 'payment:'.$operationKey));
         } catch (\Throwable $exception) {
             if ($exception instanceof PaymentFailedException) {
                 $this->operations->fail((int) $payment->id, 'refund', $exception->getMessage(), false, $leaseToken);

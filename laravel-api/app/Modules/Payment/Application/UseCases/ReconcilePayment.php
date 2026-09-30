@@ -34,13 +34,15 @@ final class ReconcilePayment
             if (! in_array($payment->status, ['processing', 'provider_created'], true)) return $payment;
         }
 
+        $returnId = $operationId === null ? null : $this->operations->returnId((int) $payment->id, $operationId);
+
         $leaseToken = (string) Str::uuid();
-        if (! $this->operations->acquireLease((int) $payment->id, $operation, $leaseToken, 300, null, $operationId !== null)) {
+        if (! $this->operations->acquireLease((int) $payment->id, $operation, $leaseToken, 300, null, $operationId !== null, $operationId)) {
             throw new PaymentException('Payment reconciliation is already in progress or blocked by an unresolved ambiguous operation.');
         }
 
         try {
-            if ($operation === 'refund') return $this->reconcileRefund($payment, $leaseToken);
+            if ($operation === 'refund') return $this->reconcileRefund($payment, $leaseToken, $operationId, $returnId);
 
             $result = $this->gateway->reconcilePayment($payment);
             $status = (string) ($result['status'] ?? 'processing');
@@ -80,7 +82,7 @@ final class ReconcilePayment
         }
     }
 
-    private function reconcileRefund(object $payment, string $leaseToken): object
+    private function reconcileRefund(object $payment, string $leaseToken, ?int $operationId, ?int $returnId): object
     {
         $result = $this->gateway->reconcileRefund($payment);
         $status = (string) ($result['status'] ?? 'ambiguous');
@@ -94,17 +96,17 @@ final class ReconcilePayment
             return $payment;
         }
 
-        $confirmedAmount = (int) ($result['confirmed_amount'] ?? $result['refunded_amount'] ?? $this->operations->requestedAmount((int) $payment->id, 'refund') ?? 0);
+        $confirmedAmount = (int) ($result['confirmed_amount'] ?? $result['refunded_amount'] ?? $this->operations->requestedAmount((int) $payment->id, 'refund', $operationId) ?? 0);
         if ($confirmedAmount <= 0) throw new PaymentException('Refund reconciliation did not confirm an amount.');
 
-        return $this->transactions->run(function () use ($payment, $result, $leaseToken, $confirmedAmount): object {
+        return $this->transactions->run(function () use ($payment, $result, $leaseToken, $confirmedAmount, $returnId): object {
             $locked = $this->payments->findForUpdate((int) $payment->id);
             $refundedTotal = $this->operations->refundedAmount((int) $payment->id) + $confirmedAmount;
             $nextStatus = $refundedTotal >= (int) $locked->amount ? 'refunded' : 'partially_refunded';
             $refunded = $this->payments->updateStatus($locked, $nextStatus, ['metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? []))]);
             $this->operations->complete((int) $refunded->id, 'refund', 'confirmed', $result['provider_reference'] ?? $refunded->provider_reference, $result, $leaseToken, $confirmedAmount);
             if ($nextStatus === 'refunded' && $refunded->order->status === 'delivered') $this->orders->markRefunded((int) $refunded->order_id);
-            $this->returns->completeRefundForPayment((int) $refunded->id, $confirmedAmount);
+            $this->returns->completeRefundForPayment((int) $refunded->id, $confirmedAmount, $returnId);
             return $refunded;
         });
     }

@@ -51,7 +51,7 @@ final class ReturnOutboxHandler implements OutboxEventHandlerInterface
         $payment = $return->payment ?: $return->order->payments->whereIn('status', ['paid', 'confirmed', 'partially_refunded', 'refunded'])->sortByDesc('id')->first();
         if ($payment === null) throw new \RuntimeException('No refundable payment found for accepted return.');
         $this->transactions->run(fn (): object => $this->returns->markRefundRequested($returnId));
-        $this->refunds->execute((int) $payment->id, (int) $return->refund_amount);
+        $this->refunds->execute((int) $payment->id, (int) $return->refund_amount, (int) $return->id);
 
         $payment = $payment->fresh();
         $actualRefund = (int) data_get($payment->metadata, 'refund_confirmed_amount', $return->refund_amount);

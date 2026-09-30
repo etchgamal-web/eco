@@ -30,5 +30,5 @@ interface ReturnRepositoryInterface
 
     public function markWorkflowFailed(int $returnId, string $error): object;
 
-    public function completeRefundForPayment(int $paymentId, int $actualRefund): void;
+    public function completeRefundForPayment(int $paymentId, int $actualRefund, ?int $returnId = null): void;
 }

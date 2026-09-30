@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class EloquentPaymentOperationRepository implements PaymentOperationRepositoryInterface
 {
-    public function start(int $paymentId, string $operation, string $idempotencyKey, ?int $requestedAmount = null): void
+    public function start(int $paymentId, string $operation, string $idempotencyKey, ?int $requestedAmount = null, ?int $returnId = null): void
     {
-        $record = PaymentOperation::query()->firstOrNew(['payment_id' => $paymentId, 'operation' => $operation, 'idempotency_key' => $idempotencyKey]);
+        $record = PaymentOperation::query()->firstOrNew(['payment_id' => $paymentId, 'operation' => $operation, 'idempotency_key' => $idempotencyKey], ['return_id' => $returnId]);
         if ($record->exists && in_array($record->status, ['provider_created', 'confirmed', 'failed', 'ambiguous'], true)) return;
         $record->status = 'processing';
         $record->attempt_count = ((int) $record->attempt_count) + 1;
@@ -19,10 +19,10 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         $record->save();
     }
 
-    public function acquireLease(int $paymentId, string $operation, string $token, int $seconds = 300, ?string $idempotencyKey = null, bool $allowAmbiguous = false): bool
+    public function acquireLease(int $paymentId, string $operation, string $token, int $seconds = 300, ?string $idempotencyKey = null, bool $allowAmbiguous = false, ?int $operationId = null): bool
     {
         $now = now();
-        return PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->when($idempotencyKey !== null, fn ($query) => $query->where('idempotency_key', $idempotencyKey))->when(! $allowAmbiguous, fn ($query) => $query->where('status', '!=', 'ambiguous'))
+        return PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->when($operationId !== null, fn ($query) => $query->whereKey($operationId))->when($idempotencyKey !== null, fn ($query) => $query->where('idempotency_key', $idempotencyKey))->when(! $allowAmbiguous, fn ($query) => $query->where('status', '!=', 'ambiguous'))
             ->where(function (Builder $query) use ($token, $now): void {
                 $query->whereNull('lease_token')->orWhere('lease_expires_at', '<=', $now)->orWhere('lease_token', $token);
             })->update(['lease_token' => $token, 'lease_expires_at' => $now->addSeconds($seconds)]) === 1;
@@ -55,10 +55,16 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         return PaymentOperation::query()->whereKey($operationId)->where('payment_id', $paymentId)->where('status', 'ambiguous')->value('operation');
     }
 
-    public function requestedAmount(int $paymentId, string $operation): ?int
+    public function requestedAmount(int $paymentId, string $operation, ?int $operationId = null): ?int
     {
-        $amount = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->value('requested_amount');
+        $amount = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->when($operationId !== null, fn ($query) => $query->whereKey($operationId))->value('requested_amount');
         return $amount === null ? null : (int) $amount;
+    }
+
+    public function returnId(int $paymentId, int $operationId): ?int
+    {
+        $returnId = PaymentOperation::query()->whereKey($operationId)->where('payment_id', $paymentId)->value('return_id');
+        return $returnId === null ? null : (int) $returnId;
     }
 
     public function refundedAmount(int $paymentId): int
