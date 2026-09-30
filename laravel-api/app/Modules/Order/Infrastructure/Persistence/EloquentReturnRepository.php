@@ -43,7 +43,8 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
             if ($items === []) {
                 throw ReturnException::invalidItems();
             }
-            $return = OrderReturn::query()->create(['order_id' => $orderId, 'user_id' => $userId, 'status' => 'pending', 'reason' => $data['reason'], 'notes' => $data['notes'] ?? null, 'refund_amount' => $refund]);
+            $payment = $order->payments()->whereIn('status', ['paid', 'confirmed'])->latest('id')->first();
+            $return = OrderReturn::query()->create(['order_id' => $orderId, 'payment_id' => $payment?->id, 'user_id' => $userId, 'status' => 'pending', 'reason' => $data['reason'], 'notes' => $data['notes'] ?? null, 'refund_amount' => $refund]);
             $return->items()->createMany($items);
 
             return $return->load('items');
@@ -88,21 +89,33 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
 
     public function findForWorkflow(int $returnId): object
     {
-        return OrderReturn::query()->with(['items.orderItem', 'order.payments'])->lockForUpdate()->findOrFail($returnId);
+        return OrderReturn::query()->with(['items.orderItem', 'order.payments', 'payment'])->lockForUpdate()->findOrFail($returnId);
     }
 
-    public function markRestocked(int $returnId, int $actualRefund): object
+    public function markRestocked(int $returnId): object
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
-        if ($return->restocked_at === null) $return->update(['restocked_at' => now(), 'actual_customer_refund' => $actualRefund]);
+        if ($return->restocked_at === null) $return->update(['restocked_at' => now()]);
         return $return->fresh(['items.orderItem', 'order.payments']);
     }
 
-    public function markCompleted(int $returnId): object
+    public function markRefundRequested(int $returnId): object
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
-        if ($return->status !== 'completed') $return->update(['status' => 'completed', 'completed_at' => now()]);
+        if ($return->refund_requested_at === null) $return->update(['refund_requested_at' => now()]);
+        return $return->fresh(['items.orderItem', 'order.payments', 'payment']);
+    }
+
+    public function markCompleted(int $returnId, int $actualRefund): object
+    {
+        $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
+        if ($return->status !== 'completed') $return->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund]);
         return $return;
+    }
+
+    public function completeRefundForPayment(int $paymentId, int $actualRefund): void
+    {
+        OrderReturn::query()->where('payment_id', $paymentId)->whereIn('status', ['inspected_accepted', 'received'])->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund]);
     }
 
     public function receive(int $returnId): object

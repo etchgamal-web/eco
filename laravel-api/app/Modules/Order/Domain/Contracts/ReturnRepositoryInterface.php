@@ -20,7 +20,11 @@ interface ReturnRepositoryInterface
 
     public function findForWorkflow(int $returnId): object;
 
-    public function markRestocked(int $returnId, int $actualRefund): object;
+    public function markRestocked(int $returnId): object;
 
-    public function markCompleted(int $returnId): object;
+    public function markRefundRequested(int $returnId): object;
+
+    public function markCompleted(int $returnId, int $actualRefund): object;
+
+    public function completeRefundForPayment(int $paymentId, int $actualRefund): void;
 }

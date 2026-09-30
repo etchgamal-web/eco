@@ -3,6 +3,7 @@
 namespace App\Modules\Payment\Application\UseCases;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
+use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
@@ -17,6 +18,7 @@ final class ReconcilePayment
         private readonly PaymentGatewayInterface $gateway,
         private readonly PaymentOperationRepositoryInterface $operations,
         private readonly OrderRepositoryInterface $orders,
+        private readonly ReturnRepositoryInterface $returns,
         private readonly TransactionManagerInterface $transactions,
     ) {}
 
@@ -94,6 +96,7 @@ final class ReconcilePayment
             $refunded = $this->payments->updateStatus($locked, 'refunded', ['metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? []))]);
             $this->operations->complete((int) $refunded->id, 'refund', 'confirmed', $result['provider_reference'] ?? $refunded->provider_reference, $result, $leaseToken);
             if ($refunded->order->status === 'delivered') $this->orders->markRefunded((int) $refunded->order_id);
+            $this->returns->completeRefundForPayment((int) $refunded->id, (int) $refunded->amount);
             return $refunded;
         });
     }

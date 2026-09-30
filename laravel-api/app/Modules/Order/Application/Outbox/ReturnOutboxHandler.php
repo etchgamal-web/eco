@@ -42,16 +42,19 @@ final class ReturnOutboxHandler implements OutboxEventHandlerInterface
                     $variantId = $item->variant_id ?? $item->orderItem?->variant_id;
                     $this->inventory->adjust(new StockAdjustmentData((int) $item->product_id, $variantId !== null ? (int) $variantId : null, (int) $item->quantity, 'return_restock', 'Return #'.$return->id.' inspection accepted'), null);
                 }
-                $return = $this->returns->markRestocked($returnId, (int) $return->refund_amount);
+                $return = $this->returns->markRestocked($returnId);
             }
             return $return;
         });
 
-        $payment = $return->order->payments->whereIn('status', ['paid', 'confirmed', 'refunded'])->sortByDesc('id')->first();
+        $payment = $return->payment ?: $return->order->payments->whereIn('status', ['paid', 'confirmed', 'refunded'])->sortByDesc('id')->first();
         if ($payment === null) throw new \RuntimeException('No refundable payment found for accepted return.');
-        if ($payment->status !== 'refunded') $this->refunds->execute((int) $payment->id);
+        $this->transactions->run(fn (): object => $this->returns->markRefundRequested($returnId));
+        if ($payment->status !== 'refunded') {
+            $this->refunds->execute((int) $payment->id);
+        }
 
-        $this->transactions->run(fn (): object => $this->returns->markCompleted($returnId));
+        $this->transactions->run(fn (): object => $this->returns->markCompleted($returnId, (int) $return->refund_amount));
         $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
     }
 

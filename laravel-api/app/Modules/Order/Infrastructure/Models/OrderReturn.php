@@ -3,6 +3,7 @@
 namespace App\Modules\Order\Infrastructure\Models;
 
 use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ class OrderReturn extends Model
 {
     protected $table = 'order_returns';
 
-    protected $fillable = ['order_id', 'shipment_id', 'user_id', 'status', 'reason', 'notes', 'refund_amount', 'actual_customer_refund', 'return_shipping_fee', 'rejection_reason', 'received_at', 'inspected_at', 'inspection_notes', 'restocked_at', 'refund_requested_at', 'completed_at'];
+    protected $fillable = ['order_id', 'payment_id', 'shipment_id', 'user_id', 'status', 'reason', 'notes', 'refund_amount', 'actual_customer_refund', 'return_shipping_fee', 'rejection_reason', 'received_at', 'inspected_at', 'inspection_notes', 'restocked_at', 'refund_requested_at', 'completed_at'];
 
     protected function casts(): array
     {
@@ -27,6 +28,11 @@ class OrderReturn extends Model
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class, 'shipment_id');
+    }
+
+    public function payment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class, 'payment_id');
     }
 
     public function user(): BelongsTo
