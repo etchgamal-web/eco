@@ -65,7 +65,11 @@ final class RefundPayment
             $this->operations->complete((int) $payment->id, 'refund', 'confirmed', $payment->provider_reference, $result);
             $this->outbox->add(new OutboxMessage('payment.refund.completed', 'payment', (int) $payment->id, ['payment_id' => $payment->id, 'provider_reference' => $payment->provider_reference], deduplicationKey: 'payment:refund:'.$payment->id));
         } catch (\Throwable $exception) {
-            $this->operations->fail((int) $payment->id, 'refund', $exception->getMessage(), ! ($exception instanceof PaymentFailedException));
+            if ($exception instanceof PaymentFailedException) {
+                $this->operations->fail((int) $payment->id, 'refund', $exception->getMessage(), false, $leaseToken);
+            } else {
+                $this->operations->failAmbiguous((int) $payment->id, 'refund', $exception->getMessage(), $leaseToken);
+            }
             throw $exception;
         }
 

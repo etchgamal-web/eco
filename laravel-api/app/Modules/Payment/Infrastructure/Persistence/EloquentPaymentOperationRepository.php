@@ -21,7 +21,7 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
     public function acquireLease(int $paymentId, string $operation, string $token, int $seconds = 300): bool
     {
         $now = now();
-        return PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)
+        return PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->where('status', '!=', 'ambiguous')
             ->where(function (Builder $query) use ($token, $now): void {
                 $query->whereNull('lease_token')->orWhere('lease_expires_at', '<=', $now)->orWhere('lease_token', $token);
             })->update(['lease_token' => $token, 'lease_expires_at' => $now->addSeconds($seconds)]) === 1;
