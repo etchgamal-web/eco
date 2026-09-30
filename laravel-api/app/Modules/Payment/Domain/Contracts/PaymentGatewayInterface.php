@@ -12,7 +12,7 @@ interface PaymentGatewayInterface
 
     public function reconcilePayment(object $payment): array;
 
-    public function reconcileRefund(object $payment): array;
+    public function reconcileRefund(object $payment, object $operation): array;
 
     public function refundPayment(object $payment): array;
 }

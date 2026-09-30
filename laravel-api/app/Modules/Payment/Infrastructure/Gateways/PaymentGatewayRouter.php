@@ -47,9 +47,9 @@ final class PaymentGatewayRouter implements PaymentGatewayInterface
         return $this->call((string) $payment->method, fn () => $this->gatewayFor((string) $payment->method)->refundPayment($payment));
     }
 
-    public function reconcileRefund(object $payment): array
+    public function reconcileRefund(object $payment, object $operation): array
     {
-        return $this->call((string) $payment->method, fn () => $this->gatewayFor((string) $payment->method)->reconcileRefund($payment));
+        return $this->call((string) $payment->method, fn () => $this->gatewayFor((string) $payment->method)->reconcileRefund($payment, $operation));
     }
 
     private function call(string $method, callable $operation): array

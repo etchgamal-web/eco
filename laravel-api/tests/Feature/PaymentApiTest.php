@@ -120,6 +120,26 @@ final class PaymentApiTest extends TestCase
         $this->assertSame(2, PaymentOperation::query()->where('payment_id', $payment->id)->where('operation', 'refund')->where('status', 'confirmed')->count());
     }
 
+    public function test_ambiguous_same_amount_refunds_reconcile_their_own_returns(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 1000);
+        $payment = Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'ambiguous-same-amount-payment', 'amount' => 1000, 'currency' => 'EGP', 'status' => 'paid', 'idempotency_key' => 'ambiguous-same-amount-payment']);
+        $firstReturn = OrderReturn::query()->create(['order_id' => $order->id, 'payment_id' => $payment->id, 'user_id' => $customer->id, 'status' => 'inspected_accepted', 'reason' => 'first ambiguous', 'refund_amount' => 200, 'refund_requested_at' => now()]);
+        $secondReturn = OrderReturn::query()->create(['order_id' => $order->id, 'payment_id' => $payment->id, 'user_id' => $customer->id, 'status' => 'inspected_accepted', 'reason' => 'second ambiguous', 'refund_amount' => 200, 'refund_requested_at' => now()]);
+        $firstOperation = PaymentOperation::query()->create(['payment_id' => $payment->id, 'return_id' => $firstReturn->id, 'operation' => 'refund', 'status' => 'ambiguous', 'idempotency_key' => 'ambiguous-refund-first', 'requested_amount' => 200, 'attempt_count' => 1]);
+        $secondOperation = PaymentOperation::query()->create(['payment_id' => $payment->id, 'return_id' => $secondReturn->id, 'operation' => 'refund', 'status' => 'ambiguous', 'idempotency_key' => 'ambiguous-refund-second', 'requested_amount' => 200, 'attempt_count' => 1]);
+
+        app(ReconcilePayment::class)->execute((int) $payment->id, (int) $firstOperation->id);
+        app(ReconcilePayment::class)->execute((int) $payment->id, (int) $secondOperation->id);
+
+        $this->assertDatabaseHas('order_returns', ['id' => $firstReturn->id, 'status' => 'completed', 'actual_customer_refund' => 200]);
+        $this->assertDatabaseHas('order_returns', ['id' => $secondReturn->id, 'status' => 'completed', 'actual_customer_refund' => 200]);
+        $this->assertDatabaseHas('payment_operations', ['id' => $firstOperation->id, 'status' => 'confirmed', 'return_id' => $firstReturn->id]);
+        $this->assertDatabaseHas('payment_operations', ['id' => $secondOperation->id, 'status' => 'confirmed', 'return_id' => $secondReturn->id]);
+    }
+
     public function test_owner_can_view_operational_dashboard_and_retry_failed_outbox(): void
     {
         $this->seed(RbacSeeder::class);

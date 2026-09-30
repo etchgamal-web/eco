@@ -115,14 +115,15 @@ final class KashierGateway implements PaymentGatewayInterface
         return ['status' => 'refunded', 'metadata' => ['provider' => 'kashier', 'refund_response' => $response]];
     }
 
-    public function reconcileRefund(object $payment): array
+    public function reconcileRefund(object $payment, object $operation): array
     {
         $endpoint = $this->settings->value('kashier', 'refund_status_url', config('services.kashier.refund_status_url'));
         if (! is_string($endpoint) || trim($endpoint) === '') return ['status' => 'ambiguous', 'provider_reference' => $payment->provider_reference, 'metadata' => ['provider' => 'kashier', 'reason' => 'provider_refund_status_endpoint_not_configured']];
-        $reference = (string) ($payment->provider_reference ?: data_get($payment->metadata, 'kashier_order_id', ''));
-        $response = $this->fepClient((string) $this->settings->value('kashier', 'secret_key', config('services.kashier.secret_key')))->get(str_replace('{reference}', rawurlencode($reference), $endpoint))->throw()->json();
+        $reference = (string) ($operation->provider_reference ?: ($payment->provider_reference ?: data_get($payment->metadata, 'kashier_order_id', '')));
+        $path = str_replace(['{reference}', '{operation_id}', '{return_id}'], [rawurlencode($reference), (string) $operation->id, (string) ($operation->return_id ?? '')], $endpoint);
+        $response = $this->fepClient((string) $this->settings->value('kashier', 'secret_key', config('services.kashier.secret_key')))->get($path, ['refund_operation_id' => $operation->id, 'return_id' => $operation->return_id, 'requested_amount' => $operation->requested_amount])->throw()->json();
         $status = strtoupper((string) ($response['status'] ?? data_get($response, 'response.status', data_get($response, 'refund.status', ''))));
-        return ['status' => in_array($status, ['REFUNDED', 'SUCCESS', 'SUCCEEDED', 'CONFIRMED'], true) ? 'refunded' : (in_array($status, ['FAILED', 'REJECTED', 'DECLINED'], true) ? 'failed' : 'ambiguous'), 'provider_reference' => $reference, 'metadata' => ['provider' => 'kashier', 'refund_reconciliation' => $response]];
+        return ['status' => in_array($status, ['REFUNDED', 'SUCCESS', 'SUCCEEDED', 'CONFIRMED'], true) ? 'refunded' : (in_array($status, ['FAILED', 'REJECTED', 'DECLINED'], true) ? 'failed' : 'ambiguous'), 'provider_reference' => $reference, 'confirmed_amount' => (int) ($response['confirmed_amount'] ?? data_get($response, 'refund.confirmed_amount', $response['refunded_amount'] ?? $operation->requested_amount)), 'metadata' => ['provider' => 'kashier', 'refund_operation_id' => $operation->id, 'return_id' => $operation->return_id, 'refund_reconciliation' => $response]];
     }
 
     private function apiClient(string $secretKey, string $paymentApiKey): PendingRequest

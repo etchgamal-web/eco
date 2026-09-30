@@ -26,6 +26,7 @@ final class ReconcilePayment
     {
         $payment = $this->payments->find($paymentId);
         $operation = $operationId === null ? null : $this->operations->ambiguousOperation((int) $payment->id, $operationId);
+        $operationRecord = $operationId === null ? null : $this->operations->operation((int) $payment->id, $operationId);
         if ($operationId !== null && $operation === null) {
             throw new PaymentException('The requested reconciliation operation is not an unresolved operation for this payment.');
         }
@@ -42,7 +43,7 @@ final class ReconcilePayment
         }
 
         try {
-            if ($operation === 'refund') return $this->reconcileRefund($payment, $leaseToken, $operationId, $returnId);
+            if ($operation === 'refund') return $this->reconcileRefund($payment, $leaseToken, $operationId, $returnId, $operationRecord);
 
             $result = $this->gateway->reconcilePayment($payment);
             $status = (string) ($result['status'] ?? 'processing');
@@ -82,9 +83,10 @@ final class ReconcilePayment
         }
     }
 
-    private function reconcileRefund(object $payment, string $leaseToken, ?int $operationId, ?int $returnId): object
+    private function reconcileRefund(object $payment, string $leaseToken, ?int $operationId, ?int $returnId, ?object $operation): object
     {
-        $result = $this->gateway->reconcileRefund($payment);
+        if ($operation === null) throw new PaymentException('Refund reconciliation requires a specific payment operation.');
+        $result = $this->gateway->reconcileRefund($payment, $operation);
         $status = (string) ($result['status'] ?? 'ambiguous');
         if ($status === 'ambiguous') {
             $this->operations->failAmbiguous((int) $payment->id, 'refund', 'Provider refund result remains unresolved.', $leaseToken);

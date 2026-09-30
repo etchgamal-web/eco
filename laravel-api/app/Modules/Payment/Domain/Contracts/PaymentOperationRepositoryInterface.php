@@ -18,6 +18,8 @@ interface PaymentOperationRepositoryInterface
 
     public function ambiguousOperation(int $paymentId, int $operationId): ?string;
 
+    public function operation(int $paymentId, int $operationId): ?object;
+
     public function requestedAmount(int $paymentId, string $operation, ?int $operationId = null): ?int;
 
     public function returnId(int $paymentId, int $operationId): ?int;

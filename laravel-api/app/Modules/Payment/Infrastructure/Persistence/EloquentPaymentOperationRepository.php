@@ -55,6 +55,11 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         return PaymentOperation::query()->whereKey($operationId)->where('payment_id', $paymentId)->where('status', 'ambiguous')->value('operation');
     }
 
+    public function operation(int $paymentId, int $operationId): ?object
+    {
+        return PaymentOperation::query()->whereKey($operationId)->where('payment_id', $paymentId)->where('status', 'ambiguous')->first();
+    }
+
     public function requestedAmount(int $paymentId, string $operation, ?int $operationId = null): ?int
     {
         $amount = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->when($operationId !== null, fn ($query) => $query->whereKey($operationId))->value('requested_amount');

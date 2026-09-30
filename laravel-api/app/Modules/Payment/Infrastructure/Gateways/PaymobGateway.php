@@ -123,14 +123,14 @@ final class PaymobGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function reconcileRefund(object $payment): array
+    public function reconcileRefund(object $payment, object $operation): array
     {
         $endpoint = $this->settings->value('paymob', 'refund_status_url', config('services.paymob.refund_status_url'));
         if (! is_string($endpoint) || trim($endpoint) === '') return ['status' => 'ambiguous', 'provider_reference' => $payment->provider_reference, 'metadata' => ['provider' => 'paymob', 'reason' => 'provider_refund_status_endpoint_not_configured']];
-        $reference = data_get($payment->metadata, 'transaction_id', $payment->provider_reference);
-        $response = $this->client((string) $this->settings->value('paymob', 'secret_key', config('services.paymob.secret_key')))->get($endpoint, ['transaction_id' => $reference])->throw()->json();
+        $reference = (string) ($operation->provider_reference ?: data_get($payment->metadata, 'transaction_id', $payment->provider_reference));
+        $response = $this->client((string) $this->settings->value('paymob', 'secret_key', config('services.paymob.secret_key')))->get($endpoint, ['transaction_id' => $reference, 'refund_operation_id' => $operation->id, 'return_id' => $operation->return_id, 'requested_amount' => $operation->requested_amount])->throw()->json();
         $status = strtolower((string) ($response['status'] ?? data_get($response, 'refund.status', '')));
-        return ['status' => in_array($status, ['refunded', 'success', 'succeeded', 'confirmed'], true) ? 'refunded' : (in_array($status, ['failed', 'rejected', 'declined'], true) ? 'failed' : 'ambiguous'), 'provider_reference' => (string) $reference, 'metadata' => ['provider' => 'paymob', 'refund_reconciliation' => $response]];
+        return ['status' => in_array($status, ['refunded', 'success', 'succeeded', 'confirmed'], true) ? 'refunded' : (in_array($status, ['failed', 'rejected', 'declined'], true) ? 'failed' : 'ambiguous'), 'provider_reference' => (string) $reference, 'confirmed_amount' => (int) ($response['confirmed_amount'] ?? $response['refunded_amount'] ?? $operation->requested_amount), 'metadata' => ['provider' => 'paymob', 'refund_operation_id' => $operation->id, 'return_id' => $operation->return_id, 'refund_reconciliation' => $response]];
     }
 
     private function client(string $secretKey): PendingRequest
