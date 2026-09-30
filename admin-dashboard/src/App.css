@@ -531,3 +531,6 @@ html[data-theme='dark'] .drawer-overlay { background: rgb(2 6 23 / 70%); } html[
 .order-meta-badge.return { background: #fff7ed; color: #c2410c; }
 
 .reject-reason { width: 100%; min-height: 96px; resize: vertical; border: 1px solid var(--line, #e2e8f0); border-radius: 10px; padding: 10px; font: inherit; font-size: 12px; }
+
+.shipment-control .status { margin-top: 4px; font-size: 9px; }
+.shipment-error { display: flex; align-items: center; gap: 4px; color: #b91c1c; font-size: 10px; line-height: 1.4; }
