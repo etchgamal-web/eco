@@ -10,6 +10,7 @@ export type ApiOrder = {
   shipping_address?: { recipient_name?: string; city?: string; address_line1?: string } | null
   payments?: Array<{ id: number; method?: string | null; amount?: number; currency?: string | null; status?: string | null }>
   shipments?: Array<{ id: number; provider_code?: string; tracking_number?: string | null; status?: string; created_at?: string | null }>
+  returns?: Array<{ id: number; status?: string; refund_amount?: number; actual_customer_refund?: number; refund_status?: string; restock_status?: string }>
 }
 export type ApiProduct = { id: number; name: string; type?: 'simple' | 'variable'; status?: string; price?: number; category?: { id?: number; name?: string } | null; brand?: { id?: number; name?: string } | null; variants?: Array<{ inventory?: { on_hand?: number; available?: number } | null }> }
 export type ApiProductPage = { data: ApiProduct[]; current_page: number; last_page: number; per_page: number; total: number }
