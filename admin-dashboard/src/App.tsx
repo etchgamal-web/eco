@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ApiError, confirmOrder, downloadOrdersCsv, getOrder, getOrderTimeline, getToken, listOrders, listSettings, logout, me, reviewOrder, updateOrderStatus } from './lib/api'
+import { ApiError, cancelOrder, confirmOrder, downloadOrdersCsv, getOrder, getOrderTimeline, getToken, listOrders, listSettings, logout, me, reviewOrder, updateOrderStatus } from './lib/api'
 import { ToastViewport } from './components/shared/DashboardWidgets'
 import type { ToastMessage } from './components/shared/DashboardWidgets'
 import { LoginScreen } from './features/auth/components/LoginScreen'
@@ -73,6 +73,17 @@ function App() {
     finally { setOrderDetailsLoading(false) }
   }
   const closeOrderDrawer = () => { setSelectedOrder(null); setSelectedOrderDetails(null); setSelectedOrderTimeline([]) }
+  const handleOrderAction = async (action: 'confirm' | 'cancel') => {
+    if (!selectedOrderDetails?.id) return
+    try {
+      const updated = action === 'confirm' ? await confirmOrder(selectedOrderDetails.id) : await cancelOrder(selectedOrderDetails.id)
+      setSelectedOrderDetails(updated)
+      setRows((current) => current.map((item) => item.apiId === updated.id ? normalizeApiOrder(updated) : item))
+      const nextTimeline = await getOrderTimeline(updated.id)
+      setSelectedOrderTimeline(Array.isArray(nextTimeline) ? nextTimeline : [])
+      setToast({ type: 'success', message: action === 'confirm' ? 'تم تأكيد الطلب' : 'تم إلغاء الطلب' })
+    } catch (error: unknown) { setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تنفيذ إجراء الطلب' }); throw error }
+  }
   const printDashboardOrder = (order: Order) => { const popup = window.open('', '_blank', 'width=760,height=800'); if (!popup) { setToast({ type: 'error', message: 'السماح بالنوافذ المنبثقة مطلوب للطباعة' }); return } const safe = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character] ?? character)); popup.document.write(`<html dir="rtl"><head><title>طلب ${safe(order.id)}</title><style>body{font-family:Arial,sans-serif;padding:36px;color:#172033}h1{font-size:24px}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{border-bottom:1px solid #ddd;padding:12px;text-align:right}small{color:#667085}</style></head><body><h1>ملخص الطلب ${safe(order.id)}</h1><small>${safe(order.date)}</small><table><tbody><tr><th>العميل</th><td>${safe(order.customer)}</td></tr><tr><th>طريقة الدفع</th><td>${safe(order.payment)}</td></tr><tr><th>الحالة</th><td>${safe(order.status)}</td></tr><tr><th>الإجمالي</th><td>${safe(order.total)}</td></tr></tbody></table></body></html>`); popup.document.close(); popup.focus(); popup.print() }
 
   if (!authenticated) return <LoginScreen onSuccess={() => setAuthenticated(true)} />
@@ -89,6 +100,6 @@ function App() {
       rows={rows} ordersTotal={ordersTotal} filteredOrders={filteredOrders} statusFilter={statusFilter} setStatusFilter={setStatusFilter} paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter}
       dateFilter={dateFilter} setDateFilter={setDateFilter} setSearch={setSearch} statusOptions={statusOptions} updateStatus={updateStatus}
       exportOrders={exportOrders} openOrderDrawer={openOrderDrawer} printDashboardOrder={printDashboardOrder} canEditOrders={canEditOrders} canAdvanceOrder={canAdvanceOrder}
-    /></Suspense>{selectedOrder && <OrderDrawer key={`${selectedOrder.id}-${selectedOrderDetails ? 'loaded' : 'loading'}`} order={selectedOrder} details={selectedOrderDetails} timeline={selectedOrderTimeline} loading={orderDetailsLoading} canCreateShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipments.create') === true} canManageShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipping.manage') === true} canManageOrders={canEditOrders} onClose={closeOrderDrawer} onToast={(message, type) => setToast({ message, type })} />}{commandOpen && <CommandPalette orders={rows} onClose={() => setCommandOpen(false)} onSelect={(path) => { setCommandOpen(false); navigate(path) }} onOrderSelect={(order) => { setCommandOpen(false); void openOrderDrawer(order) }} />}{toast && <ToastViewport toast={toast} onClose={() => setToast(null)} />}</DashboardShell>
+    /></Suspense>{selectedOrder && <OrderDrawer key={`${selectedOrder.id}-${selectedOrderDetails ? 'loaded' : 'loading'}`} order={selectedOrder} details={selectedOrderDetails} timeline={selectedOrderTimeline} loading={orderDetailsLoading} canCreateShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipments.create') === true} canManageShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipping.manage') === true} canManageOrders={canEditOrders} onOrderAction={handleOrderAction} onClose={closeOrderDrawer} onToast={(message, type) => setToast({ message, type })} />}{commandOpen && <CommandPalette orders={rows} onClose={() => setCommandOpen(false)} onSelect={(path) => { setCommandOpen(false); navigate(path) }} onOrderSelect={(order) => { setCommandOpen(false); void openOrderDrawer(order) }} />}{toast && <ToastViewport toast={toast} onClose={() => setToast(null)} />}</DashboardShell>
 }
 export default App
