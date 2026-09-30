@@ -125,8 +125,12 @@ final class PaymobGateway implements PaymentGatewayInterface
 
     public function reconcileRefund(object $payment): array
     {
-        $result = $this->reconcilePayment($payment);
-        return ['status' => $result['status'] === 'confirmed' ? 'refunded' : ($result['status'] === 'failed' ? 'failed' : 'ambiguous'), 'provider_reference' => $result['provider_reference'] ?? $payment->provider_reference, 'metadata' => ['provider' => 'paymob', 'refund_reconciliation' => $result['metadata'] ?? []]];
+        $endpoint = $this->settings->value('paymob', 'refund_status_url', config('services.paymob.refund_status_url'));
+        if (! is_string($endpoint) || trim($endpoint) === '') return ['status' => 'ambiguous', 'provider_reference' => $payment->provider_reference, 'metadata' => ['provider' => 'paymob', 'reason' => 'provider_refund_status_endpoint_not_configured']];
+        $reference = data_get($payment->metadata, 'transaction_id', $payment->provider_reference);
+        $response = $this->client((string) $this->settings->value('paymob', 'secret_key', config('services.paymob.secret_key')))->get($endpoint, ['transaction_id' => $reference])->throw()->json();
+        $status = strtolower((string) ($response['status'] ?? data_get($response, 'refund.status', '')));
+        return ['status' => in_array($status, ['refunded', 'success', 'succeeded', 'confirmed'], true) ? 'refunded' : (in_array($status, ['failed', 'rejected', 'declined'], true) ? 'failed' : 'ambiguous'), 'provider_reference' => (string) $reference, 'metadata' => ['provider' => 'paymob', 'refund_reconciliation' => $response]];
     }
 
     private function client(string $secretKey): PendingRequest
