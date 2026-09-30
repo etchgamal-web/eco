@@ -91,12 +91,15 @@ final class ReconcilePayment
             return $payment;
         }
 
-        return $this->transactions->run(function () use ($payment, $result, $leaseToken): object {
+        $confirmedAmount = (int) ($result['confirmed_amount'] ?? $result['refunded_amount'] ?? $this->operations->requestedAmount((int) $payment->id, 'refund') ?? 0);
+        if ($confirmedAmount <= 0) throw new PaymentException('Refund reconciliation did not confirm an amount.');
+
+        return $this->transactions->run(function () use ($payment, $result, $leaseToken, $confirmedAmount): object {
             $locked = $this->payments->findForUpdate((int) $payment->id);
             $refunded = $this->payments->updateStatus($locked, 'refunded', ['metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? []))]);
             $this->operations->complete((int) $refunded->id, 'refund', 'confirmed', $result['provider_reference'] ?? $refunded->provider_reference, $result, $leaseToken);
             if ($refunded->order->status === 'delivered') $this->orders->markRefunded((int) $refunded->order_id);
-            $this->returns->completeRefundForPayment((int) $refunded->id, (int) $refunded->amount);
+            $this->returns->completeRefundForPayment((int) $refunded->id, $confirmedAmount);
             return $refunded;
         });
     }

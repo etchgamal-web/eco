@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class EloquentPaymentOperationRepository implements PaymentOperationRepositoryInterface
 {
-    public function start(int $paymentId, string $operation, string $idempotencyKey): void
+    public function start(int $paymentId, string $operation, string $idempotencyKey, ?int $requestedAmount = null): void
     {
         $record = PaymentOperation::query()->firstOrNew(['payment_id' => $paymentId, 'operation' => $operation, 'idempotency_key' => $idempotencyKey]);
         if ($record->exists && in_array($record->status, ['provider_created', 'confirmed', 'failed', 'ambiguous'], true)) return;
         $record->status = 'processing';
         $record->attempt_count = ((int) $record->attempt_count) + 1;
+        if ($requestedAmount !== null) $record->requested_amount = $requestedAmount;
         $record->next_retry_at = null;
         $record->save();
     }
@@ -41,7 +42,7 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
     {
         $record = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->first();
         if (! in_array($record?->status, ['provider_created', 'confirmed'], true)) return null;
-        return array_merge((array) $record->response_payload, ['_operation_status' => $record->status]);
+        return array_merge((array) $record->response_payload, ['_operation_status' => $record->status, 'requested_amount' => $record->requested_amount, 'confirmed_amount' => $record->confirmed_amount]);
     }
 
     public function hasAttempted(int $paymentId, string $operation): bool
@@ -54,11 +55,17 @@ final class EloquentPaymentOperationRepository implements PaymentOperationReposi
         return PaymentOperation::query()->where('payment_id', $paymentId)->where('status', 'ambiguous')->latest('updated_at')->value('operation');
     }
 
-    public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null): bool
+    public function requestedAmount(int $paymentId, string $operation): ?int
+    {
+        $amount = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation)->value('requested_amount');
+        return $amount === null ? null : (int) $amount;
+    }
+
+    public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null, ?int $confirmedAmount = null): bool
     {
         $query = PaymentOperation::query()->where('payment_id', $paymentId)->where('operation', $operation);
         if ($leaseToken !== null) $query->where('lease_token', $leaseToken)->where('lease_expires_at', '>', now());
-        return $query->update(['status' => $status, 'provider_reference' => $providerReference, 'response_payload' => $response, 'last_error' => null, 'next_retry_at' => null, 'lease_token' => null, 'lease_expires_at' => null]) === 1;
+        return $query->update(['status' => $status, 'provider_reference' => $providerReference, 'response_payload' => $response, 'confirmed_amount' => $confirmedAmount, 'last_error' => null, 'next_retry_at' => null, 'lease_token' => null, 'lease_expires_at' => null]) === 1;
     }
 
     public function fail(int $paymentId, string $operation, string $error, bool $retryable = true, ?string $leaseToken = null): bool

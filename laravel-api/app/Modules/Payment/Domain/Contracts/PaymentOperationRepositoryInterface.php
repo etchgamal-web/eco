@@ -4,7 +4,7 @@ namespace App\Modules\Payment\Domain\Contracts;
 
 interface PaymentOperationRepositoryInterface
 {
-    public function start(int $paymentId, string $operation, string $idempotencyKey): void;
+    public function start(int $paymentId, string $operation, string $idempotencyKey, ?int $requestedAmount = null): void;
 
     public function acquireLease(int $paymentId, string $operation, string $token, int $seconds = 300): bool;
 
@@ -18,7 +18,9 @@ interface PaymentOperationRepositoryInterface
 
     public function ambiguousOperation(int $paymentId): ?string;
 
-    public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null): bool;
+    public function requestedAmount(int $paymentId, string $operation): ?int;
+
+    public function complete(int $paymentId, string $operation, string $status, ?string $providerReference, array $response, ?string $leaseToken = null, ?int $confirmedAmount = null): bool;
 
     public function fail(int $paymentId, string $operation, string $error, bool $retryable = true, ?string $leaseToken = null): bool;
     public function failAmbiguous(int $paymentId, string $operation, string $error, ?string $leaseToken = null): bool;
