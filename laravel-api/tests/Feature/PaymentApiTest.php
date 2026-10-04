@@ -6,11 +6,12 @@ use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReturn;
+use App\Modules\Payment\Application\UseCases\ReconcilePayment;
+use App\Modules\Payment\Application\UseCases\RefundPayment;
+use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
 use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
-use App\Modules\Payment\Application\UseCases\RefundPayment;
-use App\Modules\Payment\Application\UseCases\ReconcilePayment;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -22,7 +23,9 @@ final class PaymentApiTest extends TestCase
     public function test_admin_can_list_global_payments_with_filters_and_pagination(): void
     {
         $this->seed(RbacSeeder::class);
-        $customer = $this->userWithRole('customer'); $owner = $this->userWithRole('owner'); $order = $this->orderFor($customer, 1500);
+        $customer = $this->userWithRole('customer');
+        $owner = $this->userWithRole('owner');
+        $order = $this->orderFor($customer, 1500);
         Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'global-test', 'amount' => 1500, 'currency' => 'EGP', 'status' => 'pending', 'idempotency_key' => 'global-payment']);
 
         $this->actingAs($owner)->getJson('/api/v1/payments?status=pending&per_page=1')->assertOk()->assertJsonPath('data.0.provider_reference', 'global-test')->assertJsonPath('meta.total', 1);
@@ -108,7 +111,7 @@ final class PaymentApiTest extends TestCase
         $this->assertSame('partially_refunded', $first->status);
         $second = app(RefundPayment::class)->execute((int) $payment->id, 600);
         $this->assertSame('refunded', $second->status);
-        $this->expectException(\App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException::class);
+        $this->expectException(InvalidPaymentTransitionException::class);
         app(RefundPayment::class)->execute((int) $payment->id, 1);
     }
 

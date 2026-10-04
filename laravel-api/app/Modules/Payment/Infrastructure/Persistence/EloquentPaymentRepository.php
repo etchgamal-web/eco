@@ -70,13 +70,25 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
     public function listForAdmin(array $filters): array
     {
         $query = Payment::query()->with(['order:id,order_number', 'user:id,name,email'])->latest();
-        if (! empty($filters['status'])) $query->where('status', $filters['status']);
-        if (! empty($filters['method'])) $query->where('method', $filters['method']);
-        if (! empty($filters['provider'])) $query->where('provider_reference', 'like', '%'.$filters['provider'].'%');
-        if (! empty($filters['from'])) $query->whereDate('created_at', '>=', $filters['from']);
-        if (! empty($filters['to'])) $query->whereDate('created_at', '<=', $filters['to']);
-        $page = max(1, (int) ($filters['page'] ?? 1)); $perPage = min(100, max(1, (int) ($filters['per_page'] ?? 25)));
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        if (! empty($filters['method'])) {
+            $query->where('method', $filters['method']);
+        }
+        if (! empty($filters['provider'])) {
+            $query->where('provider_reference', 'like', '%'.$filters['provider'].'%');
+        }
+        if (! empty($filters['from'])) {
+            $query->whereDate('created_at', '>=', $filters['from']);
+        }
+        if (! empty($filters['to'])) {
+            $query->whereDate('created_at', '<=', $filters['to']);
+        }
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $perPage = min(100, max(1, (int) ($filters['per_page'] ?? 25)));
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
         return ['data' => $paginator->getCollection()->map(fn (Payment $payment) => ['id' => $payment->id, 'order_id' => $payment->order_id, 'order_number' => $payment->order?->order_number, 'customer' => $payment->user?->name ?? $payment->user?->email, 'method' => $payment->method, 'provider_reference' => $payment->provider_reference, 'amount' => (int) $payment->amount, 'currency' => $payment->currency, 'status' => $payment->status, 'created_at' => $payment->created_at?->toIso8601String()])->all(), 'meta' => ['current_page' => $paginator->currentPage(), 'per_page' => $paginator->perPage(), 'total' => $paginator->total(), 'last_page' => $paginator->lastPage()]];
     }
 
@@ -131,14 +143,19 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
         if ($operationLeaseToken === null) {
             PaymentStateMachine::assert((string) $payment->status, $status);
             $payment->update(array_merge($attributes, ['status' => $status]));
+
             return $payment->fresh(['order']);
         }
+
         return DB::transaction(function () use ($payment, $status, $attributes, $operationLeaseToken): object {
             $owns = PaymentOperation::query()->lockForUpdate()->where('payment_id', $payment->id)->where('operation', 'create')->where('lease_token', $operationLeaseToken)->where('lease_expires_at', '>', now())->exists();
-            if (! $owns) throw new \RuntimeException('Payment operation lease is no longer valid.');
+            if (! $owns) {
+                throw new \RuntimeException('Payment operation lease is no longer valid.');
+            }
             $locked = Payment::query()->lockForUpdate()->findOrFail($payment->id);
             PaymentStateMachine::assert((string) $locked->status, $status);
             $locked->update(array_merge($attributes, ['status' => $status]));
+
             return $locked->fresh(['order']);
         });
     }

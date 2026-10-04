@@ -41,7 +41,9 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
         }
         $previous = $this->operations->successfulResponse((int) $payment->id, 'create');
         if ($previous !== null) {
-            if (! $this->outbox->ownsClaim((int) $event->id, $operationToken)) return;
+            if (! $this->outbox->ownsClaim((int) $event->id, $operationToken)) {
+                return;
+            }
             $this->payments->updateStatus($payment, $previous['_operation_status'] ?? 'provider_created', [
                 'provider_reference' => $previous['provider_reference'] ?? null,
                 'metadata' => $previous['metadata'] ?? $payment->metadata,
@@ -61,13 +63,16 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
             if ($reconciledStatus === 'pending') {
                 throw new RuntimeException('Payment provider reconciliation is still pending.');
             }
-            if (! $this->operations->ownsLease((int) $payment->id, 'create', $operationToken) || ! $this->outbox->ownsClaim((int) $event->id, $operationToken)) return;
+            if (! $this->operations->ownsLease((int) $payment->id, 'create', $operationToken) || ! $this->outbox->ownsClaim((int) $event->id, $operationToken)) {
+                return;
+            }
             $this->payments->updateStatus($payment, $reconciledStatus, [
                 'provider_reference' => $reconciled['provider_reference'] ?? $payment->provider_reference,
                 'metadata' => array_merge((array) $payment->metadata, (array) ($reconciled['metadata'] ?? [])),
             ], $operationToken);
             $this->operations->complete((int) $payment->id, 'create', $reconciledStatus, $reconciled['provider_reference'] ?? null, $reconciled, $operationToken);
             $this->outbox->markProcessed((int) $event->id, $operationToken);
+
             return;
         }
 
@@ -91,10 +96,13 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
         if ($exception instanceof AmbiguousExternalResultException) {
             if ($this->operations->ownsLease((int) $event->aggregate_id, 'create', (string) $event->claim_token)) {
                 $payment = $this->payments->find((int) $event->aggregate_id);
-                if ($payment->status === 'processing') $this->payments->updateStatus($payment, 'ambiguous', [], (string) $event->claim_token);
+                if ($payment->status === 'processing') {
+                    $this->payments->updateStatus($payment, 'ambiguous', [], (string) $event->claim_token);
+                }
                 $this->operations->failAmbiguous((int) $event->aggregate_id, 'create', $exception->getMessage(), (string) $event->claim_token);
             }
             $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, $exception->getMessage());
+
             return;
         }
         $retryable = true;
@@ -104,7 +112,9 @@ final class PaymentOutboxHandler implements OutboxEventHandlerInterface
         $exhausted = $this->outbox->markFailed((int) $event->id, (string) $event->claim_token, $exception->getMessage());
         if ($exhausted) {
             $payment = $this->payments->find((int) $event->aggregate_id);
-            if ($payment->status === 'processing') $this->payments->updateStatus($payment, 'failed');
+            if ($payment->status === 'processing') {
+                $this->payments->updateStatus($payment, 'failed');
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ final class EloquentTaxRuleRepository implements TaxRuleRepositoryInterface
             throw new SettingsNotFoundException('Tax rule not found.');
         }
 
-return $rule;
+        return $rule;
     }
 
     public function create(array $data): object
@@ -47,6 +47,6 @@ return $rule;
             $data['country'] = strtoupper($data['country']);
         }
 
-return $data;
+        return $data;
     }
 }

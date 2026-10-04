@@ -5,8 +5,8 @@ namespace App\Modules\Customer\Infrastructure\Persistence;
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Customer\Domain\Contracts\AdminCustomerQueryInterface;
 use App\Modules\Customer\Infrastructure\Models\CustomerAddress;
-use App\Modules\Staff\Infrastructure\Models\AuditLog;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Staff\Infrastructure\Models\AuditLog;
 
 final class EloquentAdminCustomerQuery implements AdminCustomerQueryInterface
 {
@@ -35,6 +35,7 @@ final class EloquentAdminCustomerQuery implements AdminCustomerQueryInterface
     public function show(int $customerId): array
     {
         $customer = User::query()->whereKey($customerId)->whereHas('roles', fn ($roles) => $roles->where('slug', 'customer'))->firstOrFail();
+
         return ['customer' => $customer->only(['id', 'name', 'email', 'phone', 'status', 'created_at']), 'orders' => CustomerOrder::query()->where('user_id', $customer->id)->latest()->limit(10)->get(['id', 'order_number', 'status', 'total_amount', 'currency', 'created_at']), 'addresses' => CustomerAddress::query()->where('user_id', $customer->id)->latest()->get(), 'audit_logs' => AuditLog::query()->whereIn('target_type', [User::class, 'customer'])->where('target_id', $customer->id)->latest()->limit(20)->get()];
     }
 }

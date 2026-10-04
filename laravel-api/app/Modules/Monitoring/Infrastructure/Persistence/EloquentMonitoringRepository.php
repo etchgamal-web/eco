@@ -197,7 +197,7 @@ final class EloquentMonitoringRepository implements MonitoringRepositoryInterfac
             $a->update(['status' => 'acknowledged', 'acknowledged_at' => now(), 'acknowledged_by' => $userId]);
         }
 
-return $a->fresh('order');
+        return $a->fresh('order');
     }
 
     public function resolve(int $id, int $userId): mixed
@@ -230,8 +230,8 @@ return $a->fresh('order');
     public function bulkResolve(array $ids, int $userId, ?string $reason = null): array
     {
         $updated = [];
-        foreach (array_values(array_unique(array_map('intval',$ids))) as $id) {
-            $alert = $this->resolve($id,$userId);
+        foreach (array_values(array_unique(array_map('intval', $ids))) as $id) {
+            $alert = $this->resolve($id, $userId);
             AuditLog::query()->create(['actor_id' => $userId, 'action' => 'operational_alert.bulk_resolved', 'target_type' => OperationalAlert::class, 'target_id' => $id, 'metadata' => ['reason' => $reason]]);
             $updated[] = $alert;
         }

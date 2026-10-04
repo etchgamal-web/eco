@@ -2,7 +2,6 @@
 
 namespace App\Shared\Infrastructure\Outbox\Processing;
 
-use App\Shared\Infrastructure\Outbox\Processing\OutboxProcessor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

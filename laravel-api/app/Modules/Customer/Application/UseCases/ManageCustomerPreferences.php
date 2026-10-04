@@ -17,7 +17,7 @@ final class ManageCustomerPreferences
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $u->id;
+        return $u->id;
     }
 
     public function show()

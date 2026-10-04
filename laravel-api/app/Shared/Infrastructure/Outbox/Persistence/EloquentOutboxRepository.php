@@ -40,7 +40,9 @@ final class EloquentOutboxRepository implements OutboxRepositoryInterface
             );
         } catch (QueryException $exception) {
             $existing = $this->findByDeduplicationKey($message->key());
-            if ($existing !== null) return $existing;
+            if ($existing !== null) {
+                return $existing;
+            }
             throw $exception;
         }
     }

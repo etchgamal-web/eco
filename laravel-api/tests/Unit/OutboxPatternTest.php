@@ -2,14 +2,17 @@
 
 namespace Tests\Unit;
 
-use App\Shared\Infrastructure\Outbox\Processing\ProcessOutboxEvent;
+use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Payment\Infrastructure\Models\Payment;
+use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
+use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentOperationRepository;
 use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
 use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
 use App\Shared\Infrastructure\Outbox\Persistence\EloquentOutboxRepository;
 use App\Shared\Infrastructure\Outbox\Processing\OutboxProcessor;
-use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
-use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentOperationRepository;
+use App\Shared\Infrastructure\Outbox\Processing\ProcessOutboxEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -163,7 +166,7 @@ final class OutboxPatternTest extends TestCase
             'payload' => [],
         ]);
 
-        self::assertTrue(app(\App\Shared\Infrastructure\Outbox\Persistence\EloquentOutboxRepository::class)
+        self::assertTrue(app(EloquentOutboxRepository::class)
             ->markAmbiguous((int) $event->id, 'ambiguous-token', 'provider result is unknown'));
 
         $event->refresh();
@@ -174,14 +177,14 @@ final class OutboxPatternTest extends TestCase
 
     public function test_stale_payment_operation_cannot_complete_after_new_lease(): void
     {
-        $user = \App\Modules\Auth\Infrastructure\Models\User::factory()->create();
-        $order = \App\Modules\Order\Infrastructure\Models\CustomerOrder::query()->create([
+        $user = User::factory()->create();
+        $order = CustomerOrder::query()->create([
             'user_id' => $user->id,
             'status' => 'pending',
             'total_amount' => 100,
             'currency' => 'EGP',
         ]);
-        $payment = \App\Modules\Payment\Infrastructure\Models\Payment::query()->create([
+        $payment = Payment::query()->create([
             'order_id' => $order->id,
             'user_id' => $user->id,
             'method' => 'cash_on_delivery',
@@ -207,14 +210,14 @@ final class OutboxPatternTest extends TestCase
 
     public function test_ambiguous_reconciliation_is_selected_by_operation_id_not_latest_operation(): void
     {
-        $user = \App\Modules\Auth\Infrastructure\Models\User::factory()->create();
-        $order = \App\Modules\Order\Infrastructure\Models\CustomerOrder::query()->create([
+        $user = User::factory()->create();
+        $order = CustomerOrder::query()->create([
             'user_id' => $user->id,
             'status' => 'pending',
             'total_amount' => 100,
             'currency' => 'EGP',
         ]);
-        $payment = \App\Modules\Payment\Infrastructure\Models\Payment::query()->create([
+        $payment = Payment::query()->create([
             'order_id' => $order->id,
             'user_id' => $user->id,
             'method' => 'cash_on_delivery',

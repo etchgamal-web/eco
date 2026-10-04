@@ -10,6 +10,13 @@ use Illuminate\Http\JsonResponse;
 
 final class IntegrationEventController extends Controller
 {
-    public function index(IntegrationEventRequest $request, ListIntegrationEvents $events): JsonResponse { return response()->json(['data' => $events->execute($request->validated())]); }
-    public function retry(IntegrationEventRequest $request, string $source, int $id, RetryIntegrationEvent $retry): JsonResponse { return response()->json(['data' => $retry->execute($source, $id)]); }
+    public function index(IntegrationEventRequest $request, ListIntegrationEvents $events): JsonResponse
+    {
+        return response()->json(['data' => $events->execute($request->validated())]);
+    }
+
+    public function retry(IntegrationEventRequest $request, string $source, int $id, RetryIntegrationEvent $retry): JsonResponse
+    {
+        return response()->json(['data' => $retry->execute($source, $id)]);
+    }
 }

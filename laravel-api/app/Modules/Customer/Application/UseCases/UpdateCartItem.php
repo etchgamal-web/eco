@@ -17,6 +17,6 @@ final class UpdateCartItem
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->cart->updateItem($u->id, $productId, $variantId, $quantity);
+        return $this->cart->updateItem($u->id, $productId, $variantId, $quantity);
     }
 }

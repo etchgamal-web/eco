@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         foreach (['social_messages', 'social_interactions'] as $tableName) {
-            Schema::table($tableName, function (Blueprint $table) use ($tableName): void {
+            Schema::table($tableName, function (Blueprint $table): void {
                 $table->string('operation_idempotency_key', 191)->nullable()->index();
                 $table->unsignedInteger('operation_attempt_count')->default(0);
                 $table->string('operation_status', 30)->nullable()->index();
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         foreach (['social_messages', 'social_interactions'] as $tableName) {
-            Schema::table($tableName, function (Blueprint $table) use ($tableName): void {
+            Schema::table($tableName, function (Blueprint $table): void {
                 $table->dropIndex(['operation_idempotency_key']);
                 $table->dropIndex(['operation_status']);
                 $table->dropIndex(['operation_lease_token', 'operation_lease_expires_at']);

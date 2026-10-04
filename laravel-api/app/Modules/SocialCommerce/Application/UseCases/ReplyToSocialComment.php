@@ -3,12 +3,12 @@
 namespace App\Modules\SocialCommerce\Application\UseCases;
 
 use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
-use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
-use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialConnectionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\SocialInteractionRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Exceptions\SocialCommerceException;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 
 final class ReplyToSocialComment
 {

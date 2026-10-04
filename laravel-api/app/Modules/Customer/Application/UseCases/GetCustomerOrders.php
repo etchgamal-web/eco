@@ -17,6 +17,6 @@ final class GetCustomerOrders
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->repo->listForUser($u->id);
+        return $this->repo->listForUser($u->id);
     }
 }

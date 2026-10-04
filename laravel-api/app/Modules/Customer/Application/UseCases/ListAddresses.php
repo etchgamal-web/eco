@@ -17,6 +17,6 @@ final class ListAddresses
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->addresses->listForUser($user->id);
+        return $this->addresses->listForUser($user->id);
     }
 }

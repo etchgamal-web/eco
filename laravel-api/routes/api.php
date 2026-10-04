@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Modules\Reporting\Presentation\Http\Controllers\SalesAnalyticsController;
 use Illuminate\Support\Facades\Route;
 
 // Public API contract. Legacy /api routes are intentionally not registered.
@@ -11,10 +13,10 @@ Route::prefix('v1')->group(function (): void {
     require __DIR__.'/api/catalog.php';
     require __DIR__.'/api/inventory.php';
     require __DIR__.'/api/orders.php';
-    Route::middleware('auth:sanctum')->get('dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'stats'])->name('dashboard.stats');
+    Route::middleware('auth:sanctum')->get('dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
     require __DIR__.'/api/monitoring.php';
     require __DIR__.'/api/settlements.php';
-    Route::get('reports/sales', \App\Modules\Reporting\Presentation\Http\Controllers\SalesAnalyticsController::class)->middleware('auth:sanctum')->name('reports.sales');
+    Route::get('reports/sales', SalesAnalyticsController::class)->middleware('auth:sanctum')->name('reports.sales');
     require __DIR__.'/api/payments.php';
     require __DIR__.'/api/shipping.php';
     require __DIR__.'/api/promotion.php';

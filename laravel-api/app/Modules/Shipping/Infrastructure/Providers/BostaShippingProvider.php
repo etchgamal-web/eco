@@ -6,8 +6,8 @@ use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShippingException;
 use App\Modules\Shipping\Infrastructure\Configuration\ShippingProviderSettings;
 use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
 final class BostaShippingProvider implements ShippingProviderInterface

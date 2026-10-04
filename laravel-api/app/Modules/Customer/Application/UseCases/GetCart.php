@@ -17,6 +17,6 @@ final class GetCart
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->cart->get($u->id);
+        return $this->cart->get($u->id);
     }
 }

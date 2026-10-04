@@ -31,6 +31,7 @@ final class EloquentCustomerRepository implements CustomerRepositoryInterface
     public function updateAdmin(object $customer, array $data): User
     {
         $customer->forceFill($data)->save();
+
         return $customer->fresh();
     }
 }

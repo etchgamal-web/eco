@@ -130,6 +130,7 @@ final class EloquentSocialInteractionRepository implements SocialInteractionRepo
     public function acquireOperationLease(string $type, int $id, string $token, int $seconds = 300): bool
     {
         $now = now();
+
         return $this->operationQuery($type, $id)
             ->where(function ($query) use ($token, $now): void {
                 $query->whereNull('operation_lease_token')->orWhere('operation_lease_expires_at', '<=', $now)->orWhere('operation_lease_token', $token);
@@ -152,7 +153,10 @@ final class EloquentSocialInteractionRepository implements SocialInteractionRepo
                 'operation_lease_token' => null,
                 'operation_lease_expires_at' => null,
                 'operation_last_error' => null,
-            ])) !== 1) return false;
+            ])) !== 1) {
+                return false;
+            }
+
             return true;
         });
     }
@@ -161,6 +165,7 @@ final class EloquentSocialInteractionRepository implements SocialInteractionRepo
     {
         return DB::transaction(function () use ($type, $id, $token, $status, $error): bool {
             $query = $this->operationQuery($type, $id)->where('operation_lease_token', $token)->where('operation_lease_expires_at', '>', now());
+
             return $query->lockForUpdate()->update([
                 'status' => $status === 'processing' ? 'retrying' : $status,
                 'operation_status' => $status,

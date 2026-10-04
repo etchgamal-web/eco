@@ -3,14 +3,14 @@
 namespace App\Modules\Shared;
 
 use App\Modules\Shared\Application\Health\ReadinessChecker;
-use App\Shared\Infrastructure\Outbox\Processing\OutboxProcessor;
-use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
-use App\Shared\Domain\Contracts\OutboxRepositoryInterface as DomainOutboxRepositoryInterface;
 use App\Modules\Shared\Infrastructure\Health\CacheHealthCheck;
 use App\Modules\Shared\Infrastructure\Health\DatabaseHealthCheck;
 use App\Modules\Shared\Infrastructure\Health\QueueHealthCheck;
 use App\Modules\Shared\Infrastructure\Health\StorageHealthCheck;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface as DomainOutboxRepositoryInterface;
 use App\Shared\Infrastructure\Outbox\Persistence\EloquentOutboxRepository;
+use App\Shared\Infrastructure\Outbox\Processing\OutboxProcessor;
 use Illuminate\Support\ServiceProvider;
 
 final class SharedServiceProvider extends ServiceProvider

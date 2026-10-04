@@ -26,7 +26,7 @@ final class EloquentAddressRepository implements AddressRepositoryInterface
             throw new AddressNotFoundException('Address not found.');
         }
 
-return $address;
+        return $address;
     }
 
     public function createForUser(int $userId, array $data): CustomerAddress

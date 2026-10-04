@@ -6,6 +6,4 @@ namespace App\Shared\Domain\Exceptions;
 
 use RuntimeException;
 
-final class AmbiguousExternalResultException extends RuntimeException
-{
-}
+final class AmbiguousExternalResultException extends RuntimeException {}

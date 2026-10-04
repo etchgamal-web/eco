@@ -7,7 +7,6 @@ use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
 use Database\Seeders\RbacSeeder;

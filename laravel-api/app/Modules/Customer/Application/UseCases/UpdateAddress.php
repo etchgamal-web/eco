@@ -18,6 +18,6 @@ final class UpdateAddress
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->addresses->update($this->addresses->findForUser($user->id, $id), $data->toArray());
+        return $this->addresses->update($this->addresses->findForUser($user->id, $id), $data->toArray());
     }
 }

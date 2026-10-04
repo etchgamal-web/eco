@@ -163,7 +163,7 @@ final class EloquentSettlementRepository implements SettlementRepositoryInterfac
             $config[str_replace('settlement_import.', '', $value['key'])] = $value['value'];
         }
 
-return $config;
+        return $config;
     }
 
     private function rows(string $path): iterable
@@ -299,6 +299,7 @@ return $config;
                 $result['confirmed'] = (int) $items->confirmed_customer_refund;
                 $result['reconciliation_difference'] = (int) $items->refund_reconciliation_difference;
             }
+
             return $result;
         };
 

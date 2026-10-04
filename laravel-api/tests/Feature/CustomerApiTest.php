@@ -20,8 +20,10 @@ final class CustomerApiTest extends TestCase
 
     public function test_admin_can_export_customers_using_search_filter(): void
     {
-        $admin = User::factory()->create(); $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
-        $target = User::factory()->create(['name' => 'Export Target', 'email' => 'export-target@example.com']); $target->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
+        $target = User::factory()->create(['name' => 'Export Target', 'email' => 'export-target@example.com']);
+        $target->roles()->attach(Role::query()->where('slug', 'customer')->firstOrFail());
         $response = $this->actingAs($admin)->get('/api/v1/admin/customers/export?search=Export');
         $response->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString('Export Target', $response->streamedContent());

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -139,7 +140,7 @@ final class DatabaseSeederTest extends TestCase
         $this->app['env'] = 'production';
 
         $this->artisan('db:seed', [
-            '--class' => \Database\Seeders\DatabaseSeeder::class,
+            '--class' => DatabaseSeeder::class,
             '--force' => true,
         ])->assertExitCode(0);
 

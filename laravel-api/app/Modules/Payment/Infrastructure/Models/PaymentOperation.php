@@ -2,6 +2,7 @@
 
 namespace App\Modules\Payment\Infrastructure\Models;
 
+use App\Modules\Order\Infrastructure\Models\OrderReturn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -24,6 +25,6 @@ class PaymentOperation extends Model
 
     public function orderReturn(): BelongsTo
     {
-        return $this->belongsTo(\App\Modules\Order\Infrastructure\Models\OrderReturn::class, 'return_id');
+        return $this->belongsTo(OrderReturn::class, 'return_id');
     }
 }

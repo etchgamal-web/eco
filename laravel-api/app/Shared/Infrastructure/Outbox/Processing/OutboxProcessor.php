@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Shared\Infrastructure\Outbox\Processing;
 
-use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 
 final class OutboxProcessor
 {
@@ -25,6 +25,7 @@ final class OutboxProcessor
         foreach ($this->handlers as $handler) {
             if ($handler->supports((string) $event->event_type)) {
                 $handler->handle($event);
+
                 return;
             }
         }
@@ -42,6 +43,7 @@ final class OutboxProcessor
         foreach ($this->handlers as $handler) {
             if ($handler->supports((string) $event->event_type)) {
                 $handler->failed($event, $exception);
+
                 return;
             }
         }

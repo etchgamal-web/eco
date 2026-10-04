@@ -2,7 +2,6 @@
 
 namespace App\Modules\SocialCommerce;
 
-use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use App\Modules\SocialCommerce\Application\Outbox\SocialCommerceOutboxHandler;
 use App\Modules\SocialCommerce\Domain\Contracts\AutomationRuleRepositoryInterface;
 use App\Modules\SocialCommerce\Domain\Contracts\MessageTemplateRepositoryInterface;
@@ -16,6 +15,7 @@ use App\Modules\SocialCommerce\Infrastructure\Persistence\EloquentSocialConnecti
 use App\Modules\SocialCommerce\Infrastructure\Persistence\EloquentSocialInteractionRepository;
 use App\Modules\SocialCommerce\Infrastructure\Persistence\EloquentSocialSummaryQuery;
 use App\Modules\SocialCommerce\Infrastructure\Providers\SocialMessagingProviderRouter;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use Illuminate\Support\ServiceProvider;
 
 final class SocialCommerceServiceProvider extends ServiceProvider

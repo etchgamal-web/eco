@@ -2,6 +2,7 @@
 
 namespace App\Modules\Order;
 
+use App\Modules\Order\Application\Outbox\ReturnOutboxHandler;
 use App\Modules\Order\Domain\Contracts\CheckoutGatewayInterface;
 use App\Modules\Order\Domain\Contracts\CheckoutPolicyInterface;
 use App\Modules\Order\Domain\Contracts\OrderActivityRepositoryInterface;
@@ -9,8 +10,6 @@ use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\OrderReviewRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\ReturnRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\TransactionManagerInterface;
-use App\Modules\Order\Application\Outbox\ReturnOutboxHandler;
-use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderReview;
 use App\Modules\Order\Infrastructure\Observers\CustomerOrderObserver;
@@ -23,6 +22,7 @@ use App\Modules\Order\Infrastructure\Persistence\EloquentOrderRepository;
 use App\Modules\Order\Infrastructure\Persistence\EloquentOrderReviewRepository;
 use App\Modules\Order\Infrastructure\Persistence\EloquentReturnRepository;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface as SharedTransactionManagerInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use Illuminate\Support\ServiceProvider;
 
 final class OrderServiceProvider extends ServiceProvider

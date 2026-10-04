@@ -2,14 +2,14 @@
 
 namespace App\Modules\Shipping\Infrastructure\Persistence;
 
-use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
-use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Exceptions\ShipmentNotFoundException;
 use App\Modules\Shipping\Domain\StateMachines\ShipmentStateMachine;
 use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Shipping\Infrastructure\Models\ShipmentEvent;
 use App\Modules\Shipping\Infrastructure\Models\ShipmentOperation;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
@@ -104,11 +104,15 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
         if ($operationLeaseToken !== null) {
             return DB::transaction(function () use ($shipment, $data, $operationLeaseToken): object {
                 $owns = ShipmentOperation::query()->lockForUpdate()->where('shipment_id', $shipment->id)->where('operation', 'create')->where('lease_token', $operationLeaseToken)->where('lease_expires_at', '>', now())->exists();
-                if (! $owns) throw new \RuntimeException('Shipment operation lease is no longer valid.');
+                if (! $owns) {
+                    throw new \RuntimeException('Shipment operation lease is no longer valid.');
+                }
                 $locked = Shipment::query()->lockForUpdate()->findOrFail($shipment->id);
+
                 return $this->persistProviderData($locked, $data);
             });
         }
+
         return $this->persistProviderData($shipment, $data);
     }
 
@@ -167,15 +171,19 @@ final class EloquentShipmentRepository implements ShipmentRepositoryInterface
         if ($operationLeaseToken !== null) {
             return DB::transaction(function () use ($shipment, $status, $actorId, $note, $operationLeaseToken): Shipment {
                 $owns = ShipmentOperation::query()->lockForUpdate()->where('shipment_id', $shipment->id)->where('operation', 'create')->where('lease_token', $operationLeaseToken)->where('lease_expires_at', '>', now())->exists();
-                if (! $owns) throw new \RuntimeException('Shipment operation lease is no longer valid.');
+                if (! $owns) {
+                    throw new \RuntimeException('Shipment operation lease is no longer valid.');
+                }
                 $locked = Shipment::query()->lockForUpdate()->findOrFail($shipment->id);
                 ShipmentStateMachine::assert((string) $locked->status, $status);
                 $from = $locked->status;
                 $locked->update(['status' => $status]);
                 ShipmentEvent::query()->create(['shipment_id' => $locked->id, 'from_status' => $from, 'to_status' => $status, 'actor_id' => $actorId, 'note' => $note]);
+
                 return $locked->fresh(['order', 'method', 'events']);
             });
         }
+
         return DB::transaction(function () use ($shipment, $status, $actorId, $note): Shipment {
             $locked = Shipment::query()->lockForUpdate()->find($shipment->id);
             if ($locked === null) {

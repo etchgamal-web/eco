@@ -17,6 +17,6 @@ final class RemoveCartItem
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->cart->removeItem($u->id, $productId, $variantId);
+        return $this->cart->removeItem($u->id, $productId, $variantId);
     }
 }

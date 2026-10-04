@@ -4,12 +4,13 @@ namespace Tests\Feature;
 
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
-use App\Modules\Shipping\Application\UseCases\CreateShipment;
 use App\Modules\Shipping\Application\Outbox\ShippingOutboxHandler;
+use App\Modules\Shipping\Application\UseCases\CreateShipment;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;
 use App\Modules\Shipping\Domain\ValueObjects\CreateShipmentData;
-use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
+use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
+use App\Shared\Infrastructure\Outbox\Models\OutboxEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
 use Tests\TestCase;
@@ -71,7 +72,7 @@ final class ShippingTransactionTest extends TestCase
             'shipping_amount' => 0, 'shipping_cost' => 0, 'shipping_subsidy' => 0,
             'currency' => 'EGP', 'shipping_address' => ['city' => 'Cairo'],
         ]);
-        $shipment = \App\Modules\Shipping\Infrastructure\Models\Shipment::query()->create([
+        $shipment = Shipment::query()->create([
             'order_id' => $order->id, 'user_id' => $user->id, 'shipping_method_id' => $method->id,
             'method_code' => $method->code, 'provider_code' => 'bosta', 'fee' => 150, 'currency' => 'EGP',
             'status' => 'provider_created', 'creation_status' => 'created', 'tracking_number' => 'BOSTA-REPLAY',

@@ -4,11 +4,11 @@ namespace App\Modules\Shipping\Application\Outbox;
 
 use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
-use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
-use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingProviderInterface;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
 use RuntimeException;
 
@@ -52,7 +52,9 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
         }
         $previous = $this->operations->successfulResponse((int) $shipment->id, 'create');
         if ($previous !== null) {
-            if (! $this->outbox->ownsClaim((int) $event->id, $operationToken)) return;
+            if (! $this->outbox->ownsClaim((int) $event->id, $operationToken)) {
+                return;
+            }
             $this->completeProviderCreation($shipment, $previous, $operationToken);
             $this->operations->releaseLease((int) $shipment->id, 'create', $operationToken);
             $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
@@ -64,7 +66,9 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
             if ($recovered === null) {
                 throw new RuntimeException('Shipment creation was previously attempted, but the provider could not recover an existing shipment safely.');
             }
-            if (! $this->operations->ownsLease((int) $shipment->id, 'create', $operationToken) || ! $this->outbox->ownsClaim((int) $event->id, $operationToken)) return;
+            if (! $this->operations->ownsLease((int) $shipment->id, 'create', $operationToken) || ! $this->outbox->ownsClaim((int) $event->id, $operationToken)) {
+                return;
+            }
             $created = $this->completeProviderCreation($shipment, $recovered, $operationToken);
             $this->operations->complete((int) $shipment->id, 'create', 'provider_created', data_get($recovered, 'metadata.provider_reference'), $recovered, $operationToken);
             $this->outbox->markProcessed((int) $event->id, (string) $event->claim_token);
@@ -110,6 +114,7 @@ final class ShippingOutboxHandler implements OutboxEventHandlerInterface
             $this->shipments->updateStatus($shipment, 'ambiguous', null, $exception->getMessage(), (string) $event->claim_token);
             $this->operations->failAmbiguous((int) $event->aggregate_id, 'create', $exception->getMessage(), (string) $event->claim_token);
             $this->outbox->markAmbiguous((int) $event->id, (string) $event->claim_token, $exception->getMessage());
+
             return;
         }
         $this->shipments->markCreationFailed($shipment, $exception->getMessage());

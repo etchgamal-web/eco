@@ -18,6 +18,6 @@ final class CreateAddress
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->addresses->createForUser($user->id, $data->toArray());
+        return $this->addresses->createForUser($user->id, $data->toArray());
     }
 }

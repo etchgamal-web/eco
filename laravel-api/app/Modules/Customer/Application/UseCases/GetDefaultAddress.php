@@ -21,6 +21,6 @@ final class GetDefaultAddress
             throw new AddressNotFoundException('Default address not found.');
         }
 
-return $address;
+        return $address;
     }
 }

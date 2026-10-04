@@ -3,8 +3,8 @@
 namespace App\Modules\Customer\Presentation\Http\Requests;
 
 use App\Modules\Auth\Presentation\Http\Concerns\AuthorizesRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class CustomerAdminRequest extends FormRequest
 {
@@ -17,7 +17,9 @@ final class CustomerAdminRequest extends FormRequest
 
     public function rules(): array
     {
-        if ($this->isMethod('delete') && $this->route('addressId') !== null) return [];
+        if ($this->isMethod('delete') && $this->route('addressId') !== null) {
+            return [];
+        }
         if ($this->route('addressId') !== null || ($this->isMethod('post') && $this->route('customerId') !== null)) {
             return [
                 'label' => ['sometimes', 'string', 'max:80'], 'recipient_name' => ['required', 'string', 'max:255'],
@@ -29,6 +31,7 @@ final class CustomerAdminRequest extends FormRequest
         }
         if ($this->route('customerId') !== null) {
             $customerId = $this->route('customerId');
+
             return [
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['nullable', 'email', 'required_without:phone', Rule::unique('users', 'email')->ignore($customerId)],
@@ -36,6 +39,7 @@ final class CustomerAdminRequest extends FormRequest
                 'status' => ['sometimes', Rule::in(['active', 'inactive'])],
             ];
         }
+
         return [
             'search' => ['nullable', 'string', 'max:120'],
             'page' => ['nullable', 'integer', 'min:1'],

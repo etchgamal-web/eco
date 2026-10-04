@@ -9,7 +9,10 @@ final class SalesAnalyticsRequest extends FormRequest
 {
     use AuthorizesRequest;
 
-    public function authorize(): bool { return $this->authorizePermission('reports.view'); }
+    public function authorize(): bool
+    {
+        return $this->authorizePermission('reports.view');
+    }
 
     public function rules(): array
     {

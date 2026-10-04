@@ -20,6 +20,6 @@ final class InventoryRequest extends FormRequest
             return [];
         }
 
-return ['product_id' => ['required', 'integer', 'exists:products,id'], 'variant_id' => ['nullable', 'integer', 'exists:product_variants,id'], 'quantity' => ['required', 'integer', 'not_in:0'], 'reason' => [$this->routeIs('inventory.adjust') ? 'required' : 'nullable', 'string', 'max:100'], 'note' => ['nullable', 'string', 'max:1000']];
+        return ['product_id' => ['required', 'integer', 'exists:products,id'], 'variant_id' => ['nullable', 'integer', 'exists:product_variants,id'], 'quantity' => ['required', 'integer', 'not_in:0'], 'reason' => [$this->routeIs('inventory.adjust') ? 'required' : 'nullable', 'string', 'max:100'], 'note' => ['nullable', 'string', 'max:1000']];
     }
 }

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DashboardRequest;
-use App\Modules\SocialCommerce\Application\UseCases\GetSocialSummary;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\SocialCommerce\Application\UseCases\GetSocialSummary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 

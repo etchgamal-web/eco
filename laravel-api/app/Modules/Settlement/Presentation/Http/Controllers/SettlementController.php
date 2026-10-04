@@ -68,6 +68,6 @@ final class SettlementController extends Controller
     {
         $d = $r->validated();
 
-        return response()->json(['data' => $u->execute($d['key'],$d['value'])]);
+        return response()->json(['data' => $u->execute($d['key'], $d['value'])]);
     }
 }

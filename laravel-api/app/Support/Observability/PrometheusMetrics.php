@@ -113,6 +113,7 @@ final class PrometheusMetrics
     {
         try {
             $counts = $this->outbox->countByStatus();
+
             return ($counts['pending'] ?? 0) + ($counts['failed'] ?? 0);
         } catch (Throwable) {
             return null;

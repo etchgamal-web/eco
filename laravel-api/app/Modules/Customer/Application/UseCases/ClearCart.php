@@ -17,6 +17,6 @@ final class ClearCart
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->cart->clear($u->id);
+        return $this->cart->clear($u->id);
     }
 }

@@ -2,10 +2,9 @@
 
 namespace App\Modules\Integration\Infrastructure\Persistence;
 
+use App\Modules\Auth\Domain\Exceptions\AuthorizationException;
 use App\Modules\Integration\Domain\Contracts\IntegrationEventRepositoryInterface;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Query\Builder;
-use App\Modules\Auth\Domain\Exceptions\AuthorizationException;
 
 final class EloquentIntegrationEventRepository implements IntegrationEventRepositoryInterface
 {
@@ -18,10 +17,17 @@ final class EloquentIntegrationEventRepository implements IntegrationEventReposi
         foreach ($sources as $source) {
             $table = $this->table($source);
             $query = DB::table($table)->select('*')->orderByDesc('created_at')->limit(100);
-            if (! empty($filters['status'])) $query->where('status', $filters['status']);
-            if (! empty($filters['provider'])) $query->where($source === 'social' ? 'channel' : 'provider', $filters['provider']);
-            foreach ($query->get() as $row) $rows->push($this->normalize($source, $row));
+            if (! empty($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
+            if (! empty($filters['provider'])) {
+                $query->where($source === 'social' ? 'channel' : 'provider', $filters['provider']);
+            }
+            foreach ($query->get() as $row) {
+                $rows->push($this->normalize($source, $row));
+            }
         }
+
         return $rows->sortByDesc('created_at')->values()->all();
     }
 
@@ -29,17 +35,27 @@ final class EloquentIntegrationEventRepository implements IntegrationEventReposi
     {
         $table = $this->table($source);
         $event = DB::table($table)->where('id', $id)->first();
-        if (! $event) throw new AuthorizationException('Integration event was not found.');
-        if (! in_array($event->status, ['failed', 'error', 'received', 'retrying'], true)) throw new AuthorizationException('Only failed or received events can be retried.');
+        if (! $event) {
+            throw new AuthorizationException('Integration event was not found.');
+        }
+        if (! in_array($event->status, ['failed', 'error', 'received', 'retrying'], true)) {
+            throw new AuthorizationException('Only failed or received events can be retried.');
+        }
         $updates = ['status' => 'retrying', 'processed_at' => null, 'updated_at' => now()];
-        if ($source !== 'social') $updates['processing_error'] = null;
+        if ($source !== 'social') {
+            $updates['processing_error'] = null;
+        }
         DB::table($table)->where('id', $id)->update($updates);
+
         return $this->normalize($source, DB::table($table)->where('id', $id)->first());
     }
 
     private function table(string $source): string
     {
-        if (! in_array($source, self::SOURCES, true)) throw new AuthorizationException('Invalid integration source.');
+        if (! in_array($source, self::SOURCES, true)) {
+            throw new AuthorizationException('Invalid integration source.');
+        }
+
         return ['payment' => 'payment_webhook_events', 'shipping' => 'shipping_webhook_events', 'social' => 'social_webhook_events'][$source];
     }
 

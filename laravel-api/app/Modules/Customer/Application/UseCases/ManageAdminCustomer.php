@@ -21,6 +21,7 @@ final class ManageAdminCustomer
         $before = $customer->only(['name', 'email', 'phone', 'status']);
         $updated = $this->customers->updateAdmin($customer, $data);
         $this->audit->record($actor, 'customer.updated', 'customer', $customerId, ['before' => $before, 'after' => $updated->only(['name', 'email', 'phone', 'status'])]);
+
         return $updated;
     }
 
@@ -29,6 +30,7 @@ final class ManageAdminCustomer
         $this->customer($customerId);
         $address = $this->addresses->createForUser($customerId, $data);
         $this->audit->record($actor, 'customer.address.created', 'customer_address', $address->id, ['customer_id' => $customerId]);
+
         return $address;
     }
 
@@ -39,6 +41,7 @@ final class ManageAdminCustomer
         $before = $address->toArray();
         $updated = $this->addresses->update($address, $data);
         $this->audit->record($actor, 'customer.address.updated', 'customer_address', $addressId, ['customer_id' => $customerId, 'before' => $before, 'after' => $updated->toArray()]);
+
         return $updated;
     }
 
@@ -53,7 +56,10 @@ final class ManageAdminCustomer
     private function customer(int $id): object
     {
         $customer = $this->customers->findCustomerById($id);
-        if ($customer === null) throw new CustomerNotFoundException($id);
+        if ($customer === null) {
+            throw new CustomerNotFoundException($id);
+        }
+
         return $customer;
     }
 }

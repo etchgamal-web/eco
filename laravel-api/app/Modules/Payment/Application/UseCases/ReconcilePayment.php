@@ -32,7 +32,9 @@ final class ReconcilePayment
         }
         if ($operation === null) {
             $operation = 'create';
-            if (! in_array($payment->status, ['processing', 'provider_created'], true)) return $payment;
+            if (! in_array($payment->status, ['processing', 'provider_created'], true)) {
+                return $payment;
+            }
         }
 
         $returnId = $operationId === null ? null : $this->operations->returnId((int) $payment->id, $operationId);
@@ -43,19 +45,25 @@ final class ReconcilePayment
         }
 
         try {
-            if ($operation === 'refund') return $this->reconcileRefund($payment, $leaseToken, $operationId, $returnId, $operationRecord);
+            if ($operation === 'refund') {
+                return $this->reconcileRefund($payment, $leaseToken, $operationId, $returnId, $operationRecord);
+            }
 
             $result = $this->gateway->reconcilePayment($payment);
             $status = (string) ($result['status'] ?? 'processing');
-            if ($status === 'pending' && $payment->status === 'provider_created') $status = 'provider_created';
+            if ($status === 'pending' && $payment->status === 'provider_created') {
+                $status = 'provider_created';
+            }
             if (! in_array($status, ['pending', 'processing', 'provider_created', 'confirmed', 'failed'], true)) {
                 throw new PaymentException('Invalid provider reconciliation status.');
             }
             if ($operation === 'confirm') {
                 if ($status === 'pending' || $status === 'processing' || $status === 'provider_created') {
                     $this->operations->failAmbiguous((int) $payment->id, 'confirm', 'Provider confirmation remains unresolved.', $leaseToken);
+
                     return $payment;
                 }
+
                 return $this->transactions->run(function () use ($payment, $result, $status, $leaseToken): object {
                     $locked = $this->payments->findForUpdate((int) $payment->id);
                     $updated = $this->payments->updateStatus($locked, $status === 'confirmed' ? 'paid' : 'failed', [
@@ -63,6 +71,7 @@ final class ReconcilePayment
                         'metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? [])),
                     ]);
                     $this->operations->complete((int) $updated->id, 'confirm', $status === 'confirmed' ? 'confirmed' : 'failed', $result['provider_reference'] ?? null, $result, $leaseToken);
+
                     return $updated;
                 });
             }
@@ -74,7 +83,10 @@ final class ReconcilePayment
                     'metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? [])),
                 ]);
                 $this->operations->complete((int) $updated->id, 'create', $status === 'confirmed' ? 'confirmed' : $status, $result['provider_reference'] ?? null, $result, $leaseToken);
-                if ($status === 'confirmed' && $updated->order->status === 'pending') $this->orders->updateStatus((int) $updated->order_id, 'confirmed');
+                if ($status === 'confirmed' && $updated->order->status === 'pending') {
+                    $this->orders->updateStatus((int) $updated->order_id, 'confirmed');
+                }
+
                 return $updated;
             });
         } catch (\Throwable $exception) {
@@ -85,21 +97,29 @@ final class ReconcilePayment
 
     private function reconcileRefund(object $payment, string $leaseToken, ?int $operationId, ?int $returnId, ?object $operation): object
     {
-        if ($operation === null) throw new PaymentException('Refund reconciliation requires a specific payment operation.');
+        if ($operation === null) {
+            throw new PaymentException('Refund reconciliation requires a specific payment operation.');
+        }
         $result = $this->gateway->reconcileRefund($payment, $operation);
         $status = (string) ($result['status'] ?? 'ambiguous');
         if ($status === 'ambiguous') {
             $this->operations->failAmbiguous((int) $payment->id, 'refund', 'Provider refund result remains unresolved.', $leaseToken);
+
             return $payment;
         }
-        if (! in_array($status, ['refunded', 'failed'], true)) throw new PaymentException('Invalid provider refund reconciliation status.');
+        if (! in_array($status, ['refunded', 'failed'], true)) {
+            throw new PaymentException('Invalid provider refund reconciliation status.');
+        }
         if ($status === 'failed') {
             $this->operations->complete((int) $payment->id, 'refund', 'failed', $result['provider_reference'] ?? null, $result, $leaseToken);
+
             return $payment;
         }
 
         $confirmedAmount = (int) ($result['confirmed_amount'] ?? $result['refunded_amount'] ?? $this->operations->requestedAmount((int) $payment->id, 'refund', $operationId) ?? 0);
-        if ($confirmedAmount <= 0) throw new PaymentException('Refund reconciliation did not confirm an amount.');
+        if ($confirmedAmount <= 0) {
+            throw new PaymentException('Refund reconciliation did not confirm an amount.');
+        }
 
         return $this->transactions->run(function () use ($payment, $result, $leaseToken, $confirmedAmount, $returnId): object {
             $locked = $this->payments->findForUpdate((int) $payment->id);
@@ -107,8 +127,11 @@ final class ReconcilePayment
             $nextStatus = $refundedTotal >= (int) $locked->amount ? 'refunded' : 'partially_refunded';
             $refunded = $this->payments->updateStatus($locked, $nextStatus, ['metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? []))]);
             $this->operations->complete((int) $refunded->id, 'refund', 'confirmed', $result['provider_reference'] ?? $refunded->provider_reference, $result, $leaseToken, $confirmedAmount);
-            if ($nextStatus === 'refunded' && $refunded->order->status === 'delivered') $this->orders->markRefunded((int) $refunded->order_id);
+            if ($nextStatus === 'refunded' && $refunded->order->status === 'delivered') {
+                $this->orders->markRefunded((int) $refunded->order_id);
+            }
             $this->returns->completeRefundForPayment((int) $refunded->id, $confirmedAmount, $returnId);
+
             return $refunded;
         });
     }

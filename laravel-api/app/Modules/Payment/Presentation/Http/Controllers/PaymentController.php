@@ -46,9 +46,13 @@ final class PaymentController extends Controller
     public function export(PaymentManagementRequest $request, ListPayments $payments)
     {
         $rows = $payments->executeAdmin(array_merge($request->validated(), ['page' => 1, 'per_page' => 100]));
+
         return response()->streamDownload(function () use ($rows): void {
-            $handle = fopen('php://output', 'wb'); fputcsv($handle, ['ID', 'Order', 'Customer', 'Method', 'Provider reference', 'Amount', 'Currency', 'Status', 'Created at']);
-            foreach ($rows['data'] as $row) fputcsv($handle, [$row['id'], $row['order_number'], $row['customer'], $row['method'], $row['provider_reference'], $row['amount'], $row['currency'], $row['status'], $row['created_at']]);
+            $handle = fopen('php://output', 'wb');
+            fputcsv($handle, ['ID', 'Order', 'Customer', 'Method', 'Provider reference', 'Amount', 'Currency', 'Status', 'Created at']);
+            foreach ($rows['data'] as $row) {
+                fputcsv($handle, [$row['id'], $row['order_number'], $row['customer'], $row['method'], $row['provider_reference'], $row['amount'], $row['currency'], $row['status'], $row['created_at']]);
+            }
             fclose($handle);
         }, 'payments.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }

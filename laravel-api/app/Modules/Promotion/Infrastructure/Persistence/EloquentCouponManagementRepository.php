@@ -20,7 +20,7 @@ final class EloquentCouponManagementRepository implements CouponManagementReposi
             throw CouponInvalidException::forCode((string) $id);
         }
 
-return $coupon;
+        return $coupon;
     }
 
     public function create(array $data): object

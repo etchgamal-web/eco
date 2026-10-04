@@ -4,13 +4,13 @@ namespace Tests\Unit;
 
 use App\Modules\SocialCommerce\Domain\Exceptions\SocialCommerceException;
 use App\Modules\SocialCommerce\Domain\ValueObjects\RenderedTemplate;
+use App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation;
+use App\Modules\SocialCommerce\Infrastructure\Persistence\EloquentSocialInteractionRepository;
 use App\Modules\SocialCommerce\Infrastructure\Providers\FacebookMessagingProvider;
 use App\Modules\SocialCommerce\Infrastructure\Providers\InstagramMessagingProvider;
 use App\Modules\SocialCommerce\Infrastructure\Providers\WhatsAppMessagingProvider;
-use App\Modules\SocialCommerce\Infrastructure\Models\SocialConversation;
-use App\Modules\SocialCommerce\Infrastructure\Persistence\EloquentSocialInteractionRepository;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 final class SocialCommerceTest extends TestCase

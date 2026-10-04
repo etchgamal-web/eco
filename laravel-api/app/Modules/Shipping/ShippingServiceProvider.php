@@ -2,7 +2,6 @@
 
 namespace App\Modules\Shipping;
 
-use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use App\Modules\Shipping\Application\Outbox\ShippingOutboxHandler;
 use App\Modules\Shipping\Domain\Contracts\ShipmentOperationRepositoryInterface;
 use App\Modules\Shipping\Domain\Contracts\ShipmentPricingSnapshotRepositoryInterface;
@@ -23,6 +22,7 @@ use App\Modules\Shipping\Infrastructure\Persistence\EloquentShippingProviderRead
 use App\Modules\Shipping\Infrastructure\Persistence\EloquentShippingWebhookEventRepository;
 use App\Modules\Shipping\Infrastructure\Providers\ShippingProviderRouter;
 use App\Modules\Shipping\Infrastructure\Webhooks\ShippingWebhookAuthenticator;
+use App\Shared\Domain\Contracts\OutboxEventHandlerInterface;
 use Illuminate\Support\ServiceProvider;
 
 final class ShippingServiceProvider extends ServiceProvider

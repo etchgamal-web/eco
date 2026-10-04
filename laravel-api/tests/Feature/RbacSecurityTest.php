@@ -124,6 +124,6 @@ final class RbacSecurityTest extends TestCase
 
     private function assertPermission(User $user, string $permission, bool $allowed): void
     {
-        self::assertSame($allowed, app(AuthorizationServiceInterface::class)->allows($user,$permission), "Unexpected {$permission} result for {$user->roles()->pluck('slug')->implode(',')}.");
+        self::assertSame($allowed, app(AuthorizationServiceInterface::class)->allows($user, $permission), "Unexpected {$permission} result for {$user->roles()->pluck('slug')->implode(',')}.");
     }
 }

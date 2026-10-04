@@ -9,10 +9,10 @@ use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
-use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
-use App\Shared\Domain\Data\OutboxMessage;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
+use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
+use App\Shared\Domain\Data\OutboxMessage;
 use Illuminate\Support\Str;
 
 final class RefundPayment
@@ -66,7 +66,9 @@ final class RefundPayment
         }
         try {
             $refundPayment = clone $payment;
-            if ($requestedAmount !== null) $refundPayment->amount = $requestedAmount;
+            if ($requestedAmount !== null) {
+                $refundPayment->amount = $requestedAmount;
+            }
             $result = $this->gateway->refundPayment($refundPayment);
             if (($result['status'] ?? null) !== 'refunded') {
                 throw new PaymentFailedException('Payment refund failed.');

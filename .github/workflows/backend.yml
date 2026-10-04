@@ -35,15 +35,7 @@ jobs:
       - run: php artisan key:generate
       - run: mkdir -p database && touch database/database.sqlite
       - run: php artisan migrate --force
-      - name: Check formatting of changed PHP files
-        shell: bash
-        run: |
-          files=$(git diff --name-only HEAD^ HEAD -- '*.php' | sed 's#^laravel-api/##')
-          if [[ -n "$files" ]]; then
-            vendor/bin/pint --test $files
-          else
-            echo 'No changed PHP files to format-check'
-          fi
+      - run: vendor/bin/pint --test
       - name: Check for committed secrets
         run: |
           if git grep -n -I -E 'sk_live_|AKIA[0-9A-Z]{16}|APP_KEY=base64:[A-Za-z0-9+/=]{40,}' -- ':!composer.lock' ':!package-lock.json' ':!phpunit.xml' ':!.github/workflows/backend.yml'; then

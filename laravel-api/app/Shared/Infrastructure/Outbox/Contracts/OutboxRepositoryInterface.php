@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace App\Shared\Infrastructure\Outbox\Contracts;
 
-interface OutboxRepositoryInterface extends \App\Shared\Domain\Contracts\OutboxRepositoryInterface
-{
-}
+interface OutboxRepositoryInterface extends \App\Shared\Domain\Contracts\OutboxRepositoryInterface {}

@@ -17,6 +17,6 @@ final class AddCartItem
             throw new AuthenticationException('Unauthenticated.');
         }
 
-return $this->cart->addItem($u->id, $productId, $variantId, $quantity);
+        return $this->cart->addItem($u->id, $productId, $variantId, $quantity);
     }
 }
