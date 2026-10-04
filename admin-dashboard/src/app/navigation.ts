@@ -23,16 +23,4 @@ export const navItems = [
   { label: 'الإعدادات', path: '/settings', icon: Settings, permission: 'settings.view' },
 ]
 
-export type NavGroup = { label: string; paths: string[] }
-
-export const navGroups: NavGroup[] = [
-  { label: 'نظرة عامة', paths: ['/'] },
-  { label: 'المبيعات والطلبات', paths: ['/orders', '/shipments', '/returns', '/customers'] },
-  { label: 'المنتجات والمخزون', paths: ['/catalog', '/catalog/taxonomy', '/inventory'] },
-  { label: 'إدارة الفريق', paths: ['/management', '/roles-permissions'] },
-  { label: 'التقارير والتشغيل', paths: ['/reports', '/monitoring', '/integrations'] },
-  { label: 'التجارة والتواصل', paths: ['/commerce', '/social', '/ai'] },
-  { label: 'المالية', paths: ['/finance', '/payments', '/settlements'] },
-]
-
 export const utilityPaths = ['/profile']
