@@ -44,7 +44,7 @@ export function useDashboardOrders() {
   const dashboardStats = useMemo(() => {
     const totalSales = rows.reduce((sum, order) => sum + (order.totalAmount ?? Number.parseFloat(order.total.replace(/[^0-9.]/g, '') || '0')), 0)
     const newOrders = rows.filter((order) => order.status === 'جديد').length
-    return { totalSales, newOrders, averageOrder: rows.length ? totalSales / rows.length : 0 }
+    return { totalSales, newOrders, averageOrder: rows.length ? totalSales / rows.length : 0, totalOrders: rows.length }
   }, [rows])
   return { rows, setRows, filteredOrders, dashboardStats, statusFilter, setStatusFilter, paymentFilter, setPaymentFilter, dateFilter, setDateFilter, search, setSearch }
 }
