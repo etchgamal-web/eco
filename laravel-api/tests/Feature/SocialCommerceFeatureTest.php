@@ -164,6 +164,15 @@ final class SocialCommerceFeatureTest extends TestCase
         $this->actingAs($user)->getJson('/api/v1/admin/social/interactions')->assertForbidden();
     }
 
+    public function test_admin_can_list_social_connections_and_automation_rules_without_create_fields(): void
+    {
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
+
+        $this->actingAs($admin)->getJson('/api/v1/admin/social/connections')->assertOk()->assertJsonPath('data', []);
+        $this->actingAs($admin)->getJson('/api/v1/admin/social/automation-rules')->assertOk()->assertJsonPath('data', []);
+    }
+
     private function postWebhook(string $channel, string $raw, string $signature): TestResponse
     {
         return $this->call('POST', "/api/v1/social/webhooks/{$channel}", [], [], [], [

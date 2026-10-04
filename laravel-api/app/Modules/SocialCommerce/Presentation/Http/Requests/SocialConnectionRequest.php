@@ -16,8 +16,8 @@ final class SocialConnectionRequest extends FormRequest
 
     public function rules(): array
     {
-        if ($this->isMethod('get') && $this->route('connection')) {
-            return [];
+        if ($this->isMethod('get')) {
+            return $this->route('connection') ? [] : ['channel' => 'sometimes|in:facebook,instagram,whatsapp'];
         }
 
         return ['channel' => 'required|in:facebook,instagram,whatsapp', 'name' => 'required|string|max:120', 'provider_account_id' => 'nullable|string|max:255', 'access_token' => 'nullable|string', 'webhook_secret' => 'nullable|string', 'metadata' => 'nullable|array', 'is_active' => 'sometimes|boolean'];

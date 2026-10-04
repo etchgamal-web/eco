@@ -16,6 +16,9 @@ final class AutomationRuleRequest extends FormRequest
 
     public function rules(): array
     {
+        if ($this->isMethod('get')) {
+            return ['channel' => 'sometimes|nullable|in:facebook,instagram,whatsapp', 'is_active' => 'sometimes|boolean'];
+        }
         return ['name' => 'sometimes|required|string|max:120', 'channel' => 'nullable|in:facebook,instagram,whatsapp', 'conditions' => 'required|array', 'conditions.keywords' => 'nullable|array', 'conditions.keywords.*' => 'string|max:80', 'actions' => 'required|array|min:1', 'actions.*.type' => 'required|in:send_message,reply_to_comment', 'actions.*.message' => 'nullable|string|max:5000', 'actions.*.template_id' => 'nullable|integer|exists:social_message_templates,id', 'is_active' => 'sometimes|boolean'];
     }
 }

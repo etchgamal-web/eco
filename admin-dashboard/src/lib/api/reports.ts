@@ -4,6 +4,6 @@ export type SalesAnalytics = { from: string; to: string; current: { summary: { s
 
 export async function salesAnalytics(params: { from?: string; to?: string; compare?: boolean } = {}) {
   const query = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => { if (value !== undefined) query.set(key, String(value)) })
+  Object.entries(params).forEach(([key, value]) => { if (value !== undefined) query.set(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value)) })
   return (await request<{ data: SalesAnalytics }>(`/reports/sales?${query.toString()}`)).data
 }
