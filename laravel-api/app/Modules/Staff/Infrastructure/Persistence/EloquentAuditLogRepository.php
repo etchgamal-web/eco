@@ -2,10 +2,10 @@
 
 namespace App\Modules\Staff\Infrastructure\Persistence;
 
-use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
-use App\Modules\Staff\Infrastructure\Models\AuditLog;
 use App\Modules\Auth\Infrastructure\Models\Role;
 use App\Modules\Auth\Infrastructure\Models\User;
+use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
+use App\Modules\Staff\Infrastructure\Models\AuditLog;
 
 final class EloquentAuditLogRepository implements AuditLogRepositoryInterface
 {

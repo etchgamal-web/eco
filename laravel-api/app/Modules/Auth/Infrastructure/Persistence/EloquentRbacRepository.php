@@ -24,9 +24,13 @@ final class EloquentRbacRepository implements RbacRepositoryInterface
     public function updateRolePermissions(int $roleId, array $permissionSlugs): array
     {
         $role = Role::query()->findOrFail($roleId);
-        if ($role->isSystem() || $role->slug === 'owner') throw new AuthorizationException('System roles cannot be modified.');
+        if ($role->isSystem() || $role->slug === 'owner') {
+            throw new AuthorizationException('System roles cannot be modified.');
+        }
         $ids = Permission::query()->whereIn('slug', array_values(array_unique($permissionSlugs)))->pluck('id');
-        if ($ids->count() !== count(array_unique($permissionSlugs))) throw new AuthorizationException('One or more permissions are invalid.');
+        if ($ids->count() !== count(array_unique($permissionSlugs))) {
+            throw new AuthorizationException('One or more permissions are invalid.');
+        }
         $before = $role->permissions()->pluck('slug')->sort()->values()->all();
         DB::transaction(fn () => $role->permissions()->sync($ids));
         AuditLog::query()->create([
@@ -36,6 +40,7 @@ final class EloquentRbacRepository implements RbacRepositoryInterface
             'target_id' => $role->id,
             'metadata' => ['role_slug' => $role->slug, 'before' => $before, 'after' => $permissionSlugs],
         ]);
+
         return collect($this->listRoles())->firstWhere('id', $role->id) ?? $role->fresh('permissions')->toArray();
     }
 

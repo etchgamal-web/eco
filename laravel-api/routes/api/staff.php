@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Staff\Presentation\Http\Controllers\StaffController;
 use App\Modules\Auth\Presentation\Http\Controllers\RbacController;
+use App\Modules\Staff\Presentation\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function (): void {

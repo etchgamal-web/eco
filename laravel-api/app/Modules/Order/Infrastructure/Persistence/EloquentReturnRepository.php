@@ -9,9 +9,9 @@ use App\Modules\Order\Infrastructure\Models\OrderReturn;
 use App\Modules\Order\Infrastructure\Models\OrderReturnItem;
 use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Payment\Infrastructure\Models\PaymentOperation;
+use App\Modules\Staff\Infrastructure\Models\AuditLog;
 use App\Shared\Domain\Contracts\OutboxRepositoryInterface;
 use App\Shared\Domain\Data\OutboxMessage;
-use App\Modules\Staff\Infrastructure\Models\AuditLog;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentReturnRepository implements ReturnRepositoryInterface
@@ -60,6 +60,7 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
             $payment = $order->payments()->whereIn('status', ['paid', 'confirmed', 'partially_refunded'])->lockForUpdate()->orderByDesc('id')->get()->first(function (Payment $candidate) use ($refund): bool {
                 $reserved = (int) OrderReturn::query()->where('payment_id', $candidate->id)->whereIn('status', ['pending', 'approved', 'received', 'inspected_accepted', 'completed'])->sum('refund_amount');
                 $confirmed = (int) PaymentOperation::query()->where('payment_id', $candidate->id)->where('operation', 'refund')->whereIn('status', ['confirmed', 'refunded'])->sum('confirmed_amount');
+
                 return (int) $candidate->amount - max($reserved, $confirmed) >= $refund;
             });
             if ($payment === null) {
@@ -136,7 +137,10 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
     public function markRestocked(int $returnId): object
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
-        if ($return->restocked_at === null) $return->update(['restocked_at' => now(), 'restock_status' => 'completed']);
+        if ($return->restocked_at === null) {
+            $return->update(['restocked_at' => now(), 'restock_status' => 'completed']);
+        }
+
         return $return->fresh(['items.orderItem', 'order.payments']);
     }
 
@@ -144,13 +148,17 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
         $return->update(['refund_requested_at' => $return->refund_requested_at ?? now(), 'refund_status' => 'processing', 'workflow_error' => null]);
+
         return $return->fresh(['items.orderItem', 'order.payments', 'payment']);
     }
 
     public function markCompleted(int $returnId, int $actualRefund): object
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
-        if ($return->status !== 'completed') $return->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund, 'refund_status' => 'refunded', 'workflow_error' => null]);
+        if ($return->status !== 'completed') {
+            $return->update(['status' => 'completed', 'completed_at' => now(), 'actual_customer_refund' => $actualRefund, 'refund_status' => 'refunded', 'workflow_error' => null]);
+        }
+
         return $return;
     }
 
@@ -158,8 +166,12 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
     {
         $return = OrderReturn::query()->lockForUpdate()->findOrFail($returnId);
         $attributes = ['workflow_error' => $error, 'last_workflow_attempt_at' => now()];
-        if ($return->restock_status !== 'completed') $attributes['restock_status'] = 'failed';
-        if ($return->restock_status === 'completed' && $return->refund_status !== 'refunded') $attributes['refund_status'] = 'failed';
+        if ($return->restock_status !== 'completed') {
+            $attributes['restock_status'] = 'failed';
+        }
+        if ($return->restock_status === 'completed' && $return->refund_status !== 'refunded') {
+            $attributes['refund_status'] = 'failed';
+        }
         $return->update($attributes);
 
         return $return;
@@ -167,12 +179,18 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
 
     public function completeRefundForPayment(int $paymentId, int $confirmedAmount, ?int $returnId = null): void
     {
-        if ($confirmedAmount <= 0) return;
+        if ($confirmedAmount <= 0) {
+            return;
+        }
 
         $payment = Payment::query()->find($paymentId);
-        if ($payment === null) return;
+        if ($payment === null) {
+            return;
+        }
         $completedAmount = (int) OrderReturn::query()->where('payment_id', $paymentId)->whereNotNull('actual_customer_refund')->sum('actual_customer_refund');
-        if ($completedAmount + $confirmedAmount > (int) $payment->amount) return;
+        if ($completedAmount + $confirmedAmount > (int) $payment->amount) {
+            return;
+        }
 
         $return = OrderReturn::query()
             ->when($returnId !== null, fn ($query) => $query->whereKey($returnId))
@@ -184,7 +202,9 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
             ->lockForUpdate()
             ->first();
 
-        if ($return === null) return;
+        if ($return === null) {
+            return;
+        }
 
         $return->update([
             'status' => 'completed',
