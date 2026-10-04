@@ -1,20 +1,26 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Bell, ChevronDown, HelpCircle, Menu, Search, Settings, Store, Pin, PinOff, X, Moon, Sun } from 'lucide-react'
 import type { Order } from '../../orders/types'
 import { NotificationMenu } from '../../../components/shared/DashboardWidgets'
+import type { NavGroup } from '../../../app/navigation'
 
 type SessionUser = { name?: string; email?: string; status?: string; roles?: string[]; permissions?: string[] }
 type LocaleSettings = { locale: 'ar' | 'en'; currency: string }
 type NavItem = { label: string; path: string; icon: React.ComponentType<{ size?: number }>; permission?: string }
 type Props = {
-  children: ReactNode; navItems: NavItem[]; activeNav: string; currentUser: SessionUser | null; orders: Order[]; localeSettings: LocaleSettings; theme: 'light' | 'dark'; search: string;
+  children: ReactNode; navItems: NavItem[]; navGroups: NavGroup[]; activeNav: string; currentUser: SessionUser | null; orders: Order[]; localeSettings: LocaleSettings; theme: 'light' | 'dark'; search: string;
   mobileNav: boolean; sidebarPinned: boolean; notificationsOpen: boolean; profileMenuOpen: boolean; commandOpen?: boolean;
   onNavigate: (path: string) => void; onMobileNavChange: (open: boolean) => void; onSidebarPinnedChange: (pinned: boolean) => void;
   onToast: (message: string, type?: 'success' | 'error' | 'info') => void; onLocaleChange: (currency: string, locale: 'ar' | 'en') => void; onToggleTheme: () => void;
   onSearchChange: (value: string) => void; onCommandOpen: () => void; onNotificationsChange: (open: boolean) => void; onProfileMenuChange: (open: boolean) => void; onLogout: () => void;
 }
 
-export function DashboardShell({ children, navItems, activeNav, currentUser, orders, localeSettings, theme, search, mobileNav, sidebarPinned, notificationsOpen, profileMenuOpen, onNavigate, onMobileNavChange, onSidebarPinnedChange, onToast, onLocaleChange, onToggleTheme, onSearchChange, onNotificationsChange, onProfileMenuChange, onLogout, onCommandOpen }: Props) {
+export function DashboardShell({ children, navItems, navGroups, activeNav, currentUser, orders, localeSettings, theme, search, mobileNav, sidebarPinned, notificationsOpen, profileMenuOpen, onNavigate, onMobileNavChange, onSidebarPinnedChange, onToast, onLocaleChange, onToggleTheme, onSearchChange, onNotificationsChange, onProfileMenuChange, onLogout, onCommandOpen }: Props) {
+  const activeGroup = navGroups.find((group) => group.paths.some((path) => navItems.some((item) => item.path === path && item.label === activeNav)))?.label
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(window.localStorage.getItem('souqi-sidebar-groups') ?? '{}') as Record<string, boolean> } catch { return {} }
+  })
+  const toggleGroup = (label: string) => setExpandedGroups((current) => { const next = { ...current, [label]: !current[label] }; window.localStorage.setItem('souqi-sidebar-groups', JSON.stringify(next)); return next })
   return (
     <div className="dashboard-shell">
       <aside className={`compact-sidebar ${mobileNav ? 'mobile-open' : ''} ${sidebarPinned ? 'pinned' : 'collapsed'}`}>
@@ -31,11 +37,12 @@ export function DashboardShell({ children, navItems, activeNav, currentUser, ord
           </div>
         </div>
         <nav className="main-nav" aria-label="التنقل الرئيسي">
-          {navItems.map(({ label, path, icon: Icon }) => (
-            <button key={label} className={`nav-icon ${activeNav === label ? 'active' : ''}`} onClick={() => { onNavigate(path); onMobileNavChange(false) }} title={label} aria-label={label}>
-              <Icon size={20} /><span className="nav-label">{label}</span><span className="tooltip">{label}</span>
-            </button>
-          ))}
+          {navGroups.map((group) => {
+            const items = navItems.filter((item) => group.paths.includes(item.path))
+            if (!items.length) return null
+            const expanded = expandedGroups[group.label] ?? (group.label === activeGroup || group.label === 'نظرة عامة')
+            return <div className="nav-group" key={group.label}><button className={`nav-group-toggle ${expanded ? 'expanded' : ''}`} onClick={() => toggleGroup(group.label)} aria-expanded={expanded}><span className="nav-label">{group.label}</span><ChevronDown size={14} /></button><div className={`nav-group-items ${expanded ? 'expanded' : ''}`}>{items.map(({ label, path, icon: Icon }) => <button key={label} className={`nav-icon ${activeNav === label ? 'active' : ''}`} onClick={() => { onNavigate(path); onMobileNavChange(false) }} title={label} aria-label={label}><Icon size={20} /><span className="nav-label">{label}</span><span className="tooltip">{label}</span></button>)}</div></div>
+          })}
         </nav>
         <div className="sidebar-bottom">
           <button className="nav-icon" title="المساعدة" aria-label="المساعدة" onClick={() => onToast('للدعم، افتح صفحة المراقبة أو تواصل مع مدير النظام', 'info')}>
