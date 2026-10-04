@@ -1051,3 +1051,4 @@ html[data-theme='dark'] .quick-action-grid b { color: #e5edf8; }
 @media (max-width: 1050px) { .home-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-quick-actions { align-items: stretch; flex-direction: column; } .quick-action-grid { width: 100%; } }
 @media (max-width: 760px) { .home-hero { align-items: stretch; flex-direction: column; padding: 22px 18px; } .hero-actions { width: 100%; } .hero-actions > * { flex: 1; } .home-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-quick-actions { padding: 17px 15px; } .quick-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 420px) { .home-kpis { grid-template-columns: 1fr; } .quick-action-grid { grid-template-columns: 1fr; } }
+.form-section-heading { border-top: 1px solid #e2e8f0; color: #1d4ed8; font-size: 11px; font-weight: 800; margin-top: 5px; padding-top: 14px; }

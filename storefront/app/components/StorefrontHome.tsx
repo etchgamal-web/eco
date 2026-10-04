@@ -3,14 +3,15 @@
 import { FormEvent, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { listProducts, Product } from '../../src/lib/api/catalog'
-
+import { getPublishedLandingPage, heroFromLanding, HeroContent } from '../../src/lib/api/landing'
 const formatPrice = (price: number, currency = 'ج.م') => `${new Intl.NumberFormat('ar-EG').format(price)} ${currency}`
-
+const defaultHero: Required<HeroContent> = { eyebrow: 'اختيارات تعيش معك', title: 'أشياء أجمل', highlight: 'لحياة أبسط.', description: 'منتجات مختارة بعناية تجمع بين التصميم الهادئ، الجودة العملية، والأثر الأفضل على يومك.', cta_label: 'اكتشف المجموعة', cta_href: '#products' }
 export default function StorefrontHome() {
   const [products, setProducts] = useState<Product[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [hero, setHero] = useState<Required<HeroContent>>(defaultHero)
 
   const loadProducts = async (term = '') => {
     setLoading(true)
@@ -25,8 +26,14 @@ export default function StorefrontHome() {
     }
   }
 
+  const loadHero = async () => {
+    try {
+      const page = await getPublishedLandingPage('home')
+      setHero({ ...defaultHero, ...heroFromLanding(page) })
+    } catch { setHero(defaultHero) }
+  }
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { void loadProducts() }, [])
+  useEffect(() => { void loadProducts(); void loadHero() }, [])
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -43,7 +50,7 @@ export default function StorefrontHome() {
       </nav>
 
       <section className="hero">
-        <div className="hero-copy"><p className="kicker">اختيارات تعيش معك</p><h1>أشياء أجمل<br /><em>لحياة أبسط.</em></h1><p className="hero-text">منتجات مختارة بعناية تجمع بين التصميم الهادئ، الجودة العملية، والأثر الأفضل على يومك.</p><a className="primary-button" href="#products">اكتشف المجموعة <span>←</span></a></div>
+        <div className="hero-copy"><p className="kicker">{hero.eyebrow}</p><h1>{hero.title}<br /><em>{hero.highlight}</em></h1><p className="hero-text">{hero.description}</p><a className="primary-button" href={hero.cta_href}>{hero.cta_label} <span>←</span></a></div>
         <div className="hero-art" aria-label="صورة زخرفية للمنتجات"><div className="sun" /><div className="arch"><div className="arch-card">ECO<br /><small>everyday objects</small></div></div><div className="leaf leaf-one" /><div className="leaf leaf-two" /></div>
       </section>
 
