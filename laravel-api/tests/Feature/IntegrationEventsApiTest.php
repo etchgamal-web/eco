@@ -25,6 +25,15 @@ final class IntegrationEventsApiTest extends TestCase
         $this->assertDatabaseHas('payment_webhook_events', ['id' => $id, 'status' => 'retrying', 'processing_error' => null]);
     }
 
+    public function test_admin_can_list_all_integration_sources_without_filters(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
+
+        $this->actingAs($admin)->getJson('/api/v1/integrations/events')->assertOk()->assertJsonStructure(['data']);
+    }
+
     public function test_staff_without_integration_permission_is_forbidden(): void
     {
         $this->seed(RbacSeeder::class);

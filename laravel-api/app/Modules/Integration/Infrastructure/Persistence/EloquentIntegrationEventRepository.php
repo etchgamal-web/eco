@@ -13,7 +13,7 @@ final class EloquentIntegrationEventRepository implements IntegrationEventReposi
 
     public function list(array $filters): array
     {
-        $sources = $filters['source'] ? [$filters['source']] : self::SOURCES;
+        $sources = ! empty($filters['source']) ? [$filters['source']] : self::SOURCES;
         $rows = collect();
         foreach ($sources as $source) {
             $table = $this->table($source);
