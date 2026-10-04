@@ -13,6 +13,11 @@ final class GetAdminCustomers
         return $this->query->index($search, $perPage);
     }
 
+    public function export(string $search = ''): array
+    {
+        return $this->query->export($search);
+    }
+
     public function show(int $customerId): array
     {
         return $this->query->show($customerId);

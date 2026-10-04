@@ -6,11 +6,13 @@ use App\Modules\Auth\Domain\Contracts\AuthenticationServiceInterface;
 use App\Modules\Auth\Domain\Contracts\AuthorizationServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PasswordServiceInterface;
 use App\Modules\Auth\Domain\Contracts\PermissionRepositoryInterface;
+use App\Modules\Auth\Domain\Contracts\RbacRepositoryInterface;
 use App\Modules\Auth\Domain\Contracts\UserRepositoryInterface;
 use App\Modules\Auth\Infrastructure\Authentication\LaravelPasswordService;
 use App\Modules\Auth\Infrastructure\Authentication\LaravelTokenAuthenticationService;
 use App\Modules\Auth\Infrastructure\Authorization\LaravelAuthorizationService;
 use App\Modules\Auth\Infrastructure\Persistence\EloquentPermissionRepository;
+use App\Modules\Auth\Infrastructure\Persistence\EloquentRbacRepository;
 use App\Modules\Auth\Infrastructure\Persistence\EloquentUserRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -22,6 +24,7 @@ class AuthServiceProvider extends ServiceProvider
     public array $bindings = [
         UserRepositoryInterface::class => EloquentUserRepository::class,
         PermissionRepositoryInterface::class => EloquentPermissionRepository::class,
+        RbacRepositoryInterface::class => EloquentRbacRepository::class,
         AuthenticationServiceInterface::class => LaravelTokenAuthenticationService::class,
         AuthorizationServiceInterface::class => LaravelAuthorizationService::class,
         PasswordServiceInterface::class => LaravelPasswordService::class,

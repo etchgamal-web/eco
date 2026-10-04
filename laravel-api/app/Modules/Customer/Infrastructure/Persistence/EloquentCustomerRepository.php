@@ -12,6 +12,11 @@ final class EloquentCustomerRepository implements CustomerRepositoryInterface
         return User::query()->find($id);
     }
 
+    public function findCustomerById(int $id): ?User
+    {
+        return User::query()->whereKey($id)->whereHas('roles', fn ($roles) => $roles->where('slug', 'customer'))->first();
+    }
+
     public function update(object $customer, string $name, ?string $email, ?string $phone): User
     {
         $customer->forceFill([
@@ -20,6 +25,12 @@ final class EloquentCustomerRepository implements CustomerRepositoryInterface
             'phone' => $phone,
         ])->save();
 
+        return $customer->fresh();
+    }
+
+    public function updateAdmin(object $customer, array $data): User
+    {
+        $customer->forceFill($data)->save();
         return $customer->fresh();
     }
 }

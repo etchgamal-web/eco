@@ -1,19 +1,11 @@
-import { request } from './client'
+import { request, API_BASE, getToken } from './client'
 
-export type OperationalDashboard = {
-  ambiguous_payments?: Array<Record<string, unknown>>
-  ambiguous_refunds?: Array<Record<string, unknown>>
-  stuck_returns?: Array<Record<string, unknown>>
-  failed_outbox?: Array<Record<string, unknown>>
-  circuits?: Array<Record<string, unknown>>
-}
-
-export async function getOperationalDashboard() {
-  return (await request<{ data: OperationalDashboard }>('/operations/dashboard')).data
-}
-
+export type OperationalDashboard = { ambiguous_payments?: Array<Record<string, unknown>>; ambiguous_refunds?: Array<Record<string, unknown>>; stuck_returns?: Array<Record<string, unknown>>; failed_outbox?: Array<Record<string, unknown>>; circuits?: Array<Record<string, unknown>> }
+export type GlobalPayment = { id: number; order_id: number; order_number: string | null; customer: string | null; method: string; provider_reference: string | null; amount: number; currency: string; status: string; created_at: string }
+export type PaymentsPage = { data: GlobalPayment[]; meta: { current_page: number; per_page: number; total: number; last_page: number } }
+export async function getOperationalDashboard() { return (await request<{ data: OperationalDashboard }>('/operations/dashboard')).data }
 export async function listOrderPayments(orderId: number) { return (await request<{ data: Array<Record<string, unknown>> }>(`/orders/${orderId}/payments`)).data }
-
+export async function listPayments(params: Record<string, string | number> = {}) { const query = new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)])); return request<PaymentsPage>(`/payments?${query.toString()}`) }
+export async function downloadPaymentsCsv(params: Record<string, string | number> = {}) { const query = new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)])); const response = await fetch(`${API_BASE}/payments/export?${query.toString()}`, { headers: { Accept: 'text/csv', Authorization: `Bearer ${getToken()}` } }); if (!response.ok) throw new Error('تعذر تصدير المدفوعات'); const blob = await response.blob(); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'payments.csv'; anchor.click(); URL.revokeObjectURL(url) }
 export async function confirmPayment(id: number) { return (await request<{ data: Record<string, unknown> }>(`/payments/${id}/confirm`, { method: 'POST' })).data }
-
 export async function refundPayment(id: number) { return (await request<{ data: Record<string, unknown> }>(`/payments/${id}/refund`, { method: 'POST' })).data }

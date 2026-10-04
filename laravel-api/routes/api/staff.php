@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Staff\Presentation\Http\Controllers\StaffController;
+use App\Modules\Auth\Presentation\Http\Controllers\RbacController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function (): void {
@@ -8,4 +9,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('staff', [StaffController::class, 'store'])->name('staff.store');
     Route::match(['put', 'patch'], 'staff/{staffId}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('staff/{staffId}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    Route::get('roles', [RbacController::class, 'index'])->name('roles.index');
+    Route::match(['put', 'patch'], 'roles/{roleId}/permissions', [RbacController::class, 'update'])->name('roles.permissions.update');
 });

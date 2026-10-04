@@ -1,4 +1,4 @@
-import { AlertTriangle, Bot, Boxes, CircleDollarSign, CreditCard, FileText, LayoutDashboard, MessageCircle, Package, RefreshCcw, Settings, Shield, ShoppingCart, Store, Truck, TrendingUp, Users } from 'lucide-react'
+import { AlertTriangle, Bot, Boxes, CircleDollarSign, CreditCard, FileText, LayoutDashboard, MessageCircle, Package, RefreshCcw, Settings, Shield, ShoppingCart, Store, Truck, TrendingUp, Users, Webhook } from 'lucide-react'
 
 export const navItems = [
   { label: 'الرئيسية', path: '/', icon: LayoutDashboard },
@@ -15,6 +15,7 @@ export const navItems = [
   { label: 'التجارة الاجتماعية', path: '/social', icon: MessageCircle, permission: 'social.interactions.view' },
   { label: 'الذكاء الاصطناعي', path: '/ai', icon: Bot, permission: 'settings.view' },
   { label: 'المراقبة', path: '/monitoring', icon: AlertTriangle, permission: 'monitoring.run' },
+  { label: 'التكاملات', path: '/integrations', icon: Webhook, permission: 'integrations.view' },
   { label: 'المالية', path: '/finance', icon: CircleDollarSign, permission: 'settlements.view' },
   { label: 'المدفوعات', path: '/payments', icon: CreditCard, permission: 'payments.view' },
   { label: 'التسويات', path: '/settlements', icon: FileText, permission: 'settlements.view' },

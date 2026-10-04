@@ -19,6 +19,16 @@ final class PaymentApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_can_list_global_payments_with_filters_and_pagination(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer'); $owner = $this->userWithRole('owner'); $order = $this->orderFor($customer, 1500);
+        Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'global-test', 'amount' => 1500, 'currency' => 'EGP', 'status' => 'pending', 'idempotency_key' => 'global-payment']);
+
+        $this->actingAs($owner)->getJson('/api/v1/payments?status=pending&per_page=1')->assertOk()->assertJsonPath('data.0.provider_reference', 'global-test')->assertJsonPath('meta.total', 1);
+        $this->actingAs($customer)->getJson('/api/v1/payments')->assertForbidden();
+    }
+
     public function test_customer_can_create_and_list_cash_on_delivery_payment(): void
     {
         $this->seed(RbacSeeder::class);

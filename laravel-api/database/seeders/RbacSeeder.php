@@ -25,6 +25,9 @@ class RbacSeeder extends Seeder
 
             // Dashboard
             ['name' => 'View Dashboard', 'slug' => 'dashboard.view', 'group' => 'dashboard'],
+            ['name' => 'View Sales Reports', 'slug' => 'reports.view', 'group' => 'reports'],
+            ['name' => 'View Integrations', 'slug' => 'integrations.view', 'group' => 'integrations'],
+            ['name' => 'Retry Integrations', 'slug' => 'integrations.retry', 'group' => 'integrations'],
 
             // Products
             ['name' => 'View Products', 'slug' => 'products.view', 'group' => 'products'],

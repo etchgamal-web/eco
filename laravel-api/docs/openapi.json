@@ -10062,7 +10062,8 @@
           "NOT_FOUND",
           "CONFLICT",
           "RATE_LIMITED"
-        ]
+        ],
+        "x-rate-limit": "api"
       }
     },
     "/orders/{orderId}": {
@@ -21807,6 +21808,14 @@
           "CONFLICT",
           "RATE_LIMITED"
         ]
+      },
+      "patch": {
+        "summary": "update admin customer",
+        "operationId": "admin_customers_update"
+      },
+      "put": {
+        "summary": "update admin customer",
+        "operationId": "admin_customers_update_put"
       }
     },
     "/admin/social/summary": {
@@ -22055,7 +22064,622 @@
           "200": {
             "description": "Paginated shipments"
           }
+        },
+        "x-rate-limit": "api"
+      }
+    },
+    "/admin/customers/{customerId}/addresses": {
+      "post": {
+        "summary": "create admin customer address",
+        "operationId": "admin_customers_addresses_store",
+        "x-rate-limit": "api",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {}
+                }
+              }
+            }
+          }
         }
+      }
+    },
+    "/admin/customers/{customerId}/addresses/{addressId}": {
+      "patch": {
+        "summary": "update admin customer address",
+        "operationId": "admin_customers_addresses_update",
+        "x-rate-limit": "api",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "delete admin customer address",
+        "operationId": "admin_customers_addresses_destroy",
+        "x-rate-limit": "api"
+      },
+      "put": {
+        "summary": "update admin customer address",
+        "operationId": "admin_customers_addresses_update_put",
+        "x-rate-limit": "api",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/sales": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "sales analytics",
+        "operationId": "reports_sales_get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "reports.view",
+        "x-rate-limit": "api"
+      }
+    },
+    "/roles": {
+      "get": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "roles and permissions matrix",
+        "operationId": "roles_index_get",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "roles.view",
+        "x-rate-limit": "api"
+      }
+    },
+    "/roles/{roleId}/permissions": {
+      "put": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "update role permissions",
+        "operationId": "roles_permissions_update_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "permissions.manage",
+        "x-rate-limit": "api"
+      },
+      "patch": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "update role permissions",
+        "operationId": "roles_permissions_update_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "default": {
+                  "value": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "permissions.manage",
+        "x-rate-limit": "api"
+      }
+    },
+    "/integrations/events": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "integration webhook events",
+        "operationId": "integrations_events_index_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "payment",
+                "shipping",
+                "social"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "integrations.view",
+        "x-rate-limit": "api"
+      }
+    },
+    "/integrations/events/{source}/{id}/retry": {
+      "post": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "retry integration event",
+        "operationId": "integrations_events_retry_post",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Event not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "integrations.retry",
+        "x-rate-limit": "api"
+      }
+    },
+    "/payments": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "global payments list",
+        "operationId": "payments_global_index_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": [],
+                      "meta": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "payments.view",
+        "x-rate-limit": "api"
+      }
+    },
+    "/payments/export": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "export payments CSV",
+        "operationId": "payments_global_export_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "default": {
+                    "value": {
+                      "data": [],
+                      "meta": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "payments.view",
+        "x-rate-limit": "api"
+      }
+    },
+    "/admin/customers/export": {
+      "get": {
+        "tags": [
+          "Customers"
+        ],
+        "summary": "export customers CSV",
+        "operationId": "admin_customers_export_get",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV export",
+            "content": {
+              "text/csv": {}
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Missing required permission"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-permission": "customers.view",
+        "x-rate-limit": "api"
       }
     }
   },

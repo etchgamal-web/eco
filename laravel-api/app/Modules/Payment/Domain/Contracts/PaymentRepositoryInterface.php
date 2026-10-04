@@ -20,6 +20,9 @@ interface PaymentRepositoryInterface
 
     public function listForOrderAsAdmin(int $orderId): iterable;
 
+    /** @return array<string, mixed> */
+    public function listForAdmin(array $filters): array;
+
     public function create(array $attributes): object;
 
     public function start(array $attributes): object;

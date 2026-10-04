@@ -67,6 +67,19 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
         return Payment::query()->with('order')->where('order_id', $orderId)->latest()->get();
     }
 
+    public function listForAdmin(array $filters): array
+    {
+        $query = Payment::query()->with(['order:id,order_number', 'user:id,name,email'])->latest();
+        if (! empty($filters['status'])) $query->where('status', $filters['status']);
+        if (! empty($filters['method'])) $query->where('method', $filters['method']);
+        if (! empty($filters['provider'])) $query->where('provider_reference', 'like', '%'.$filters['provider'].'%');
+        if (! empty($filters['from'])) $query->whereDate('created_at', '>=', $filters['from']);
+        if (! empty($filters['to'])) $query->whereDate('created_at', '<=', $filters['to']);
+        $page = max(1, (int) ($filters['page'] ?? 1)); $perPage = min(100, max(1, (int) ($filters['per_page'] ?? 25)));
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        return ['data' => $paginator->getCollection()->map(fn (Payment $payment) => ['id' => $payment->id, 'order_id' => $payment->order_id, 'order_number' => $payment->order?->order_number, 'customer' => $payment->user?->name ?? $payment->user?->email, 'method' => $payment->method, 'provider_reference' => $payment->provider_reference, 'amount' => (int) $payment->amount, 'currency' => $payment->currency, 'status' => $payment->status, 'created_at' => $payment->created_at?->toIso8601String()])->all(), 'meta' => ['current_page' => $paginator->currentPage(), 'per_page' => $paginator->perPage(), 'total' => $paginator->total(), 'last_page' => $paginator->lastPage()]];
+    }
+
     public function create(array $attributes): object
     {
         return Payment::query()->create($attributes)->load('order');

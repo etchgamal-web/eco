@@ -14,10 +14,12 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->get('dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'stats'])->name('dashboard.stats');
     require __DIR__.'/api/monitoring.php';
     require __DIR__.'/api/settlements.php';
+    Route::get('reports/sales', \App\Modules\Reporting\Presentation\Http\Controllers\SalesAnalyticsController::class)->middleware('auth:sanctum')->name('reports.sales');
     require __DIR__.'/api/payments.php';
     require __DIR__.'/api/shipping.php';
     require __DIR__.'/api/promotion.php';
     require __DIR__.'/api/staff.php';
+    require __DIR__.'/api/integrations.php';
     require __DIR__.'/api/settings.php';
     require __DIR__.'/api/social.php';
     require __DIR__.'/api/landing.php';

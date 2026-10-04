@@ -5,6 +5,8 @@ use App\Modules\Payment\Presentation\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('payments', [PaymentController::class, 'globalIndex'])->name('payments.global.index');
+    Route::get('payments/export', [PaymentController::class, 'export'])->name('payments.global.export');
     Route::get('orders/{orderId}/payments', [PaymentController::class, 'adminIndex'])->name('payments.index');
     Route::get('operations/dashboard', OperationalDashboardController::class)->name('operations.dashboard');
     Route::post('operations/payments/{paymentId}/reconcile', [OperationalDashboardController::class, 'reconcile'])->name('operations.reconcile');

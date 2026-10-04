@@ -12,4 +12,10 @@ final class ListPayments
     {
         return $this->payments->listForOrderAsAdmin($orderId);
     }
+
+    /** @return array<string, mixed> */
+    public function executeAdmin(array $filters): array
+    {
+        return $this->payments->listForAdmin($filters);
+    }
 }

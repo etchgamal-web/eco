@@ -7,6 +7,9 @@ interface AdminCustomerQueryInterface
     /** @return array{data: array, meta: array} */
     public function index(string $search, int $perPage): array;
 
+    /** @return array<int, array<string, mixed>> */
+    public function export(string $search): array;
+
     /** @return array{customer: mixed, orders: mixed} */
     public function show(int $customerId): array;
 }
