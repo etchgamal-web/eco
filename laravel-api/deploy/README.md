@@ -54,3 +54,18 @@ php artisan backup:database --force
 ## Health expectations
 
 `/up` هو liveness check أساسي، أما `/ready` فيفحص database وcache وstorage وqueue ويعيد `503` عند عدم الجاهزية. يجب أن يراقب مشغل البنية التحتية `/ready` قبل توجيه traffic، إضافة إلى `/metrics` المحمي و`5xx` وqueue failures وpayment/webhook failures.
+
+## Automated preflight
+
+قبل أي release production، شغّل الفحص من نفس environment provider الذي سيشغّل التطبيق. السكربت لا يطبع الأسرار، ويفشل إذا كانت البيئة غير آمنة:
+
+```bash
+./scripts/preflight_production.sh
+```
+
+وللواجهة:
+
+```bash
+cd ../admin-dashboard
+VITE_API_URL=https://admin.example.com/api npm run verify:production
+```

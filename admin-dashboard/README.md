@@ -1,75 +1,55 @@
-# React + TypeScript + Vite
+# لوحة تحكم Eco
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+واجهة الإدارة مبنية باستخدام React وTypeScript وVite، وتتصل بـLaravel API.
 
-Currently, two official plugins are available:
+## التشغيل المحلي
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm ci
+cp .env.example .env  # إذا كان الملف موجودًا
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+يتم تحديد عنوان الـAPI من خلال:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+VITE_API_URL=http://localhost:8000/api
 ```
+
+إذا لم يتم تعريف `VITE_API_URL` تستخدم الواجهة القيمة الافتراضية الموجودة في عميل API.
+
+## أوامر التحقق
+
+```bash
+npm run build   # فحص TypeScript وإنشاء نسخة الإنتاج
+npm run lint    # فحص ESLint
+npm run verify  # تشغيل build ثم lint
+```
+
+## الوحدات الحالية
+
+- الطلبات وتفاصيل الطلب والمدفوعات والشحن والإرجاع.
+- المنتجات والكتالوج والخصائص والـvariants والوسائط.
+- العملاء مع البحث والتفاصيل والعناوين وسجل التغييرات.
+- المخزون والحجز والتحرير وسجل الحركات.
+- التقارير التشغيلية وتحليلات المبيعات والمقارنات والتصدير.
+- المدفوعات العامة والتفاصيل والتأكيد والاسترجاع والتصدير.
+- التسويات والاستيراد والتصدير وتفاصيل العناصر.
+- التجارة الاجتماعية: الاتصالات، التفاعلات، المحادثات، القوالب، والأتمتة.
+- الشحن والتسويق: طرق الشحن، صفحات الهبوط، العملاء المحتملون، وقوالب التواصل.
+- الإدارة، الصلاحيات، الإعدادات، المراقبة، والذكاء الاصطناعي.
+
+## ملاحظات مهمة
+
+- اختبار Laravel في بيئات CI أو Sandbox يجب أن يضبط `APP_ENV=testing` صراحةً حتى لا تتغلب قيمة بيئة خارجية مثل `APP_ENV=PROD` على إعداد PHPUnit.
+- الإجراءات الحساسة مثل الاسترجاع، الحذف، النشر، وإعادة المحاولة مرتبطة بصلاحيات المستخدم وتظهر بعد التأكيد أو الإجراء الصريح.
+- خدمات Laravel وقاعدة البيانات يجب تشغيلها منفصلًا قبل تجربة تدفقات الواجهة كاملة.
+
+## الحالة الحالية
+
+آخر تحقق ناجح:
+
+- `npm run build`
+- `npm run lint`
+- `git diff --check`
+- Laravel: `APP_ENV=testing php artisan test` — 295 اختبارًا ناجحًا و10,551 assertion.

@@ -12,4 +12,7 @@ interface RbacRepositoryInterface
 
     /** @return array<string, mixed> */
     public function updateRolePermissions(int $roleId, array $permissionSlugs): array;
+
+    /** @return array<string, mixed> */
+    public function updateRoleStatus(int $roleId, bool $isActive): array;
 }

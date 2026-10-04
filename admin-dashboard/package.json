@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify": "npm run build && npm run lint",
+    "verify:production": "node scripts/check-production-env.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

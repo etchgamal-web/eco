@@ -8,8 +8,10 @@ use App\Modules\Staff\Application\UseCases\DeleteStaff;
 use App\Modules\Staff\Application\UseCases\GetStaff;
 use App\Modules\Staff\Application\UseCases\ListStaff;
 use App\Modules\Staff\Application\UseCases\UpdateStaff;
+use App\Modules\Staff\Application\UseCases\ListStaffAudit;
 use App\Modules\Staff\Domain\ValueObjects\StaffData;
 use App\Modules\Staff\Presentation\Http\Requests\StaffRequest;
+use App\Modules\Staff\Presentation\Http\Requests\AuditLogRequest;
 use Illuminate\Http\JsonResponse;
 
 final class StaffController extends Controller
@@ -34,5 +36,10 @@ final class StaffController extends Controller
         $useCase->execute($getStaff->execute($id), $request->user());
 
         return response()->json(['message' => 'Staff deleted successfully.']);
+    }
+
+    public function audit(AuditLogRequest $request, int $id, ListStaffAudit $useCase): JsonResponse
+    {
+        return response()->json(['data' => $useCase->execute($id, $request->validated())]);
     }
 }

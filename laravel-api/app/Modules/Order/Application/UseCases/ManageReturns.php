@@ -23,6 +23,11 @@ final class ManageReturns
         return $this->returns->listAll();
     }
 
+    public function adminDetail(int $id): object
+    {
+        return $this->returns->findForAdmin($id);
+    }
+
     public function approve(int $id): object
     {
         return $this->returns->approve($id);

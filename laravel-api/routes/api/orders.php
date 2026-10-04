@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('orders/{orderId}/confirm', [OrderController::class, 'confirm'])->whereNumber('orderId')->name('orders.confirm');
     Route::post('orders/{orderId}/cancel', [OrderController::class, 'cancel'])->whereNumber('orderId')->name('orders.cancel');
     Route::get('returns', [ReturnController::class, 'index'])->name('returns.index');
+    Route::get('returns/{returnId}', [ReturnController::class, 'show'])->whereNumber('returnId')->name('returns.show');
     Route::patch('returns/{returnId}/approve', [ReturnController::class, 'approve'])->name('returns.approve');
     Route::patch('returns/{returnId}/receive', [ReturnController::class, 'receive'])->name('returns.receive');
     Route::patch('returns/{returnId}/inspect', [ReturnController::class, 'inspect'])->name('returns.inspect');

@@ -24,6 +24,11 @@ final class ReturnController extends Controller
         return response()->json(['data' => $useCase->adminList()]);
     }
 
+    public function show(ReturnRequest $request, int $return, ManageReturns $useCase): JsonResponse
+    {
+        return response()->json(['data' => $useCase->adminDetail($return)]);
+    }
+
     public function approve(ReturnRequest $request, int $return, ManageReturns $useCase): JsonResponse
     {
         return response()->json(['data' => $useCase->approve($return)]);

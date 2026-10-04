@@ -164,6 +164,7 @@ final class StaffApiTest extends TestCase
         $response = $this->actingAs($owner)->postJson('/api/v1/staff', ['name' => 'Audited Staff', 'email' => 'audited@example.com', 'password' => 'password123', 'password_confirmation' => 'password123', 'roles' => ['manager']])->assertCreated();
         $id = $response->json('data.id');
         $this->actingAs($owner)->patchJson("/api/v1/staff/{$id}", ['name' => 'Audited Updated', 'email' => 'audited@example.com'])->assertOk();
+        $this->actingAs($owner)->getJson("/api/v1/staff/{$id}/audit?per_page=1&page=1")->assertOk()->assertJsonPath('data.meta.total', 2)->assertJsonCount(1, 'data.items');
         $this->actingAs($owner)->deleteJson("/api/v1/staff/{$id}")->assertOk();
         $this->assertDatabaseHas('audit_logs', ['actor_id' => $owner->id, 'action' => 'staff.created', 'target_id' => $id]);
         $this->assertDatabaseHas('audit_logs', ['actor_id' => $owner->id, 'action' => 'staff.updated', 'target_id' => $id]);

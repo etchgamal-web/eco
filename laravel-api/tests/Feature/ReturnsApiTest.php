@@ -37,6 +37,41 @@ final class ReturnsApiTest extends TestCase
             ->assertStatus(409);
     }
 
+    public function test_admin_can_read_return_details_but_customer_cannot(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->user('customer');
+        $admin = $this->user('admin');
+        $product = Product::query()->create(['name' => 'Return Detail Product', 'slug' => 'return-detail-product', 'type' => 'simple', 'status' => 'active', 'price' => 250]);
+        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'delivered', 'total_amount' => 250, 'currency' => 'EGP']);
+        $item = $order->items()->create(['product_id' => $product->id, 'name' => $product->name, 'quantity' => 1, 'unit_price' => 250]);
+        Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'return-detail-payment', 'amount' => 250, 'currency' => 'EGP', 'status' => 'paid', 'idempotency_key' => 'return-detail-payment']);
+        $return = $this->actingAs($customer)->postJson('/api/v1/customer/orders/'.$order->id.'/returns', ['reason' => 'Detail check', 'notes' => 'Handle carefully', 'items' => [['order_item_id' => $item->id, 'quantity' => 1]]])->assertCreated()->json('data.id');
+
+        $this->actingAs($admin)->getJson('/api/v1/returns/'.$return)
+            ->assertOk()
+            ->assertJsonPath('data.id', $return)
+            ->assertJsonPath('data.reason', 'Detail check')
+            ->assertJsonCount(1, 'data.items');
+        $this->actingAs($customer)->getJson('/api/v1/returns/'.$return)->assertForbidden();
+    }
+
+    public function test_admin_can_reject_return_during_inspection_with_notes(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->user('customer');
+        $admin = $this->user('admin');
+        $product = Product::query()->create(['name' => 'Inspection Product', 'slug' => 'inspection-product', 'type' => 'simple', 'status' => 'active', 'price' => 300]);
+        $order = CustomerOrder::query()->create(['user_id' => $customer->id, 'status' => 'delivered', 'total_amount' => 300, 'currency' => 'EGP']);
+        $item = $order->items()->create(['product_id' => $product->id, 'name' => $product->name, 'quantity' => 1, 'unit_price' => 300]);
+        Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'inspection-payment', 'amount' => 300, 'currency' => 'EGP', 'status' => 'paid', 'idempotency_key' => 'inspection-payment']);
+        $return = $this->actingAs($customer)->postJson('/api/v1/customer/orders/'.$order->id.'/returns', ['reason' => 'Inspection check', 'items' => [['order_item_id' => $item->id, 'quantity' => 1]]])->assertCreated()->json('data.id');
+
+        $this->actingAs($admin)->patchJson('/api/v1/returns/'.$return.'/approve')->assertOk();
+        $this->actingAs($admin)->patchJson('/api/v1/returns/'.$return.'/receive')->assertOk();
+        $this->actingAs($admin)->patchJson('/api/v1/returns/'.$return.'/inspect', ['accepted' => false, 'notes' => 'المنتج مستخدم'])->assertOk()->assertJsonPath('data.status', 'inspected_rejected')->assertJsonPath('data.inspection_notes', 'المنتج مستخدم');
+    }
+
     public function test_only_delivered_orders_and_valid_quantities_can_be_returned(): void
     {
         $this->seed(RbacSeeder::class);

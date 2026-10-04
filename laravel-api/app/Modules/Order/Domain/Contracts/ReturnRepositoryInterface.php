@@ -10,6 +10,8 @@ interface ReturnRepositoryInterface
 
     public function listAll(): iterable;
 
+    public function findForAdmin(int $id): object;
+
     public function approve(int $returnId): object;
 
     public function receive(int $returnId): object;

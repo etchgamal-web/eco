@@ -958,6 +958,14 @@ html[data-theme='dark'] .email-quick-menu a:hover { background: #1e293b; color: 
 .order-roadmap-step.is-current.is-cancelled b { color: #b91c1c; }
 .order-roadmap-step small { color: #94a3b8; font-size: 9px; line-height: 1.2; white-space: nowrap; }
 .order-drawer-full-page .order-roadmap { margin-bottom: 22px; padding-block: 17px 13px; }
+.order-timeline { display: flex; flex-direction: column; gap: 0; margin: 0 0 18px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fbff; padding: 12px 14px; }
+.order-timeline-item { position: relative; display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; min-height: 58px; }
+.order-timeline-item:not(:last-child)::before { position: absolute; top: 12px; bottom: 0; left: 5px; width: 2px; background: #dbe3ee; content: ''; }
+.order-timeline-dot { z-index: 1; width: 11px; height: 11px; margin-top: 4px; border: 2px solid #2563eb; border-radius: 50%; background: #fff; }
+.order-timeline-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.order-timeline-heading b { color: #1e293b; font-size: 11px; }
+.order-timeline-heading small { color: #94a3b8; font-size: 9px; white-space: nowrap; }
+.order-timeline-item p { margin: 3px 0 12px; color: #64748b; font-size: 10px; line-height: 1.55; }
 html[data-theme='dark'] .order-roadmap { border-color: #263449; background: #142238; scrollbar-color: #475569 transparent; }
 html[data-theme='dark'] .order-roadmap-step:not(:last-child)::after { background: #334155; }
 html[data-theme='dark'] .order-roadmap-step.is-done:not(:last-child)::after { background: #166534; }
@@ -966,6 +974,11 @@ html[data-theme='dark'] .order-roadmap-step.is-done .order-roadmap-node { border
 html[data-theme='dark'] .order-roadmap-step.is-current .order-roadmap-node { border-color: #3b82f6; background: #2563eb; box-shadow: 0 0 0 3px #1e3a5f; }
 html[data-theme='dark'] .order-roadmap-step b { color: #9aabc3; }
 html[data-theme='dark'] .order-roadmap-step.is-done b, html[data-theme='dark'] .order-roadmap-step.is-current b { color: #e2e8f0; }
+html[data-theme='dark'] .order-timeline { border-color: #263449; background: #142238; }
+html[data-theme='dark'] .order-timeline-item:not(:last-child)::before { background: #334155; }
+html[data-theme='dark'] .order-timeline-dot { border-color: #60a5fa; background: #172338; }
+html[data-theme='dark'] .order-timeline-heading b { color: #e5edf8; }
+html[data-theme='dark'] .order-timeline-item p { color: #9aabc3; }
 @media (max-width: 600px) {
   .order-roadmap { margin-bottom: 14px; padding: 13px 6px 10px; }
   .order-roadmap-step { min-width: 96px; flex-basis: 96px; }

@@ -61,6 +61,21 @@ final class SettlementImportApiTest extends TestCase
         $this->actingAs($viewer)->postJson('/api/v1/orders/delayed/detect')->assertForbidden();
     }
 
+    public function test_manager_can_paginate_operational_alerts(): void
+    {
+        $viewer = $this->createUserWithPermissions(['orders.view']);
+        $order = CustomerOrder::query()->create(['status' => 'processing', 'total_amount' => 100, 'currency' => 'EGP']);
+        OperationalAlert::query()->create(['order_id' => $order->id, 'type' => 'processing_overdue', 'severity' => 'high', 'status' => 'open', 'detected_at' => now()->subMinutes(3)]);
+        OperationalAlert::query()->create(['order_id' => $order->id, 'type' => 'shipment_no_update', 'severity' => 'medium', 'status' => 'acknowledged', 'detected_at' => now()->subMinutes(2)]);
+        OperationalAlert::query()->create(['order_id' => $order->id, 'type' => 'settlement_missing', 'severity' => 'low', 'status' => 'resolved', 'detected_at' => now()->subMinute()]);
+
+        $this->actingAs($viewer)->getJson('/api/v1/operational-alerts?per_page=1&page=2')
+            ->assertOk()
+            ->assertJsonPath('data.meta.current_page', 2)
+            ->assertJsonPath('data.meta.last_page', 3)
+            ->assertJsonCount(1, 'data.items');
+    }
+
     public function test_manager_can_list_settlements_with_filters_and_pagination(): void
     {
         $admin = User::factory()->create();

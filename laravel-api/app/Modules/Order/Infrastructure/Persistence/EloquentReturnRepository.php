@@ -82,6 +82,18 @@ final class EloquentReturnRepository implements ReturnRepositoryInterface
         return OrderReturn::query()->with(['items', 'order:id,user_id,status', 'user:id,name'])->latest()->get();
     }
 
+    public function findForAdmin(int $id): object
+    {
+        return OrderReturn::query()->with([
+            'items.orderItem.product:id,name',
+            'items.orderItem.variant:id,sku',
+            'order:id,user_id,status,order_number,total_amount,currency',
+            'user:id,name,email,phone',
+            'payment:id,order_id,status,amount,currency,provider_reference',
+            'shipment:id,order_id,carrier_company,tracking_number,status',
+        ])->findOrFail($id);
+    }
+
     public function approve(int $returnId): object
     {
         return DB::transaction(function () use ($returnId): object {
