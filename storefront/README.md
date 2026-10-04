@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# واجهة متجر Eco
 
-## Getting Started
+واجهة المتجر مبنية باستخدام Next.js 16 وReact، وتستخدم Laravel API v1 للكتالوج.
 
-First, run the development server:
+## التشغيل المحلي
 
 ```bash
+npm ci
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+المتغيرات:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## التحقق
 
-## Learn More
+```bash
+npm run build
+npm run lint
+```
 
-To learn more about Next.js, take a look at the following resources:
+## المرحلة الحالية
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+تم تنفيذ الصفحة الرئيسية الأولى بواجهة عربية RTL تشمل:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- هوية Eco ومقدمة المتجر.
+- كتالوج متصل بـ `GET /api/v1/products`.
+- البحث في المنتجات.
+- حالات التحميل والخطأ وعدم وجود نتائج.
+- بطاقات المنتجات والتصميم المتجاوب.
+- metadata وOpen Graph باللغة العربية.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+السلة، صفحة تفاصيل المنتج، تسجيل الدخول، وCheckout ستُنفذ على مراحل لاحقة بعد تثبيت تدفقات الكتالوج والـAPI في بيئة Staging.
