@@ -28,12 +28,15 @@ function App() {
   const location = useLocation()
   const navigate = useNavigate()
   const [authenticated, setAuthenticated] = useState(() => Boolean(getToken()))
-  const activeNav = navItems.find((item) => item.path === location.pathname)?.label ?? (location.pathname.startsWith('/settings/') ? 'الإعدادات' : 'الرئيسية')
+  const orderDetailId = /^\/orders\/([1-9]\d*)$/.exec(location.pathname)?.[1] ?? null
+  const isFullOrderPage = orderDetailId !== null && Number.isSafeInteger(Number(orderDetailId))
+  const activeNav = navItems.find((item) => item.path === location.pathname)?.label ?? (location.pathname.startsWith('/settings/') ? 'الإعدادات' : isFullOrderPage ? (navItems.find((item) => item.path === '/orders')?.label ?? 'الطلبات') : 'الرئيسية')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<import('./lib/api').ApiOrder | null>(null)
   const [selectedOrderTimeline, setSelectedOrderTimeline] = useState<unknown[]>([])
   const [ordersTotal, setOrdersTotal] = useState(0)
   const [orderDetailsLoading, setOrderDetailsLoading] = useState(false)
+  const [orderPageErrorId, setOrderPageErrorId] = useState<number | null>(null)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [mobileNav, setMobileNav] = useState(false)
   const [sidebarPinned, setSidebarPinned] = useState(() => window.localStorage.getItem('souqi-sidebar-pinned') === 'true')
@@ -57,6 +60,27 @@ function App() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (!authenticated) { setApiLoading(false); setCurrentUser(null); setRows([]); setOrdersTotal(0); setSelectedOrder(null); setSelectedOrderDetails(null); setSelectedOrderTimeline([]); return } Promise.all([me(), listOrders({ page: 1, per_page: 20 }), listSettings()]).then(([user, data, settings]) => { setCurrentUser(user); const ordersPage = Array.isArray(data) ? data : data.data; setOrdersTotal(Array.isArray(data) ? data.length : data.total); setRows(ordersPage.map(normalizeApiOrder)); const currency = String(settings.find((item) => item.key === 'store.currency')?.value ?? localeSettings.currency); const locale = String(settings.find((item) => item.key === 'store.locale')?.value ?? localeSettings.locale) as 'ar' | 'en'; if (currency !== localeSettings.currency || locale !== localeSettings.locale) setLocale(currency, locale) }).catch((error: unknown) => { if (error instanceof ApiError && error.status === 401) { setAuthenticated(false); setToast({ type: 'info', message: 'انتهت جلسة الدخول، يرجى تسجيل الدخول مجددًا' }) } else setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل بيانات الحساب من الـAPI' }) }).finally(() => setApiLoading(false)) }, [authenticated, localeSettings.currency, localeSettings.locale, setLocale, setRows])
 
+  // Load order details directly when a user opens /orders/{id} from a bookmark or the drawer.
+  useEffect(() => {
+    if (!authenticated || !isFullOrderPage || !orderDetailId) return
+    let active = true
+    const apiOrderId = Number(orderDetailId)
+    Promise.all([getOrder(apiOrderId), getOrderTimeline(apiOrderId)])
+      .then(([details, timeline]) => {
+        if (!active) return
+        setSelectedOrder(normalizeApiOrder(details))
+        setOrderPageErrorId(null)
+        setSelectedOrderDetails(details)
+        setSelectedOrderTimeline(Array.isArray(timeline) ? timeline : [])
+      })
+      .catch((error: unknown) => {
+        if (!active) return
+        setOrderPageErrorId(apiOrderId)
+        setToast({ type: 'error', message: error instanceof ApiError ? error.message : 'تعذر تحميل تفاصيل الطلب' })
+      })
+    return () => { active = false }
+  }, [authenticated, isFullOrderPage, orderDetailId])
+
   const todayLabel = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const canEditOrders = currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('orders.edit') === true
@@ -73,6 +97,8 @@ function App() {
     finally { setOrderDetailsLoading(false) }
   }
   const closeOrderDrawer = () => { setSelectedOrder(null); setSelectedOrderDetails(null); setSelectedOrderTimeline([]) }
+  const openOrderFullPage = (order: Order) => { if (!order.apiId) { setToast({ type: 'error', message: 'لا يتوفر معرّف لفتح هذا الطلب' }); return } navigate(`/orders/${order.apiId}`) }
+  const closeFullOrderPage = () => { closeOrderDrawer(); navigate('/orders') }
   const handleOrderAction = async (action: 'confirm' | 'cancel') => {
     if (!selectedOrderDetails?.id) return
     try {
@@ -89,17 +115,21 @@ function App() {
   if (!authenticated) return <LoginScreen onSuccess={() => setAuthenticated(true)} />
   const isSettingsSection = location.pathname === '/settings' || location.pathname.startsWith('/settings/')
   const canViewSettings = currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('settings.view')
-  if (location.pathname !== '/' && !navItems.some((item) => item.path === location.pathname) && !isSettingsSection && !utilityPaths.includes(location.pathname)) return <NotFound onHome={() => navigate('/')} />
+  const routeAccessPath = isFullOrderPage ? '/orders' : location.pathname
+  if (location.pathname !== '/' && !navItems.some((item) => item.path === location.pathname) && !isSettingsSection && !utilityPaths.includes(location.pathname) && !isFullOrderPage) return <NotFound onHome={() => navigate('/')} />
   if (isSettingsSection && !canViewSettings) return <NotAuthorized onHome={() => navigate('/')} />
-  if (location.pathname !== '/' && !visibleNavItems.some((item) => item.path === location.pathname) && !isSettingsSection && !utilityPaths.includes(location.pathname)) return <NotAuthorized onHome={() => navigate('/')} />
+  if (routeAccessPath !== '/' && !visibleNavItems.some((item) => item.path === routeAccessPath) && !isSettingsSection && !utilityPaths.includes(location.pathname)) return <NotAuthorized onHome={() => navigate('/')} />
 
+
+  const fullPageOrderMatches = Boolean(selectedOrder && selectedOrderDetails && selectedOrderDetails.id === Number(orderDetailId))
+  const renderOrderDrawer = (fullPage: boolean) => selectedOrder ? <OrderDrawer key={`${selectedOrder.id}-${selectedOrderDetails ? 'loaded' : 'loading'}-${fullPage ? 'page' : 'drawer'}`} order={selectedOrder} details={selectedOrderDetails} timeline={selectedOrderTimeline} loading={orderDetailsLoading} canCreateShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipments.create') === true} canManageShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipping.manage') === true} canManageOrders={canEditOrders} fullPage={fullPage} onOpenFullPage={() => openOrderFullPage(selectedOrder)} onOrderAction={handleOrderAction} onClose={fullPage ? closeFullOrderPage : closeOrderDrawer} onToast={(message, type) => setToast({ message, type })} /> : null
   return <DashboardShell navItems={visibleNavItems} activeNav={activeNav} currentUser={currentUser} orders={rows} localeSettings={localeSettings} theme={theme} search={search} mobileNav={mobileNav} sidebarPinned={sidebarPinned} notificationsOpen={notificationsOpen} profileMenuOpen={profileMenuOpen}
-    onNavigate={navigate} onMobileNavChange={setMobileNav} onSidebarPinnedChange={(next) => { setSidebarPinned(next); window.localStorage.setItem('souqi-sidebar-pinned', String(next)) }} onToast={(message, type) => setToast({ type: type ?? 'info', message })} onLocaleChange={setLocale} onToggleTheme={toggleTheme} onSearchChange={setSearch} onCommandOpen={() => setCommandOpen(true)} onNotificationsChange={setNotificationsOpen} onProfileMenuChange={setProfileMenuOpen} onLogout={() => void handleLogout()}><Suspense fallback={<PageLoading />}><DashboardContent
+    onNavigate={navigate} onMobileNavChange={setMobileNav} onSidebarPinnedChange={(next) => { setSidebarPinned(next); window.localStorage.setItem('souqi-sidebar-pinned', String(next)) }} onToast={(message, type) => setToast({ type: type ?? 'info', message })} onLocaleChange={setLocale} onToggleTheme={toggleTheme} onSearchChange={setSearch} onCommandOpen={() => setCommandOpen(true)} onNotificationsChange={setNotificationsOpen} onProfileMenuChange={setProfileMenuOpen} onLogout={() => void handleLogout()}>{isFullOrderPage ? (fullPageOrderMatches ? renderOrderDrawer(true) : orderPageErrorId === Number(orderDetailId) ? <div className="order-page-error"><b>تعذر فتح تفاصيل الطلب</b><p>تأكد من صحة رقم الطلب أو ارجع إلى قائمة الطلبات.</p><button className="outline-button" onClick={closeFullOrderPage}>العودة إلى الطلبات</button></div> : <PageLoading />) : <><Suspense fallback={<PageLoading />}><DashboardContent
       activeNav={activeNav} pathname={location.pathname} currentUser={currentUser} onToast={(message, type) => setToast({ type: type ?? 'success', message })} onUserUpdated={setCurrentUser}
       navigate={navigate} apiLoading={apiLoading || dashboardQuery.isLoading} todayLabel={todayLabel} dashboardStats={dashboardQuery.data ? { totalSales: dashboardQuery.data.sales.total, newOrders: dashboardQuery.data.orders.new, averageOrder: dashboardQuery.data.average_order } : dashboardStats} currency={localeSettings.currency} socialStats={dashboardQuery.data?.social ?? socialStats} operationalDashboard={operationsQuery.data}
       rows={rows} ordersTotal={ordersTotal} filteredOrders={filteredOrders} statusFilter={statusFilter} setStatusFilter={setStatusFilter} paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter}
       dateFilter={dateFilter} setDateFilter={setDateFilter} setSearch={setSearch} statusOptions={statusOptions} updateStatus={updateStatus}
       exportOrders={exportOrders} openOrderDrawer={openOrderDrawer} printDashboardOrder={printDashboardOrder} canEditOrders={canEditOrders} canAdvanceOrder={canAdvanceOrder}
-    /></Suspense>{selectedOrder && <OrderDrawer key={`${selectedOrder.id}-${selectedOrderDetails ? 'loaded' : 'loading'}`} order={selectedOrder} details={selectedOrderDetails} timeline={selectedOrderTimeline} loading={orderDetailsLoading} canCreateShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipments.create') === true} canManageShipment={currentUser?.roles?.some((role) => ['owner', 'admin'].includes(role)) || currentUser?.permissions?.includes('shipping.manage') === true} canManageOrders={canEditOrders} onOrderAction={handleOrderAction} onClose={closeOrderDrawer} onToast={(message, type) => setToast({ message, type })} />}{commandOpen && <CommandPalette orders={rows} onClose={() => setCommandOpen(false)} onSelect={(path) => { setCommandOpen(false); navigate(path) }} onOrderSelect={(order) => { setCommandOpen(false); void openOrderDrawer(order) }} />}{toast && <ToastViewport toast={toast} onClose={() => setToast(null)} />}</DashboardShell>
+    /></Suspense>{selectedOrder && renderOrderDrawer(false)}</>}{commandOpen && <CommandPalette orders={rows} onClose={() => setCommandOpen(false)} onSelect={(path) => { setCommandOpen(false); navigate(path) }} onOrderSelect={(order) => { setCommandOpen(false); void openOrderDrawer(order) }} />}{toast && <ToastViewport toast={toast} onClose={() => setToast(null)} />}</DashboardShell>
 }
 export default App

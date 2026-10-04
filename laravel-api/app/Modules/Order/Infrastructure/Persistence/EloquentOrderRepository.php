@@ -49,7 +49,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function find(int $orderId): object
     {
-        $order = CustomerOrder::query()->with(['user', 'items.product', 'review.reviewer', 'review.confirmer', 'shipments.method', 'returns'])->find($orderId);
+        $order = CustomerOrder::query()->with(['user', 'items.product', 'payments:id,order_id,method,amount,currency,status,created_at', 'review.reviewer', 'review.confirmer', 'shipments.method', 'returns'])->find($orderId);
         if ($order === null) {
             throw new OrderNotFoundException('Order not found.');
         }

@@ -7,6 +7,7 @@ use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Catalog\Infrastructure\Models\Product;
 use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
+use App\Modules\Payment\Infrastructure\Models\Payment;
 use App\Modules\Shipping\Infrastructure\Models\Shipment;
 use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
 use Database\Seeders\RbacSeeder;
@@ -28,6 +29,41 @@ final class OrderCrudApiTest extends TestCase
         $this->actingAs($customer)->getJson('/api/v1/customer/orders')->assertOk()->assertJsonCount(1, 'data');
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$owned->id}")->assertOk()->assertJsonPath('data.id', $owned->id);
         $this->actingAs($customer)->getJson("/api/v1/customer/orders/{$foreign->id}")->assertNotFound();
+    }
+
+    public function test_order_details_return_safe_payment_summary_fields_without_provider_secrets(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $manager = $this->userWithRole('order_manager');
+        $customer = User::factory()->create();
+        $order = CustomerOrder::query()->create([
+            'user_id' => $customer->id,
+            'status' => 'processing',
+            'subtotal_amount' => 1250,
+            'total_amount' => 1250,
+            'currency' => 'EGP',
+        ]);
+        $order->payments()->create([
+            'user_id' => $customer->id,
+            'method' => 'mada',
+            'provider_reference' => 'private-provider-reference',
+            'amount' => 1250,
+            'currency' => 'EGP',
+            'status' => 'succeeded',
+            'idempotency_key' => 'safe-order-detail-'.$order->id,
+            'metadata' => ['private_token' => 'must-not-leak'],
+        ]);
+
+        $response = $this->actingAs($manager)->getJson("/api/v1/orders/{$order->id}")
+            ->assertOk()
+            ->assertJsonPath('data.payments.0.method', 'mada')
+            ->assertJsonPath('data.payments.0.amount', 1250)
+            ->assertJsonPath('data.payments.0.status', 'succeeded');
+
+        $paymentFields = array_keys($response->json('data.payments.0'));
+        sort($paymentFields);
+
+        $this->assertSame(['amount', 'created_at', 'currency', 'id', 'method', 'order_id', 'status'], $paymentFields);
     }
 
     public function test_order_manager_must_review_and_contact_before_confirmation(): void
