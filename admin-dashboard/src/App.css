@@ -971,3 +971,22 @@ html[data-theme='dark'] .order-roadmap-step.is-done b, html[data-theme='dark'] .
   .order-roadmap-step { min-width: 96px; flex-basis: 96px; }
   .order-roadmap-step b { font-size: 9px; }
 }
+
+/* Customer profile shortcuts stay compact and wrap cleanly inside the drawer. */
+.customer-contact-action { display: inline-flex; align-items: center; gap: 5px; width: fit-content; margin-top: 7px; color: #2563eb; font-size: 11px; font-weight: 700; text-decoration: none; }
+.customer-contact-action:hover { color: #1d4ed8; text-decoration: underline; }
+.customer-order-list { display: flex; flex-direction: column; gap: 8px; }
+.customer-order-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px; align-items: center; gap: 8px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; }
+.customer-order-row > div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.customer-order-row b, .customer-order-row small { overflow-wrap: anywhere; }
+.customer-order-row small { color: #64748b; font-size: 10px; }
+.customer-order-row .quick-action { display: grid; height: 30px; width: 30px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; }
+.customer-order-row .quick-action:hover, .customer-order-row .quick-action:focus-visible { background: #eff6ff; color: #2563eb; }
+html[data-theme='dark'] .customer-order-row { border-color: #334155; background: #172338; }
+html[data-theme='dark'] .customer-order-row small { color: #94a3b8; }
+html[data-theme='dark'] .customer-contact-action { color: #93c5fd; }
+@media (max-width: 420px) {
+  .customer-order-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .customer-order-row > div:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .customer-order-row .quick-action { grid-column: 2; grid-row: 1 / span 2; }
+}
