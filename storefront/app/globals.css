@@ -86,3 +86,21 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .auth-help { color:var(--muted); font-size:13px; margin:25px 0 0; text-align:center; }
 .auth-help a { color:var(--green); font-weight:700; }
 @media (max-width:800px) { .auth-card { padding:30px 22px; } }
+
+.account-page-shell { margin:0 auto; max-width:1240px; min-height:650px; padding:75px 5% 110px; }
+.account-heading { align-items:end; display:flex; justify-content:space-between; margin-bottom:45px; }
+.account-heading h1 { font-family:Georgia,serif; font-size:clamp(40px,5vw,64px); font-weight:400; letter-spacing:-.05em; margin:0 0 12px; }
+.account-heading p:not(.kicker) { color:var(--muted); margin:0; }
+.account-cards { display:grid; gap:18px; grid-template-columns:repeat(3,1fr); margin-bottom:55px; }
+.account-card { background:var(--cream); display:flex; flex-direction:column; gap:8px; min-height:150px; padding:24px; }
+.account-card span,.account-card p { color:var(--muted); font-size:13px; margin:0; }
+.account-card strong { color:var(--green); font-family:Georgia,serif; font-size:35px; font-weight:400; }
+.account-card a { color:var(--green); font-size:20px; font-weight:700; margin-top:10px; }
+.account-sections { display:grid; gap:35px; grid-template-columns:1fr 1fr; }
+.account-sections section { border-top:1px solid var(--line); padding-top:20px; }
+.account-section-heading { align-items:center; display:flex; justify-content:space-between; margin-bottom:18px; }
+.account-section-heading h2 { font-family:Georgia,serif; font-size:26px; font-weight:400; margin:0; }
+.account-section-heading span,.muted-text { color:var(--muted); font-size:13px; }
+.account-list > div { align-items:center; border-bottom:1px solid var(--line); display:grid; font-size:13px; gap:12px; grid-template-columns:1fr 1fr auto; padding:15px 0; }
+.account-list strong { color:var(--green); font-size:11px; }
+@media (max-width:800px) { .account-heading { align-items:start; flex-direction:column; gap:25px; } .account-cards,.account-sections { grid-template-columns:1fr; } }

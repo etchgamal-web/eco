@@ -17,7 +17,7 @@ export default function SiteHeader() {
         <a href="#contact">تواصل معنا</a>
       </div>
       <div className="header-actions">
-        {customer ? <button className="account-link" type="button" onClick={() => void logout()}>خروج</button> : <Link className="account-link" href="/account/login">دخول</Link>}
+        {customer ? <><Link className="account-link" href="/account">حسابي</Link><button className="account-link" type="button" onClick={() => void logout()}>خروج</button></> : <Link className="account-link" href="/account/login">دخول</Link>}
         <Link className="cart-button" href="/cart" aria-label="السلة">السلة <span>{itemCount}</span></Link>
       </div>
     </nav>
