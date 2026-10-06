@@ -118,3 +118,15 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .text-button { background:transparent; border:0; color:#a04436; cursor:pointer; font-size:12px; padding:0; }
 .orders-list { max-width:850px; }
 @media (max-width:800px) { .addresses-layout { grid-template-columns:1fr; } }
+
+.account-heading-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.profile-form { background:var(--cream); display:grid; gap:17px; max-width:540px; padding:30px; }
+.profile-form label { display:grid; font-size:13px; gap:7px; }
+.profile-form input { background:var(--paper); border:1px solid var(--line); padding:12px; width:100%; }
+.order-details { max-width:850px; }
+.order-detail-summary { background:var(--cream); display:grid; gap:14px; grid-template-columns:repeat(3,1fr); margin-bottom:40px; padding:24px; }
+.order-detail-summary span { color:var(--muted); font-size:12px; }
+.order-detail-summary strong { color:var(--green); font-family:Georgia,serif; font-size:22px; }
+.order-details h2 { font-family:Georgia,serif; font-size:27px; font-weight:400; }
+.orders-list a { color:var(--green); font-weight:700; }
+@media (max-width:800px) { .account-heading-actions { width:100%; } .order-detail-summary { grid-template-columns:1fr; } }

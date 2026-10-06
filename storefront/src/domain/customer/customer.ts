@@ -5,4 +5,5 @@ export type Customer = {
   phone?: string | null
   roles?: string[]
   permissions?: string[]
+  status?: string
 }

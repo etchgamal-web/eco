@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { Customer } from '@/domain/customer/customer'
 import { getCurrentCustomer, login as loginRequest, logout as logoutRequest } from '@/infrastructure/api/auth-api'
 import { useCart } from '@/features/cart/store'
+import { updateCustomerProfile } from '@/infrastructure/api/customer-api'
 
 const TOKEN_KEY = 'eco-auth-token'
 
@@ -12,6 +13,7 @@ type AuthContextValue = {
   loading: boolean
   login: (identifier: string, password: string, remember?: boolean) => Promise<void>
   logout: () => Promise<void>
+  updateProfile: (input: Pick<Customer, 'name' | 'email' | 'phone'>) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -43,6 +45,7 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
     logout: async () => {
       try { await logoutRequest() } finally { window.localStorage.removeItem(TOKEN_KEY); setCustomer(null) }
     },
+    updateProfile: async (input) => { const updated = await updateCustomerProfile(input); setCustomer(updated) },
   }), [customer, loading, syncAfterAuthentication])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

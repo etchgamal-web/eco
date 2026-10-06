@@ -24,7 +24,7 @@ export default function AccountOverview() {
 
   return (
     <section className="account-page-shell">
-      <div className="account-heading"><div><p className="kicker">مساحتك في إيكو</p><h1>مرحبًا، {customer.name}</h1><p>{customer.email || customer.phone}</p></div><Link className="secondary-button" href="/products">متابعة التسوق</Link></div>
+      <div className="account-heading"><div><p className="kicker">مساحتك في إيكو</p><h1>مرحبًا، {customer.name}</h1><p>{customer.email || customer.phone}</p></div><div className="account-heading-actions"><Link className="secondary-button" href="/account/profile">تعديل بياناتي</Link><Link className="secondary-button" href="/products">متابعة التسوق</Link></div></div>
       {error ? <div className="state-card" role="alert"><strong>{error}</strong><p>تأكد من اتصال Laravel API ثم حاول مرة أخرى.</p></div> : null}
       <div className="account-cards">
         <article className="account-card"><span>الطلبات</span><strong>{loading ? '—' : orders.length}</strong><Link href="/account/orders">عرض الطلبات</Link><p>طلباتك السابقة</p></article>

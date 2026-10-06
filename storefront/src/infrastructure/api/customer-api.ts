@@ -1,4 +1,5 @@
 import { requestJson } from '@/core/http/client'
+import type { Customer } from '@/domain/customer/customer'
 
 type DataResponse<T> = { data: T }
 
@@ -39,4 +40,21 @@ export async function createCustomerAddress(input: AddressInput): Promise<Custom
 
 export async function deleteCustomerAddress(id: number): Promise<void> {
   await requestJson<unknown>(`/customer/addresses/${id}`, { method: 'DELETE' })
+}
+
+export async function getCustomerProfile(): Promise<Customer> {
+  const response = await requestJson<DataResponse<Customer>>('/customer/profile', { cache: 'no-store' })
+  return response.data
+}
+
+export async function updateCustomerProfile(input: Pick<Customer, 'name' | 'email' | 'phone'>): Promise<Customer> {
+  const response = await requestJson<DataResponse<Customer>>('/customer/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
+  return response.data
+}
+
+export type CustomerOrderDetails = CustomerOrder & { items?: Array<{ id: number; quantity?: number; product_name?: string; unit_price?: number; total_amount?: number }>; shipping_amount?: number; subtotal_amount?: number; payment_status?: string }
+
+export async function getCustomerOrder(id: number): Promise<CustomerOrderDetails> {
+  const response = await requestJson<DataResponse<CustomerOrderDetails>>(`/customer/orders/${id}`, { cache: 'no-store' })
+  return response.data
 }
