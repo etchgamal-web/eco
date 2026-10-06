@@ -14,6 +14,13 @@ export type ServerCart = {
   totals?: { subtotal?: number; total?: number; currency?: string }
 }
 
+export class CartMergeError extends Error {
+  constructor(message: string, public readonly remainingItems: CartItem[]) {
+    super(message)
+    this.name = 'CartMergeError'
+  }
+}
+
 type CartResponse = { data: ServerCart }
 
 function itemPayload(item: Pick<CartItem, 'productId' | 'variantId' | 'quantity'>) {
@@ -68,6 +75,12 @@ export async function clearServerCart(): Promise<ServerCart> {
 /** Merge policy: local quantities are added to remote quantities; Laravel remains authoritative. */
 export async function mergeLocalCart(items: CartItem[]): Promise<ServerCart> {
   let serverCart = await getServerCart()
-  for (const item of items) serverCart = await addServerCartItem(item)
+  for (const [index, item] of items.entries()) {
+    try {
+      serverCart = await addServerCartItem(item)
+    } catch (reason) {
+      throw new CartMergeError(reason instanceof Error ? reason.message : 'تعذر دمج السلة المحلية', items.slice(index))
+    }
+  }
   return serverCart
 }

@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [loading, setLoading] = useState(true)
-  const { syncAfterAuthentication, hydrateFromServer } = useCart()
+  const { setAuthenticated, syncAfterAuthentication } = useCart()
   const cartHydrated = useRef(false)
 
   useEffect(() => {
@@ -35,11 +35,10 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
     }
     void getCurrentCustomer().then((nextCustomer) => {
       setCustomer(nextCustomer)
-      void hydrateFromServer().catch(() => {
-        // Keep the authenticated session if cart hydration is temporarily unavailable.
-      })
+      setAuthenticated(true)
+      void syncAfterAuthentication()
     }).catch(() => window.localStorage.removeItem(TOKEN_KEY)).finally(() => setLoading(false))
-  }, [hydrateFromServer])
+  }, [setAuthenticated, syncAfterAuthentication])
 
   const value = useMemo<AuthContextValue>(() => ({
     customer,
@@ -48,13 +47,14 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
       const response = await loginRequest(identifier, password, remember)
       window.localStorage.setItem(TOKEN_KEY, response.token)
       setCustomer(response.data)
+      setAuthenticated(true)
       await syncAfterAuthentication()
     },
     logout: async () => {
-      try { await logoutRequest() } finally { window.localStorage.removeItem(TOKEN_KEY); setCustomer(null) }
+      try { await logoutRequest() } finally { window.localStorage.removeItem(TOKEN_KEY); setAuthenticated(false); setCustomer(null) }
     },
     updateProfile: async (input) => { const updated = await updateCustomerProfile(input); setCustomer(updated) },
-  }), [customer, loading, syncAfterAuthentication])
+  }), [customer, loading, setAuthenticated, syncAfterAuthentication])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

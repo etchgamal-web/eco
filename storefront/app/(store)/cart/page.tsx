@@ -8,7 +8,7 @@ import { useCart } from '@/features/cart/store'
 import { formatPrice } from '@/core/i18n/formatters'
 
 export default function CartPage() {
-  const { cart, itemCount, removeItem, updateQuantity, clearCart } = useCart()
+  const { cart, itemCount, removeItem, updateQuantity, clearCart, syncStatus, syncError, retrySync } = useCart()
   const total = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
   return (
@@ -17,6 +17,8 @@ export default function CartPage() {
       <SiteHeader />
       <div className="cart-page-shell">
         <div className="section-heading"><div><p className="kicker">مراجعة اختياراتك</p><h1>السلة</h1></div><span className="cart-count-label">{itemCount} منتجات</span></div>
+        {syncStatus === 'syncing' ? <div className="state-card" role="status">جارٍ مزامنة السلة مع حسابك...</div> : null}
+        {syncStatus === 'error' ? <div className="state-card" role="alert"><strong>{syncError || 'تعذر مزامنة السلة'}</strong><button className="secondary-button" type="button" onClick={() => void retrySync()}>إعادة المحاولة</button></div> : null}
         {cart.items.length === 0 ? (
           <div className="state-card"><strong>السلة فارغة</strong><p>أضف منتجات من المجموعة لتظهر هنا.</p><Link className="primary-button" href="/#products">تصفح المنتجات</Link></div>
         ) : (
