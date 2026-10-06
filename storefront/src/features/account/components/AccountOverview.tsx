@@ -27,8 +27,8 @@ export default function AccountOverview() {
       <div className="account-heading"><div><p className="kicker">مساحتك في إيكو</p><h1>مرحبًا، {customer.name}</h1><p>{customer.email || customer.phone}</p></div><Link className="secondary-button" href="/products">متابعة التسوق</Link></div>
       {error ? <div className="state-card" role="alert"><strong>{error}</strong><p>تأكد من اتصال Laravel API ثم حاول مرة أخرى.</p></div> : null}
       <div className="account-cards">
-        <article className="account-card"><span>الطلبات</span><strong>{loading ? '—' : orders.length}</strong><p>طلباتك السابقة</p></article>
-        <article className="account-card"><span>العناوين</span><strong>{loading ? '—' : addresses.length}</strong><p>عناوين الشحن المحفوظة</p></article>
+        <article className="account-card"><span>الطلبات</span><strong>{loading ? '—' : orders.length}</strong><Link href="/account/orders">عرض الطلبات</Link><p>طلباتك السابقة</p></article>
+        <article className="account-card"><span>العناوين</span><strong>{loading ? '—' : addresses.length}</strong><Link href="/account/addresses">إدارة العناوين</Link><p>عناوين الشحن المحفوظة</p></article>
         <article className="account-card"><span>السلة</span><Link href="/cart">عرض السلة</Link><p>راجع اختياراتك الحالية</p></article>
       </div>
       <div className="account-sections">

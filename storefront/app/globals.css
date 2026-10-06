@@ -104,3 +104,17 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .account-list > div { align-items:center; border-bottom:1px solid var(--line); display:grid; font-size:13px; gap:12px; grid-template-columns:1fr 1fr auto; padding:15px 0; }
 .account-list strong { color:var(--green); font-size:11px; }
 @media (max-width:800px) { .account-heading { align-items:start; flex-direction:column; gap:25px; } .account-cards,.account-sections { grid-template-columns:1fr; } }
+
+.addresses-layout { display:grid; gap:55px; grid-template-columns:minmax(280px,360px) 1fr; }
+.address-form { background:var(--cream); display:grid; gap:15px; padding:26px; }
+.address-form h2,.addresses-layout section h2 { font-family:Georgia,serif; font-size:26px; font-weight:400; margin:0 0 8px; }
+.address-form label { display:grid; font-size:13px; gap:7px; }
+.address-form input:not([type='checkbox']) { background:var(--paper); border:1px solid var(--line); padding:11px; width:100%; }
+.address-list { display:grid; gap:12px; }
+.address-list article { border:1px solid var(--line); padding:18px; position:relative; }
+.address-list article > div { align-items:center; display:flex; gap:10px; }
+.address-list article span { background:var(--green); color:var(--paper); font-size:10px; padding:4px 7px; }
+.address-list article p { color:var(--muted); font-size:13px; margin:10px 0 14px; }
+.text-button { background:transparent; border:0; color:#a04436; cursor:pointer; font-size:12px; padding:0; }
+.orders-list { max-width:850px; }
+@media (max-width:800px) { .addresses-layout { grid-template-columns:1fr; } }
