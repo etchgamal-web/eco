@@ -3,6 +3,13 @@ import type { Product } from '@/domain/catalog/product'
 
 export type { Product } from '@/domain/catalog/product'
 
+export type CatalogFilterOption = {
+  id: number
+  name: string
+  slug?: string | null
+  products_count?: number
+}
+
 export type ProductListOptions = {
   page?: number
   perPage?: number
@@ -26,6 +33,11 @@ type SingleProductResponse = {
   data: Product
 }
 
+async function listFilterOptions(path: 'categories' | 'brands'): Promise<CatalogFilterOption[]> {
+  const payload = await requestJson<{ data: CatalogFilterOption[] }>(`/${path}`, { cache: 'no-store' })
+  return payload.data
+}
+
 export const catalogApi = {
   async listProducts(search = '', options: ProductListOptions = {}): Promise<ProductListResult> {
     const params = new URLSearchParams()
@@ -46,6 +58,9 @@ export const catalogApi = {
     const payload = await requestJson<SingleProductResponse>(`/products/${encodeURIComponent(slugOrId)}`, { cache: 'no-store' })
     return payload.data
   },
+
+  listCategories: () => listFilterOptions('categories'),
+  listBrands: () => listFilterOptions('brands'),
 }
 
 export const catalogRepository = catalogApi

@@ -1,12 +1,12 @@
+import type { Cart, CartItem } from '@/domain/cart/cart'
 import { requestJson } from '@/core/http/client'
-import type { CartItem } from '@/domain/cart/cart'
 
 type ServerCartItem = {
   product_id: number
   variant_id?: number | null
   quantity: number
   product?: { name?: string; slug?: string; price?: number; currency?: string }
-  variant?: { name?: string; sku?: string; price?: number }
+  variant?: { id?: number; name?: string; sku?: string; price?: number }
 }
 
 export type ServerCart = {
@@ -21,6 +21,21 @@ function itemPayload(item: Pick<CartItem, 'productId' | 'variantId' | 'quantity'
     product_id: item.productId,
     ...(item.variantId ? { variant_id: item.variantId } : {}),
     quantity: item.quantity,
+  }
+}
+
+export function serverCartToLocalCart(serverCart: ServerCart): Cart {
+  return {
+    items: serverCart.items.map((item) => ({
+      productId: item.product_id,
+      name: item.product?.name || 'منتج إيكو',
+      slug: item.product?.slug,
+      price: item.variant?.price ?? item.product?.price ?? 0,
+      currency: item.product?.currency || serverCart.totals?.currency,
+      quantity: item.quantity,
+      variantId: item.variant_id ?? undefined,
+      variantName: item.variant?.name || item.variant?.sku,
+    })),
   }
 }
 
@@ -50,7 +65,7 @@ export async function clearServerCart(): Promise<ServerCart> {
   return response.data
 }
 
-/** Merge guest items into the authenticated Laravel cart. Laravel remains the source of truth after success. */
+/** Merge policy: local quantities are added to remote quantities; Laravel remains authoritative. */
 export async function mergeLocalCart(items: CartItem[]): Promise<ServerCart> {
   let serverCart = await getServerCart()
   for (const item of items) serverCart = await addServerCartItem(item)

@@ -1,8 +1,9 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
+import type { CatalogFilterOption } from '@/infrastructure/api/catalog-api'
 import type { Product } from '@/domain/catalog/product'
-import { listProducts } from '@/infrastructure/repositories/repository-factories'
+import { listBrands, listCategories, listProducts } from '@/infrastructure/repositories/repository-factories'
 import ProductGrid from './ProductGrid'
 import Pagination from '@/shared/components/Pagination'
 
@@ -12,6 +13,8 @@ type SortValue = 'newest' | 'price_asc' | 'price_desc' | 'name_asc'
 
 export default function ProductListing() {
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<CatalogFilterOption[]>([])
+  const [brands, setBrands] = useState<CatalogFilterOption[]>([])
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | undefined>()
   const [brandId, setBrandId] = useState<number | undefined>()
@@ -39,17 +42,17 @@ export default function ProductListing() {
   // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { void loadProducts('', 1) }, [])
 
-  const categories = useMemo(() => {
-    const values = new Map<number, string>()
-    products.forEach((product) => { if (product.category) values.set(product.category.id, product.category.name) })
-    return [...values.entries()]
-  }, [products])
-
-  const brands = useMemo(() => {
-    const values = new Map<number, string>()
-    products.forEach((product) => { if (product.brand) values.set(product.brand.id, product.brand.name) })
-    return [...values.entries()]
-  }, [products])
+  useEffect(() => {
+    let active = true
+    void Promise.all([listCategories(), listBrands()]).then(([nextCategories, nextBrands]) => {
+      if (!active) return
+      setCategories(nextCategories)
+      setBrands(nextBrands)
+    }).catch(() => {
+      // Product loading remains usable if optional filter metadata is unavailable.
+    })
+    return () => { active = false }
+  }, [])
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -87,11 +90,11 @@ export default function ProductListing() {
       <div className="catalog-filters" aria-label="فلاتر المنتجات">
         <select value={categoryId ?? ''} onChange={(event) => applyFilter(event.target.value ? Number(event.target.value) : undefined, brandId)} aria-label="التصنيف">
           <option value="">كل التصنيفات</option>
-          {categories.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
         </select>
         <select value={brandId ?? ''} onChange={(event) => applyFilter(categoryId, event.target.value ? Number(event.target.value) : undefined)} aria-label="العلامة التجارية">
           <option value="">كل العلامات</option>
-          {brands.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+          {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
         </select>
         <select value={sort} onChange={(event) => applyFilter(categoryId, brandId, event.target.value as SortValue)} aria-label="ترتيب المنتجات">
           <option value="newest">الأحدث</option><option value="price_asc">السعر: الأقل أولًا</option><option value="price_desc">السعر: الأعلى أولًا</option><option value="name_asc">الاسم: أ - ي</option>

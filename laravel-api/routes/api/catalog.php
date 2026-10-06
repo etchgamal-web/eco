@@ -5,6 +5,7 @@ use App\Modules\Catalog\Presentation\Http\Controllers\BrandController;
 use App\Modules\Catalog\Presentation\Http\Controllers\CategoryController;
 use App\Modules\Catalog\Presentation\Http\Controllers\ProductController;
 use App\Modules\Catalog\Presentation\Http\Controllers\ProductMediaController;
+use App\Modules\Catalog\Presentation\Http\Controllers\PublicCatalogController;
 use Illuminate\Support\Facades\Route;
 
 // Storefront catalog is public; mutation and moderation routes remain protected below.
@@ -12,6 +13,9 @@ Route::get('products', [ProductController::class, 'index'])->name('products.inde
 Route::get('products/{productId}', [ProductController::class, 'show'])->name('products.show');
 Route::get('products/{productId}/variants', [ProductController::class, 'variants'])->name('products.variants.index');
 Route::get('products/{productId}/variants/{variantId}', [ProductController::class, 'showVariant'])->name('products.variants.show');
+Route::get('categories', [PublicCatalogController::class, 'categories'])->name('categories.public.index');
+Route::get('brands', [PublicCatalogController::class, 'brands'])->name('brands.public.index');
+
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('products/import', [ProductController::class, 'import'])->middleware('throttle:10,1')->name('products.import');
     Route::post('products', [ProductController::class, 'store'])->name('products.store');
@@ -38,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('attributes/{attributeId}/values', [AttributeController::class, 'storeValue'])->name('attributes.values.store');
     Route::match(['put', 'patch'], 'attributes/{attributeId}/values/{valueId}', [AttributeController::class, 'updateValue'])->name('attributes.values.update');
     Route::delete('attributes/{attributeId}/values/{valueId}', [AttributeController::class, 'destroyValue'])->name('attributes.values.destroy');
-    Route::apiResource('brands', BrandController::class)->parameters(['brands' => 'brandId']);
-    Route::apiResource('categories', CategoryController::class)->parameters(['categories' => 'categoryId']);
+    Route::get('brands/{brandId}', [BrandController::class, 'show'])->name('brands.show');
+    Route::get('categories/{categoryId}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::apiResource('brands', BrandController::class)->except(['index', 'show'])->parameters(['brands' => 'brandId']);
+    Route::apiResource('categories', CategoryController::class)->except(['index', 'show'])->parameters(['categories' => 'categoryId']);
 });

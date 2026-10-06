@@ -157,6 +157,6 @@ class ApiAuthorizationTest extends TestCase
 
     private function isPublicStorefront(string $method, string $uri): bool
     {
-        return $method === 'GET' && (bool) preg_match('#^/api/v1/products(?:/\d+|/\d+/variants(?:/\d+)?)?$#', $uri);
+        return $method === 'GET' && (bool) preg_match('#^/api/v1/(?:products(?:/\d+|/\d+/variants(?:/\d+)?)?|brands|categories)$#', $uri);
     }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { Customer } from '@/domain/customer/customer'
 import { getCurrentCustomer, login as loginRequest, logout as logoutRequest } from '@/infrastructure/api/auth-api'
 import { useCart } from '@/features/cart/store'
@@ -21,17 +21,25 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [loading, setLoading] = useState(true)
-  const { syncAfterAuthentication } = useCart()
+  const { syncAfterAuthentication, hydrateFromServer } = useCart()
+  const cartHydrated = useRef(false)
 
   useEffect(() => {
+    if (cartHydrated.current) return
+    cartHydrated.current = true
     const token = window.localStorage.getItem(TOKEN_KEY)
     if (!token) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false)
       return
     }
-    void getCurrentCustomer().then(setCustomer).catch(() => window.localStorage.removeItem(TOKEN_KEY)).finally(() => setLoading(false))
-  }, [])
+    void getCurrentCustomer().then((nextCustomer) => {
+      setCustomer(nextCustomer)
+      void hydrateFromServer().catch(() => {
+        // Keep the authenticated session if cart hydration is temporarily unavailable.
+      })
+    }).catch(() => window.localStorage.removeItem(TOKEN_KEY)).finally(() => setLoading(false))
+  }, [hydrateFromServer])
 
   const value = useMemo<AuthContextValue>(() => ({
     customer,

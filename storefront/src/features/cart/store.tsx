@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { Cart, CartItem } from '@/domain/cart/cart'
 import { cartItemCount } from '@/domain/cart/cart'
-import { syncCartAfterAuthentication } from './api'
+import { getServerCart, mergeLocalCart, serverCartToLocalCart } from '@/infrastructure/api/cart-api'
 
 const STORAGE_KEY = 'eco-cart'
 const emptyCart: Cart = { items: [] }
@@ -16,6 +16,7 @@ type CartContextValue = {
   updateQuantity: (productId: number, quantity: number, variantId?: number) => void
   clearCart: () => void
   syncAfterAuthentication: () => Promise<void>
+  hydrateFromServer: () => Promise<void>
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -27,7 +28,6 @@ function sameItem(left: CartItem, right: Pick<CartItem, 'productId' | 'variantId
 export function CartProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [cart, setCart] = useState<Cart>(emptyCart)
 
-  // Hydrate only in the browser so the server and initial client render match.
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY)
@@ -56,7 +56,12 @@ export function CartProvider({ children }: Readonly<{ children: React.ReactNode 
     updateQuantity: (productId, quantity, variantId) => setCart((current) => ({ items: current.items.map((item) => sameItem(item, { productId, variantId }) ? { ...item, quantity: Math.max(1, quantity) } : item) })),
     clearCart: () => setCart(emptyCart),
     syncAfterAuthentication: async () => {
-      await syncCartAfterAuthentication(cart.items)
+      const serverCart = await mergeLocalCart(cart.items)
+      setCart(serverCartToLocalCart(serverCart))
+    },
+    hydrateFromServer: async () => {
+      const serverCart = await getServerCart()
+      setCart(serverCartToLocalCart(serverCart))
     },
   }), [cart])
 

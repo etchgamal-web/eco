@@ -1,0 +1,40 @@
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { listBrands, listCategories, listProducts } from '@/infrastructure/repositories/repository-factories'
+import AnnouncementBar from '@/shared/layout/AnnouncementBar'
+import SiteHeader from '@/shared/layout/SiteHeader'
+import SiteFooter from '@/shared/layout/SiteFooter'
+import ProductGrid from './ProductGrid'
+
+type TaxonomyPageProps = {
+  kind: 'category' | 'brand'
+  slug: string
+}
+
+export default async function TaxonomyPage({ kind, slug }: TaxonomyPageProps) {
+  const options = kind === 'category' ? await listCategories() : await listBrands()
+  const option = options.find((item) => item.slug === slug)
+
+  if (!option) notFound()
+
+  const title = kind === 'category' ? 'تصنيف' : 'علامة تجارية'
+  const products = await listProducts('', kind === 'category' ? { categoryId: option.id } : { brandId: option.id })
+
+  return (
+    <main>
+      <AnnouncementBar />
+      <SiteHeader />
+      <section className="products-section catalog-page-section taxonomy-page">
+        <nav className="breadcrumb" aria-label="مسار التنقل">
+          <Link href="/">الرئيسية</Link><span>/</span><Link href="/products">المنتجات</Link><span>/</span><span>{option.name}</span>
+        </nav>
+        <div className="section-heading">
+          <div><p className="kicker">{title}</p><h1>{option.name}</h1></div>
+          <p className="taxonomy-count">{option.products_count ?? products.items.length} منتج</p>
+        </div>
+        <ProductGrid products={products.items} />
+      </section>
+      <SiteFooter />
+    </main>
+  )
+}
