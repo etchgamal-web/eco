@@ -62,7 +62,7 @@ final class OrderCrudApiTest extends TestCase
         $paymentFields = array_keys($response->json('data.payments.0'));
         sort($paymentFields);
 
-        $this->assertSame(['amount', 'created_at', 'currency', 'id', 'method', 'order_id', 'status'], $paymentFields);
+        $this->assertSame(['amount', 'checkout_url', 'created_at', 'currency', 'id', 'method', 'order_id', 'status'], $paymentFields);
     }
 
     public function test_order_manager_must_review_and_contact_before_confirmation(): void
