@@ -57,6 +57,16 @@ class EloquentProductRepository implements ProductRepositoryInterface
         return $model;
     }
 
+    public function findBySlugOrFail(string $slug): object
+    {
+        $model = Product::query()->with(['brand', 'category', 'variants.attributeValues.attribute'])->where('slug', $slug)->first();
+        if ($model === null) {
+            throw new ProductNotFoundException($slug);
+        }
+
+        return $model;
+    }
+
     public function slugExists(string $slug, ?int $exceptId = null): bool
     {
         return Product::query()->where('slug', $slug)->when($exceptId, fn ($q) => $q->whereKeyNot($exceptId))->exists();

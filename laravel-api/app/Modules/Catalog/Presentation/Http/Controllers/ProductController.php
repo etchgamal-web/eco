@@ -47,7 +47,7 @@ class ProductController extends Controller
         return response()->json(['data' => $useCase->execute((string) $file->getRealPath(), $file->getClientOriginalExtension(), $request->user())], 201);
     }
 
-    public function show(CatalogActionRequest $request, int $product, GetProduct $useCase): JsonResponse
+    public function show(CatalogActionRequest $request, string $product, GetProduct $useCase): JsonResponse
     {
         return response()->json(['data' => $useCase->execute($product)]);
     }

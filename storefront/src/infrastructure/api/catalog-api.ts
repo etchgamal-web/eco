@@ -6,7 +6,7 @@ export type { Product } from '@/domain/catalog/product'
 export type { CatalogFilterOption, ProductListOptions, ProductListResult } from '@/application/catalog/catalog-types'
 
 type ProductResponse = {
-  data: Product[] | { items: Product[]; meta?: { total?: number; current_page?: number; last_page?: number; per_page?: number } }
+  data: Product[] | { data?: Product[]; items?: Product[]; total?: number; current_page?: number; last_page?: number; meta?: { total?: number; current_page?: number; last_page?: number; per_page?: number } }
 }
 
 type SingleProductResponse = {
@@ -30,8 +30,14 @@ export const catalogApi = {
     const query = params.toString()
     const payload = await requestJson<ProductResponse>(`/products${query ? `?${query}` : ''}`, { cache: 'no-store' })
     if (Array.isArray(payload.data)) return { items: payload.data, page: 1, totalPages: 1 }
-    const meta = payload.data.meta
-    return { items: payload.data.items ?? [], total: meta?.total, page: meta?.current_page ?? options.page ?? 1, totalPages: meta?.last_page ?? 1 }
+    const pageData = payload.data
+    const meta = pageData.meta
+    return {
+      items: pageData.items ?? pageData.data ?? [],
+      total: meta?.total ?? pageData.total,
+      page: meta?.current_page ?? pageData.current_page ?? options.page ?? 1,
+      totalPages: meta?.last_page ?? pageData.last_page ?? 1,
+    }
   },
 
   async getProduct(slugOrId: string): Promise<Product> {

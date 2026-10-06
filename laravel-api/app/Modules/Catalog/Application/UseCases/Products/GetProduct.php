@@ -8,8 +8,10 @@ final class GetProduct
 {
     public function __construct(private readonly ProductRepositoryInterface $products) {}
 
-    public function execute(int $id): object
+    public function execute(string|int $id): object
     {
-        return $this->products->findOrFail($id);
+        return ctype_digit((string) $id)
+            ? $this->products->findOrFail((int) $id)
+            : $this->products->findBySlugOrFail((string) $id);
     }
 }

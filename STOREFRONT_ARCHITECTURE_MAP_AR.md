@@ -309,7 +309,7 @@ src/shared/components/ProductCard.tsx
 |---|---|---|---|
 | P0 | بنية الملفات | تم فصل route group وfeatures وshared وdomain وinfrastructure، وما زالت `application` غير مكتملة | نقل ما تبقى من `src/lib/api` وإضافة ports/use cases عند الحاجة |
 | P0 | بطاقة المنتج | موجودة في `shared/components/ProductCard.tsx` وتدعم رابط المنتج، مع fallback زخرفي للصور | ربط صور Laravel عبر `Next Image` وإضافة إجراءات السلة عند الحاجة |
-| P0 | صفحة تفاصيل المنتج | منفذة في `/products/[slug]` مع الوصف والسعر والوسائط والـvariants والكمية | تقييمات، structured data فعلي، والتحقق النهائي من المخزون قبل checkout |
+| P0 | صفحة تفاصيل المنتج | منفذة في `/products/[slug]` مع lookup API بالـslug والوصف والسعر والوسائط والـvariants والكمية | تقييمات، structured data فعلي، والتحقق النهائي من المخزون قبل checkout |
 | P0 | السلة | local-first وremote sync منفذتان في `/cart` مع merge قابل للاستئناف وطابور mutations وحالات خطأ | التحقق النهائي من السعر والمخزون في checkout |
 | P0 | Checkout | `/checkout` ونتائج النجاح والفشل منفذة، مع العنوان وطرق الشحن وخيارات الدفع وidempotency وربط `customer/checkout`، وتفريغ السلة بعد النجاح فقط، والتحويل الخارجي عند توفر جلسة Paymob/Kashier | اختبار E2E مع بوابة sandbox الفعلية |
 | P1 | طبقة HTTP | client موحد في `src/core/http/client.ts` مع `ApiError` وBearer token وcredentials | timeouts، retry policy، ونقل API القديم إلى adapters المنظمة |
@@ -399,6 +399,16 @@ src/shared/components/ProductCard.tsx
 - [x] تمرير طريقة الشحن المختارة إلى Checkout واحتساب `shipping_amount` و`total_amount` خادميًا مع التحقق من النشاط والعملة.
 - [x] إظهار الإجمالي النهائي وحالة الدفع في صفحة النجاح مع polling محدود لحالات Paymob/Kashier بعد إنشاء السجل.
 - [x] إرجاع رابط جلسة الدفع الآمن فقط (`checkout_url`) وإخفاء `metadata` و`idempotency_key` من استجابة العميل، مع تحويل تلقائي عند حالة `provider_created`.
+- [x] اختبار E2E فعلي من product slug إلى Checkout success، مع التحقق من subtotal/shipping/tax/total الخادمي وidempotency replay.
+- [x] توافق عميل الكتالوج مع Laravel paginator وإضافة product lookup بالـslug.
+- [ ] إضافة Checkout Preview يعيد الإجمالي النهائي المتوقع قبل إنشاء الطلب.
+
+### آخر تحقق — دفعة E2E Checkout
+- Storefront: صفحة `/products` و`/products/[slug]` و`/cart` و`/checkout` اختُبرت فعليًا عبر متصفح Sandbox.
+- Laravel: الرحلة أنشأت طلبًا بحالة دفع `pending`، واحتسبت الضريبة والشحن من الخادم.
+- Idempotency: إعادة نفس payload أعادت نفس الطلب دون تكرار.
+- Laravel: `299/299` اختبارًا و`10648` assertion.
+- Storefront: `npm run lint` و`npm run build` ناجحان.
 
 ### آخر تحقق — دفعة مزامنة السلة
 
@@ -408,4 +418,4 @@ src/shared/components/ProductCard.tsx
 - `storefront` و`admin-dashboard`: `npm audit` بلا ثغرات عالية أو حرجة بعد تثبيت الاعتمادات.
 - Laravel: `composer audit` بلا advisories؛ اختبارات الكتالوج والطبقات وOpenAPI ناجحة، والاختبار الكامل مرّ الآن بـ`299/299` اختبارًا و`10646` assertion بعد عزل عقد Seeder وتثبيت تاريخ fixture التحليلات.
 
-الحالة الحالية: **المرحلتان 0 و1 مكتملتان، والمرحلة 2 مكتملة وظيفيًا، والمرحلة 3 مكتملة للزائر والمستخدم المسجل في نطاق الكتالوج والسلة وCheckout الأساسي، والمرحلة 4 منفذة جزئيًا، ومرحلة الجودة والإطلاق بدأت**. تم إغلاق مجموعة الاختبارات الكاملة `299/299`؛ الأولوية التالية هي اختبار E2E مع sandbox الفعلية، ثم SEO الديناميكي.
+الحالة الحالية: **المرحلتان 0 و1 مكتملتان، والمرحلة 2 مكتملة وظيفيًا، والمرحلة 3 مكتملة للزائر والمستخدم المسجل في نطاق الكتالوج والسلة وCheckout الأساسي، والمرحلة 4 منفذة جزئيًا، ومرحلة الجودة والإطلاق بدأت**. تم إغلاق مجموعة الاختبارات الكاملة `299/299`؛ الأولوية التالية هي Checkout Preview ثم اختبار Paymob/Kashier sandbox، ثم SEO الديناميكي.

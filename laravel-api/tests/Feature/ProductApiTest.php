@@ -39,6 +39,7 @@ class ProductApiTest extends TestCase
 
         $this->getJson('/api/v1/products')->assertOk()->assertJsonPath('data.0.id', $id);
         $this->getJson("/api/v1/products/{$id}")->assertOk()->assertJsonPath('data.category.id', $category->id);
+        $this->getJson('/api/v1/products/phone')->assertOk()->assertJsonPath('data.id', $id);
         $this->patchJson("/api/v1/products/{$id}", [
             'name' => 'Smart Phone', 'slug' => 'smart-phone', 'description' => null,
             'type' => 'simple', 'status' => 'inactive', 'brand_id' => null, 'category_id' => null,

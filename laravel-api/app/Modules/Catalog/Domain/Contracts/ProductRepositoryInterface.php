@@ -14,6 +14,8 @@ interface ProductRepositoryInterface
 
     public function findOrFail(int $id): object;
 
+    public function findBySlugOrFail(string $slug): object;
+
     public function slugExists(string $slug, ?int $exceptId = null): bool;
 
     public function create(ProductData $data, string $slug): object;

@@ -6,7 +6,7 @@ use RuntimeException;
 
 final class ProductNotFoundException extends RuntimeException
 {
-    public function __construct(int $id)
+    public function __construct(int|string $id)
     {
         parent::__construct("Product [{$id}] was not found.");
     }
