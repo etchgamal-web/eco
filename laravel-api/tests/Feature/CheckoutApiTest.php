@@ -51,6 +51,35 @@ final class CheckoutApiTest extends TestCase
         $this->assertDatabaseCount('customer_cart_items', 0);
     }
 
+    public function test_customer_can_preview_checkout_without_mutating_order_payment_inventory_or_cart(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $user = $this->userWithRole('customer');
+        $product = Product::query()->create(['name' => 'Preview Product', 'slug' => 'preview-product', 'type' => 'simple', 'status' => 'active', 'price' => 1000]);
+        $address = CustomerAddress::query()->create(['user_id' => $user->id, 'recipient_name' => 'Customer', 'phone' => '01000000000', 'address_line1' => 'Street 1', 'city' => 'Cairo', 'country' => 'EG', 'is_default' => true]);
+        $cart = CustomerCart::query()->create(['user_id' => $user->id]);
+        $cart->items()->create(['product_id' => $product->id, 'quantity' => 2]);
+        InventoryItem::query()->create(['product_id' => $product->id, 'on_hand' => 5, 'reserved' => 0]);
+        TaxRule::query()->create(['name' => 'Egypt VAT', 'country' => 'EG', 'rate' => 14, 'is_active' => true]);
+        $shipping = ShippingMethod::query()->create(['code' => 'preview-standard', 'name' => 'Preview Standard', 'base_fee' => 150, 'currency' => 'EGP', 'is_active' => true]);
+
+        $this->actingAs($user)->postJson('/api/v1/customer/checkout/preview', [
+            'address_id' => $address->id,
+            'shipping_method_id' => $shipping->id,
+            'currency' => 'EGP',
+        ])->assertOk()
+            ->assertJsonPath('data.subtotal_amount', 2000)
+            ->assertJsonPath('data.discount_amount', 0)
+            ->assertJsonPath('data.tax_amount', 280)
+            ->assertJsonPath('data.shipping_amount', 150)
+            ->assertJsonPath('data.total_amount', 2430);
+
+        $this->assertDatabaseCount('customer_orders', 0);
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertDatabaseHas('inventory_items', ['product_id' => $product->id, 'reserved' => 0]);
+        $this->assertDatabaseCount('customer_cart_items', 1);
+    }
+
     public function test_guest_can_checkout_when_store_setting_allows_it(): void
     {
         Setting::query()->create([

@@ -43,7 +43,7 @@
 
 > الإجمالي التقديري قبل الضريبة — سيعيد الخادم احتساب الضريبة والإجمالي النهائي عند تأكيد الطلب.
 
-وهذا يحافظ على مبدأ أن المتصفح **ليس مصدر الحقيقة**. المتبقي كتحسين لاحق هو إضافة endpoint لـ **Checkout Preview** يعيد subtotal/discount/tax/shipping/total قبل الإنشاء، بحيث يرى العميل الإجمالي النهائي المتوقع قبل الضغط على التأكيد.
+وهذا يحافظ على مبدأ أن المتصفح **ليس مصدر الحقيقة**. تمت إضافة endpoint لـ **Checkout Preview** لاحقًا، وأصبح العميل يرى subtotal/discount/tax/shipping/total قبل الضغط على التأكيد.
 
 ## إصلاحات كشفتها E2E
 
@@ -53,13 +53,17 @@
 
 ## التحقق النهائي
 
-- Laravel: **299 اختبارًا ناجحًا، 10,648 assertion**.
+- Laravel: **300 اختبارًا ناجحًا، 10,678 assertion**.
 - Storefront: `npm run lint` ناجح.
 - Storefront: `npm run build` ناجح.
 - اختبار API مستقل لـ idempotency: نجح، وأعاد الطلب نفسه في المحاولة الثانية.
 
+## ما تم بعد التقرير
+
+تمت إضافة `POST /api/v1/customer/checkout/preview` وربطه بالواجهة. المعاينة تعيد التسعير الخادمي دون إنشاء Order أو Payment أو حجز المخزون، بينما يعيد التأكيد الحساب والتحقق مرة أخرى.
+
 ## الخطوة التالية
 
-1. إضافة Checkout Preview خادمي قبل إنشاء الطلب.
+1. اختبار تغيّر السعر أو المخزون أو الشحن بين Preview والتأكيد.
 2. اختبار Paymob/Kashier sandbox مع webhook وreconciliation.
 3. بعد ذلك بدء SEO الديناميكي: metadata، canonical، Product schema، sitemap وrobots.

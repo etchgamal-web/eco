@@ -23284,6 +23284,162 @@
           "RATE_LIMITED"
         ]
       }
+    },
+    "/customer/checkout/preview": {
+      "post": {
+        "tags": [
+          "Customer"
+        ],
+        "summary": "Preview checkout totals",
+        "operationId": "previewCustomerCheckout",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Stable unique key for safe retries. Conflicting reuse returns 409.",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Successful response",
+                    "value": {
+                      "data": {},
+                      "message": "Request completed successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Successful response",
+                    "value": {
+                      "data": {},
+                      "message": "Request completed successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Malformed request"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict or idempotency conflict"
+          },
+          "422": {
+            "description": "Validation or business rule failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Validation error",
+                    "value": {
+                      "message": "Validation failed.",
+                      "errors": {
+                        "field": [
+                          "The field is invalid."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry."
+              }
+            }
+          }
+        },
+        "security": [],
+        "x-required-permission": "public",
+        "x-rate-limit": {
+          "name": "checkout",
+          "description": "Application rate limiter: checkout."
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              },
+              "examples": {
+                "default": {
+                  "summary": "Example request",
+                  "value": {
+                    "address_id": 12,
+                    "currency": "EGP",
+                    "items": [
+                      {
+                        "product_id": 101,
+                        "variant_id": 7,
+                        "quantity": 2
+                      }
+                    ],
+                    "payment_method": "cash_on_delivery"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "externalDocs": {
+          "description": "API v1 contract and authentication rules",
+          "url": "/docs/openapi.json"
+        },
+        "x-error-codes": [
+          "VALIDATION_FAILED",
+          "UNAUTHENTICATED",
+          "FORBIDDEN",
+          "NOT_FOUND",
+          "CONFLICT",
+          "RATE_LIMITED"
+        ],
+        "description": "Calculate current cart pricing without creating an order, payment, or inventory reservation. The final checkout request recalculates all values."
+      }
     }
   },
   "components": {

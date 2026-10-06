@@ -44,6 +44,35 @@ final class CheckoutOrderService
         });
     }
 
+    /** @return array<string, mixed> */
+    public function preview(CheckoutData $data, int $userId): array
+    {
+        $cart = $this->customers->cartForUser($userId);
+        $items = $cart->items;
+        if ($items->isEmpty()) {
+            throw CheckoutException::emptyCart();
+        }
+
+        $address = $this->customers->addressForUser($userId, $data->addressId);
+        [$subtotal, $snapshots] = $this->priceCustomerItems($items, false);
+        $promotion = $this->coupons->apply($data->couponCode, $userId, $subtotal);
+        $tax = $this->taxes->calculate($subtotal - $promotion['discount'], (string) $address->country, $address->state);
+        $shippingAmount = $this->shippingAmount($data->shippingMethodId, (string) $data->currency);
+
+        return [
+            'items' => $snapshots,
+            'subtotal_amount' => $subtotal,
+            'discount_amount' => $promotion['discount'],
+            'coupon_code' => $promotion['code'],
+            'tax_amount' => $tax['amount'],
+            'tax_rate' => $tax['rate'],
+            'tax_rule_id' => $tax['rule_id'],
+            'shipping_amount' => $shippingAmount,
+            'currency' => $data->currency,
+            'total_amount' => $subtotal - $promotion['discount'] + $tax['amount'] + $shippingAmount,
+        ];
+    }
+
     private function checkoutCustomer(CheckoutData $data, int $userId): object
     {
         $cart = $this->customers->cartForUser($userId);
@@ -163,7 +192,7 @@ final class CheckoutOrderService
         return $order->load('items');
     }
 
-    private function priceCustomerItems(iterable $items): array
+    private function priceCustomerItems(iterable $items, bool $reserveInventory = true): array
     {
         $subtotal = 0;
         $snapshots = [];
@@ -196,7 +225,12 @@ final class CheckoutOrderService
                 'tax_amount' => 0,
                 'total_amount' => $lineTotal,
             ];
-            $this->inventory->reserve($product->id, $variant?->id, $cartItem->quantity);
+            if (! $this->inventory->isAvailable($product->id, $variant?->id, $cartItem->quantity)) {
+                throw CheckoutException::unavailableProduct($product->name);
+            }
+            if ($reserveInventory) {
+                $this->inventory->reserve($product->id, $variant?->id, $cartItem->quantity);
+            }
         }
 
         return [$subtotal, $snapshots];

@@ -15,6 +15,7 @@ Route::post('customer/checkout', CheckoutController::class)
     ->name('customer.checkout');
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::post('customer/checkout/preview', [CheckoutController::class, 'preview'])->middleware('throttle:checkout')->name('customer.checkout.preview');
     Route::get('customer/profile', [CustomerController::class, 'profile'])->name('customer.profile');
     Route::match(['put', 'patch'], 'customer/profile', [CustomerController::class, 'updateProfile'])->name('customer.profile.update');
     Route::get('customer/addresses', [CustomerFeaturesController::class, 'addresses'])->name('customer.addresses.index');

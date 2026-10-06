@@ -90,6 +90,25 @@ export async function getShippingMethods(): Promise<ShippingMethod[]> {
 
 export type CheckoutInput = { address_id: number; shipping_method_id?: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string }
 
+export type CheckoutPreview = {
+  items?: Array<{ product_id?: number; variant_id?: number; name?: string; quantity?: number; unit_price?: number; total_amount?: number }>
+  subtotal_amount: number
+  discount_amount: number
+  coupon_code?: string | null
+  tax_amount: number
+  tax_rate?: number | string
+  shipping_amount: number
+  total_amount: number
+  currency: string
+}
+
+export type CheckoutPreviewInput = Pick<CheckoutInput, 'address_id' | 'shipping_method_id' | 'currency' | 'coupon_code'>
+
+export async function previewCheckout(input: CheckoutPreviewInput): Promise<CheckoutPreview> {
+  const response = await requestJson<DataResponse<CheckoutPreview>>('/customer/checkout/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
+  return response.data
+}
+
 export async function checkout(input: CheckoutInput): Promise<CustomerOrderDetails> {
   const response = await requestJson<DataResponse<CustomerOrderDetails>>('/customer/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': input.idempotency_key }, body: JSON.stringify(input) })
   return response.data

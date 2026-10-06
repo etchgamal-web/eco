@@ -401,7 +401,14 @@ src/shared/components/ProductCard.tsx
 - [x] إرجاع رابط جلسة الدفع الآمن فقط (`checkout_url`) وإخفاء `metadata` و`idempotency_key` من استجابة العميل، مع تحويل تلقائي عند حالة `provider_created`.
 - [x] اختبار E2E فعلي من product slug إلى Checkout success، مع التحقق من subtotal/shipping/tax/total الخادمي وidempotency replay.
 - [x] توافق عميل الكتالوج مع Laravel paginator وإضافة product lookup بالـslug.
-- [ ] إضافة Checkout Preview يعيد الإجمالي النهائي المتوقع قبل إنشاء الطلب.
+- [x] إضافة Checkout Preview يعيد المنتجات والأسعار والخصم والضريبة والشحن والإجمالي من Laravel دون Order أو Payment أو حجز مخزون.
+- [ ] اختبار تغيّر السعر أو المخزون أو الشحن بين Preview والتأكيد مع رفض/إعادة حساب التأكيد.
+
+### آخر تحقق — دفعة Checkout Preview
+- `POST /customer/checkout/preview` يعيد التسعير الخادمي دون mutation.
+- اختبار عدم mutation يثبت عدم إنشاء Order/Payment، وعدم حجز المخزون، وبقاء السلة.
+- Laravel: `300/300` اختبارًا و`10678` assertion.
+- Storefront: `npm run lint` و`npm run build` ناجحان.
 
 ### آخر تحقق — دفعة E2E Checkout
 - Storefront: صفحة `/products` و`/products/[slug]` و`/cart` و`/checkout` اختُبرت فعليًا عبر متصفح Sandbox.
@@ -418,4 +425,4 @@ src/shared/components/ProductCard.tsx
 - `storefront` و`admin-dashboard`: `npm audit` بلا ثغرات عالية أو حرجة بعد تثبيت الاعتمادات.
 - Laravel: `composer audit` بلا advisories؛ اختبارات الكتالوج والطبقات وOpenAPI ناجحة، والاختبار الكامل مرّ الآن بـ`299/299` اختبارًا و`10646` assertion بعد عزل عقد Seeder وتثبيت تاريخ fixture التحليلات.
 
-الحالة الحالية: **المرحلتان 0 و1 مكتملتان، والمرحلة 2 مكتملة وظيفيًا، والمرحلة 3 مكتملة للزائر والمستخدم المسجل في نطاق الكتالوج والسلة وCheckout الأساسي، والمرحلة 4 منفذة جزئيًا، ومرحلة الجودة والإطلاق بدأت**. تم إغلاق مجموعة الاختبارات الكاملة `299/299`؛ الأولوية التالية هي Checkout Preview ثم اختبار Paymob/Kashier sandbox، ثم SEO الديناميكي.
+الحالة الحالية: **المرحلتان 0 و1 مكتملتان، والمرحلة 2 مكتملة وظيفيًا، والمرحلة 3 مكتملة للزائر والمستخدم المسجل في نطاق الكتالوج والسلة وCheckout الأساسي، والمرحلة 4 منفذة جزئيًا، ومرحلة الجودة والإطلاق بدأت**. تم إغلاق مجموعة الاختبارات الكاملة `299/299`؛ الأولوية التالية اختبار تغيّر الحالة بين Preview والتأكيد، ثم Paymob/Kashier sandbox، ثم SEO الديناميكي.
