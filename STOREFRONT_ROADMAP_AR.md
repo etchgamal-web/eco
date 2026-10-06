@@ -142,6 +142,13 @@
 - إعادة تفاصيل الدفع في طلب العميل، وعرض حالة Paymob/Kashier مع polling محدود في صفحة النجاح.
 - اختبارات Checkout والشحن: `20/20` ناجحة ضمن الدفعة، وواجهة المتجر lint/build ناجحان.
 
+**دفعة جلسة الدفع — 2026-10-06**
+
+- إتاحة `checkout_url` الآمن من سجل الدفع بعد معالجة الـoutbox، مع دعم Paymob وKashier.
+- تحويل المستخدم تلقائيًا من صفحة نجاح Checkout عند وصول الدفع إلى `provider_created`.
+- إخفاء `metadata` و`idempotency_key` من JSON العام لمنع كشف أسرار البوابات.
+- اختبارات الدفع وCheckout والعميل: `27/27` ناجحة، وواجهة المتجر lint/build ناجحان.
+
 الدفعة السابقة:
 
 **Commit `b00c54f` — `refactor(storefront): isolate catalog contracts from infrastructure`**
