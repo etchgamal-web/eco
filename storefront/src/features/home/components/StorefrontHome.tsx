@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useState } from 'react'
-import { listProducts } from '@/infrastructure/repositories/repository-factories'
+import { listProducts } from '@/features/catalog/api'
 import type { Product } from '@/domain/catalog/product'
 import { getPublishedLandingPage, heroFromLanding } from '@/src/lib/api/landing'
 import type { HeroContent } from '@/src/lib/api/landing'

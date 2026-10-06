@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { listBrands, listCategories, listProducts } from '@/infrastructure/repositories/repository-factories'
+import { listBrands, listCategories, listProducts } from '@/features/catalog/api'
 import AnnouncementBar from '@/shared/layout/AnnouncementBar'
 import SiteHeader from '@/shared/layout/SiteHeader'
 import SiteFooter from '@/shared/layout/SiteFooter'

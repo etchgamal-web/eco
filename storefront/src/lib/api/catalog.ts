@@ -1,5 +1,6 @@
 export { catalogApi as default, catalogApi, catalogRepository } from '@/infrastructure/api/catalog-api'
-export type { CatalogFilterOption, Product, ProductListOptions, ProductListResult } from '@/infrastructure/api/catalog-api'
+export type { Product } from '@/domain/catalog/product'
+export type { CatalogFilterOption, ProductListOptions, ProductListResult } from '@/application/catalog/catalog-types'
 
 import { catalogApi } from '@/infrastructure/api/catalog-api'
 

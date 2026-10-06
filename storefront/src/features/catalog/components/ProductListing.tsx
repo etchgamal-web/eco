@@ -1,9 +1,9 @@
 'use client'
 
 import { FormEvent, useEffect, useState } from 'react'
-import type { CatalogFilterOption } from '@/infrastructure/api/catalog-api'
+import type { CatalogFilterOption } from '@/application/catalog/catalog-types'
 import type { Product } from '@/domain/catalog/product'
-import { listBrands, listCategories, listProducts } from '@/infrastructure/repositories/repository-factories'
+import { listBrands, listCategories, listProducts } from '@/features/catalog/api'
 import ProductGrid from './ProductGrid'
 import Pagination from '@/shared/components/Pagination'
 

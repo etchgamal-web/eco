@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ApiError } from '@/core/http/client'
-import { getProduct } from '@/infrastructure/repositories/repository-factories'
+import { getProduct } from '@/features/catalog/api'
 import AnnouncementBar from '@/shared/layout/AnnouncementBar'
 import SiteHeader from '@/shared/layout/SiteHeader'
 import SiteFooter from '@/shared/layout/SiteFooter'
