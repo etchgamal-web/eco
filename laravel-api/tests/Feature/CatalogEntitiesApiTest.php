@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Modules\Auth\Infrastructure\Models\User;
 use App\Modules\Catalog\Infrastructure\Models\Attribute;
+use App\Modules\Catalog\Infrastructure\Models\Brand;
 use App\Modules\Catalog\Infrastructure\Models\Category;
 use App\Modules\Catalog\Infrastructure\Models\Product;
 use Database\Seeders\RbacSeeder;
@@ -92,10 +93,10 @@ class CatalogEntitiesApiTest extends TestCase
 
     public function test_public_taxonomy_lookup_uses_slug_and_hides_inactive_entities(): void
     {
-        $activeBrand = \App\Modules\Catalog\Infrastructure\Models\Brand::query()->create([
+        $activeBrand = Brand::query()->create([
             'name' => 'Eco Home', 'slug' => 'eco-home-public', 'status' => 'active',
         ]);
-        \App\Modules\Catalog\Infrastructure\Models\Brand::query()->create([
+        Brand::query()->create([
             'name' => 'Hidden Brand', 'slug' => 'hidden-brand', 'status' => 'inactive',
         ]);
         $activeCategory = Category::query()->create([
