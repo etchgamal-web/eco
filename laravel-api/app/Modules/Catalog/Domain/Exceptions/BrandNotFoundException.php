@@ -6,7 +6,7 @@ use RuntimeException;
 
 final class BrandNotFoundException extends RuntimeException
 {
-    public function __construct(int $id)
+    public function __construct(int|string $id)
     {
         parent::__construct("Brand [{$id}] was not found.");
     }

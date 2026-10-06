@@ -16,6 +16,21 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
         return Category::query()->with('parent')->withCount(['children', 'products'])->orderBy('name')->get();
     }
 
+    public function findPublicBySlug(string $slug): object
+    {
+        $model = Category::query()
+            ->where('is_active', true)
+            ->where('slug', $slug)
+            ->withCount('products')
+            ->first();
+
+        if ($model === null) {
+            throw new CategoryNotFoundException($slug);
+        }
+
+        return $model;
+    }
+
     public function findOrFail(int $id): object
     {
         $model = Category::query()->with(['parent', 'children'])->withCount('products')->find($id);

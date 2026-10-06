@@ -6,7 +6,7 @@ use RuntimeException;
 
 final class CategoryNotFoundException extends RuntimeException
 {
-    public function __construct(int $id)
+    public function __construct(int|string $id)
     {
         parent::__construct("Category [{$id}] was not found.");
     }

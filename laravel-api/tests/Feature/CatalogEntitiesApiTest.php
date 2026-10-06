@@ -90,6 +90,29 @@ class CatalogEntitiesApiTest extends TestCase
         $this->deleteJson("/api/v1/brands/{$id}")->assertNoContent();
     }
 
+    public function test_public_taxonomy_lookup_uses_slug_and_hides_inactive_entities(): void
+    {
+        $activeBrand = \App\Modules\Catalog\Infrastructure\Models\Brand::query()->create([
+            'name' => 'Eco Home', 'slug' => 'eco-home-public', 'status' => 'active',
+        ]);
+        \App\Modules\Catalog\Infrastructure\Models\Brand::query()->create([
+            'name' => 'Hidden Brand', 'slug' => 'hidden-brand', 'status' => 'inactive',
+        ]);
+        $activeCategory = Category::query()->create([
+            'name' => 'Home Essentials', 'slug' => 'home-essentials-public', 'is_active' => true,
+        ]);
+        Category::query()->create([
+            'name' => 'Hidden Category', 'slug' => 'hidden-category', 'is_active' => false,
+        ]);
+
+        $this->getJson('/api/v1/brands')->assertOk()->assertJsonPath('data.0.id', $activeBrand->id);
+        $this->getJson('/api/v1/brands/eco-home-public')->assertOk()->assertJsonPath('data.slug', 'eco-home-public');
+        $this->getJson('/api/v1/brands/hidden-brand')->assertNotFound();
+        $this->getJson('/api/v1/categories')->assertOk()->assertJsonPath('data.0.id', $activeCategory->id);
+        $this->getJson('/api/v1/categories/home-essentials-public')->assertOk()->assertJsonPath('data.slug', 'home-essentials-public');
+        $this->getJson('/api/v1/categories/hidden-category')->assertNotFound();
+    }
+
     public function test_category_crud_validation_duplicate_slug_404_and_relationship_rules(): void
     {
         $parentResponse = $this->actingAs($this->admin)->postJson('/api/v1/categories', [

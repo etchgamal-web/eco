@@ -6,4 +6,6 @@ export interface CatalogRepository {
   getProduct(slugOrId: string): Promise<Product>
   listCategories(): Promise<CatalogFilterOption[]>
   listBrands(): Promise<CatalogFilterOption[]>
+  getCategoryBySlug(slug: string): Promise<CatalogFilterOption>
+  getBrandBySlug(slug: string): Promise<CatalogFilterOption>
 }

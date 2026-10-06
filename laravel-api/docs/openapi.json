@@ -23034,6 +23034,256 @@
         },
         "x-required-permission": "permissions.manage"
       }
+    },
+    "/categories/{slug}": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "categories public lookup by slug",
+        "operationId": "categories_public_show_get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(?![0-9]+$)[A-Za-z0-9][A-Za-z0-9-]*$"
+            },
+            "description": "categorie slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Successful response",
+                    "value": {
+                      "data": {},
+                      "message": "Request completed successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Successful response",
+                    "value": {
+                      "data": {},
+                      "message": "Request completed successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Malformed request"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict or idempotency conflict"
+          },
+          "422": {
+            "description": "Validation or business rule failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Validation error",
+                    "value": {
+                      "message": "Validation failed.",
+                      "errors": {
+                        "field": [
+                          "The field is invalid."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry."
+              }
+            }
+          }
+        },
+        "externalDocs": {
+          "description": "API v1 contract and authentication rules",
+          "url": "/docs/openapi.json"
+        },
+        "x-error-codes": [
+          "VALIDATION_FAILED",
+          "UNAUTHENTICATED",
+          "FORBIDDEN",
+          "NOT_FOUND",
+          "CONFLICT",
+          "RATE_LIMITED"
+        ]
+      }
+    },
+    "/brands/{slug}": {
+      "get": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "brands public lookup by slug",
+        "operationId": "brands_public_show_get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(?![0-9]+$)[A-Za-z0-9][A-Za-z0-9-]*$"
+            },
+            "description": "brand slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Successful response",
+                    "value": {
+                      "data": {},
+                      "message": "Request completed successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Successful response",
+                    "value": {
+                      "data": {},
+                      "message": "Request completed successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Malformed request"
+          },
+          "401": {
+            "description": "Unauthenticated or invalid webhook signature"
+          },
+          "403": {
+            "description": "Missing required permission"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Conflict or idempotency conflict"
+          },
+          "422": {
+            "description": "Validation or business rule failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Validation error",
+                    "value": {
+                      "message": "Validation failed.",
+                      "errors": {
+                        "field": [
+                          "The field is invalid."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry."
+              }
+            }
+          }
+        },
+        "externalDocs": {
+          "description": "API v1 contract and authentication rules",
+          "url": "/docs/openapi.json"
+        },
+        "x-error-codes": [
+          "VALIDATION_FAILED",
+          "UNAUTHENTICATED",
+          "FORBIDDEN",
+          "NOT_FOUND",
+          "CONFLICT",
+          "RATE_LIMITED"
+        ]
+      }
     }
   },
   "components": {

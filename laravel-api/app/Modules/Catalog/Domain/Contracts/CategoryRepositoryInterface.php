@@ -8,6 +8,8 @@ interface CategoryRepositoryInterface
 {
     public function all(): iterable;
 
+    public function findPublicBySlug(string $slug): object;
+
     public function findOrFail(int $id): object;
 
     public function slugExists(string $slug, ?int $exceptId = null): bool;

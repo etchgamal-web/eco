@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { listBrands, listCategories, listProducts } from '@/features/catalog/api'
+import { getBrandBySlug, getCategoryBySlug, listProducts } from '@/features/catalog/api'
 import AnnouncementBar from '@/shared/layout/AnnouncementBar'
 import SiteHeader from '@/shared/layout/SiteHeader'
 import SiteFooter from '@/shared/layout/SiteFooter'
@@ -12,10 +12,12 @@ type TaxonomyPageProps = {
 }
 
 export default async function TaxonomyPage({ kind, slug }: TaxonomyPageProps) {
-  const options = kind === 'category' ? await listCategories() : await listBrands()
-  const option = options.find((item) => item.slug === slug)
-
-  if (!option) notFound()
+  let option
+  try {
+    option = kind === 'category' ? await getCategoryBySlug(slug) : await getBrandBySlug(slug)
+  } catch {
+    notFound()
+  }
 
   const title = kind === 'category' ? 'تصنيف' : 'علامة تجارية'
   const products = await listProducts('', kind === 'category' ? { categoryId: option.id } : { brandId: option.id })

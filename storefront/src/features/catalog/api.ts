@@ -1,8 +1,10 @@
 import {
   getProduct,
+  getBrandBySlug,
+  getCategoryBySlug,
   listBrands,
   listCategories,
   listProducts,
 } from '@/infrastructure/repositories/repository-factories'
 
-export { getProduct, listBrands, listCategories, listProducts }
+export { getBrandBySlug, getCategoryBySlug, getProduct, listBrands, listCategories, listProducts }

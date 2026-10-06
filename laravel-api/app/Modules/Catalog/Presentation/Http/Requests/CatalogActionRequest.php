@@ -15,6 +15,7 @@ final class CatalogActionRequest extends FormRequest
         $routeName = preg_replace('/^v1\./', '', (string) $this->route()?->getName());
         if ($this->isMethod('GET') && in_array($routeName, [
             'products.index', 'products.show', 'products.variants.index', 'products.variants.show',
+            'categories.public.index', 'categories.public.show', 'brands.public.index', 'brands.public.show',
         ], true)) {
             return true;
         }

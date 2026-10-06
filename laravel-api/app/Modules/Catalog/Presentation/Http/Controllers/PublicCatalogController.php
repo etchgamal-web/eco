@@ -3,31 +3,32 @@
 namespace App\Modules\Catalog\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Catalog\Infrastructure\Models\Brand;
-use App\Modules\Catalog\Infrastructure\Models\Category;
+use App\Modules\Catalog\Application\UseCases\Brands\GetPublicBrandBySlug;
+use App\Modules\Catalog\Application\UseCases\Brands\ListPublicBrands;
+use App\Modules\Catalog\Application\UseCases\Categories\GetPublicCategoryBySlug;
+use App\Modules\Catalog\Application\UseCases\Categories\ListPublicCategories;
+use App\Modules\Catalog\Presentation\Http\Requests\CatalogActionRequest;
 use Illuminate\Http\JsonResponse;
 
 final class PublicCatalogController extends Controller
 {
-    public function categories(): JsonResponse
+    public function categories(CatalogActionRequest $request, ListPublicCategories $useCase): JsonResponse
     {
-        $categories = Category::query()
-            ->where('is_active', true)
-            ->withCount('products')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
-        return response()->json(['data' => $categories]);
+        return response()->json(['data' => $useCase->execute()]);
     }
 
-    public function brands(): JsonResponse
+    public function category(CatalogActionRequest $request, string $slug, GetPublicCategoryBySlug $useCase): JsonResponse
     {
-        $brands = Brand::query()
-            ->where('status', 'active')
-            ->withCount('products')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
+        return response()->json(['data' => $useCase->execute($slug)]);
+    }
 
-        return response()->json(['data' => $brands]);
+    public function brands(CatalogActionRequest $request, ListPublicBrands $useCase): JsonResponse
+    {
+        return response()->json(['data' => $useCase->execute()]);
+    }
+
+    public function brand(CatalogActionRequest $request, string $slug, GetPublicBrandBySlug $useCase): JsonResponse
+    {
+        return response()->json(['data' => $useCase->execute($slug)]);
     }
 }

@@ -16,6 +16,21 @@ class EloquentBrandRepository implements BrandRepositoryInterface
         return Brand::query()->withCount('products')->orderBy('name')->get();
     }
 
+    public function findPublicBySlug(string $slug): object
+    {
+        $model = Brand::query()
+            ->where('status', 'active')
+            ->where('slug', $slug)
+            ->withCount('products')
+            ->first();
+
+        if ($model === null) {
+            throw new BrandNotFoundException($slug);
+        }
+
+        return $model;
+    }
+
     public function findOrFail(int $id): object
     {
         $model = Brand::query()->withCount('products')->find($id);

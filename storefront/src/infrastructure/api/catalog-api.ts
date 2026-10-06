@@ -41,6 +41,14 @@ export const catalogApi = {
 
   listCategories: () => listFilterOptions('categories'),
   listBrands: () => listFilterOptions('brands'),
+  async getCategoryBySlug(slug: string): Promise<CatalogFilterOption> {
+    const payload = await requestJson<{ data: CatalogFilterOption }>(`/categories/${encodeURIComponent(slug)}`, { cache: 'no-store' })
+    return payload.data
+  },
+  async getBrandBySlug(slug: string): Promise<CatalogFilterOption> {
+    const payload = await requestJson<{ data: CatalogFilterOption }>(`/brands/${encodeURIComponent(slug)}`, { cache: 'no-store' })
+    return payload.data
+  },
 }
 
 export const catalogRepository = catalogApi

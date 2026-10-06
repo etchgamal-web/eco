@@ -14,7 +14,9 @@ Route::get('products/{productId}', [ProductController::class, 'show'])->name('pr
 Route::get('products/{productId}/variants', [ProductController::class, 'variants'])->name('products.variants.index');
 Route::get('products/{productId}/variants/{variantId}', [ProductController::class, 'showVariant'])->name('products.variants.show');
 Route::get('categories', [PublicCatalogController::class, 'categories'])->name('categories.public.index');
+Route::get('categories/{slug}', [PublicCatalogController::class, 'category'])->where('slug', '(?![0-9]+$)[A-Za-z0-9][A-Za-z0-9-]*')->name('categories.public.show');
 Route::get('brands', [PublicCatalogController::class, 'brands'])->name('brands.public.index');
+Route::get('brands/{slug}', [PublicCatalogController::class, 'brand'])->where('slug', '(?![0-9]+$)[A-Za-z0-9][A-Za-z0-9-]*')->name('brands.public.show');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('products/import', [ProductController::class, 'import'])->middleware('throttle:10,1')->name('products.import');
@@ -42,8 +44,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('attributes/{attributeId}/values', [AttributeController::class, 'storeValue'])->name('attributes.values.store');
     Route::match(['put', 'patch'], 'attributes/{attributeId}/values/{valueId}', [AttributeController::class, 'updateValue'])->name('attributes.values.update');
     Route::delete('attributes/{attributeId}/values/{valueId}', [AttributeController::class, 'destroyValue'])->name('attributes.values.destroy');
-    Route::get('brands/{brandId}', [BrandController::class, 'show'])->name('brands.show');
-    Route::get('categories/{categoryId}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::get('brands/{brandId}', [BrandController::class, 'show'])->whereNumber('brandId')->name('brands.show');
+    Route::get('categories/{categoryId}', [CategoryController::class, 'show'])->whereNumber('categoryId')->name('categories.show');
     Route::apiResource('brands', BrandController::class)->except(['index', 'show'])->parameters(['brands' => 'brandId']);
     Route::apiResource('categories', CategoryController::class)->except(['index', 'show'])->parameters(['categories' => 'categoryId']);
 });
