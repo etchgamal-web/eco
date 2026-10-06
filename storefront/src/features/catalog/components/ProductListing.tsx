@@ -1,9 +1,9 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
-import type { CatalogFilterOption } from '@/application/catalog/catalog-types'
+import { FormEvent, useState } from 'react'
+import type { CatalogFilterOption, ProductListResult } from '@/application/catalog/catalog-types'
 import type { Product } from '@/domain/catalog/product'
-import { listBrands, listCategories, listProducts } from '@/features/catalog/api'
+import { listProducts } from '@/features/catalog/api'
 import ProductGrid from './ProductGrid'
 import Pagination from '@/shared/components/Pagination'
 
@@ -11,18 +11,38 @@ const PER_PAGE = 12
 
 type SortValue = 'newest' | 'price_asc' | 'price_desc' | 'name_asc'
 
-export default function ProductListing() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<CatalogFilterOption[]>([])
-  const [brands, setBrands] = useState<CatalogFilterOption[]>([])
-  const [search, setSearch] = useState('')
-  const [categoryId, setCategoryId] = useState<number | undefined>()
-  const [brandId, setBrandId] = useState<number | undefined>()
-  const [sort, setSort] = useState<SortValue>('newest')
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+type ProductListingProps = {
+  initialProducts: ProductListResult
+  initialCategories: CatalogFilterOption[]
+  initialBrands: CatalogFilterOption[]
+  initialSearch?: string
+  initialCategoryId?: number
+  initialBrandId?: number
+  initialSort?: SortValue
+  initialError?: string
+}
+
+export default function ProductListing({
+  initialProducts,
+  initialCategories,
+  initialBrands,
+  initialSearch = '',
+  initialCategoryId,
+  initialBrandId,
+  initialSort = 'newest',
+  initialError = '',
+}: ProductListingProps) {
+  const [products, setProducts] = useState<Product[]>(initialProducts.items)
+  const [categories] = useState<CatalogFilterOption[]>(initialCategories)
+  const [brands] = useState<CatalogFilterOption[]>(initialBrands)
+  const [search, setSearch] = useState(initialSearch)
+  const [categoryId, setCategoryId] = useState<number | undefined>(initialCategoryId)
+  const [brandId, setBrandId] = useState<number | undefined>(initialBrandId)
+  const [sort, setSort] = useState<SortValue>(initialSort)
+  const [page, setPage] = useState(initialProducts.page)
+  const [totalPages, setTotalPages] = useState(initialProducts.totalPages)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(initialError)
 
   const loadProducts = async (term = search, requestedPage = page, nextCategoryId = categoryId, nextBrandId = brandId, nextSort = sort) => {
     setLoading(true)
@@ -38,21 +58,6 @@ export default function ProductListing() {
       setLoading(false)
     }
   }
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
-  useEffect(() => { void loadProducts('', 1) }, [])
-
-  useEffect(() => {
-    let active = true
-    void Promise.all([listCategories(), listBrands()]).then(([nextCategories, nextBrands]) => {
-      if (!active) return
-      setCategories(nextCategories)
-      setBrands(nextBrands)
-    }).catch(() => {
-      // Product loading remains usable if optional filter metadata is unavailable.
-    })
-    return () => { active = false }
-  }, [])
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
