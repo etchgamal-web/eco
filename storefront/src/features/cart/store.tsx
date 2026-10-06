@@ -57,7 +57,6 @@ export function CartProvider({ children }: Readonly<{ children: React.ReactNode 
     clearCart: () => setCart(emptyCart),
     syncAfterAuthentication: async () => {
       await syncCartAfterAuthentication(cart.items)
-      setCart(emptyCart)
     },
   }), [cart])
 

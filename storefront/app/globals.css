@@ -158,3 +158,11 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .checkout-total strong { color:var(--green); font-family:Georgia,serif; font-size:25px; }
 .checkout-form > .primary-button { justify-content:center; max-width:260px; }
 .checkout-section a { color:var(--green); font-weight:700; }
+
+.checkout-result-shell { align-items:center; display:flex; justify-content:center; min-height:650px; padding:70px 5%; }
+.checkout-result-card { background:var(--cream); display:grid; gap:18px; max-width:560px; padding:50px; text-align:center; width:100%; }
+.checkout-result-card h1 { font-family:Georgia,serif; font-size:clamp(38px,5vw,60px); font-weight:400; margin:0; }
+.checkout-result-card p:not(.kicker) { color:var(--muted); line-height:1.9; margin:0; }
+.checkout-result-card .primary-button,.checkout-result-card .secondary-button { justify-content:center; }
+.checkout-result-card.is-failure { border-top:3px solid #a04436; }
+.form-error a { color:var(--green); font-weight:700; }
