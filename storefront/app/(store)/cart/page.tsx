@@ -29,7 +29,7 @@ export default function CartPage() {
                 </article>
               ))}
             </div>
-            <aside className="cart-summary"><h2>ملخص الطلب</h2><div><span>الإجمالي</span><strong>{formatPrice(total, cart.items[0]?.currency)}</strong></div><button className="primary-button checkout-button" type="button">متابعة الدفع</button><button className="clear-cart-button" type="button" onClick={clearCart}>تفريغ السلة</button></aside>
+            <aside className="cart-summary"><h2>ملخص الطلب</h2><div><span>الإجمالي</span><strong>{formatPrice(total, cart.items[0]?.currency)}</strong></div><Link className="primary-button checkout-button" href="/checkout">متابعة الدفع</Link><button className="clear-cart-button" type="button" onClick={clearCart}>تفريغ السلة</button></aside>
           </div>
         )}
       </div>

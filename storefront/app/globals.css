@@ -144,3 +144,17 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .notification-card p { color:var(--muted); font-size:13px; margin:8px 0 0; }
 .notification-card span { color:var(--muted); font-size:11px; }
 @media (max-width:800px) { .wishlist-grid { grid-template-columns:1fr; } .wishlist-card,.notification-card { align-items:flex-start; flex-direction:column; gap:15px; } }
+
+.checkout-page-shell { margin:0 auto; max-width:1100px; min-height:650px; padding:75px 5% 110px; }
+.checkout-form { display:grid; gap:22px; max-width:760px; }
+.checkout-section { border-top:1px solid var(--line); display:grid; gap:15px; padding-top:22px; }
+.checkout-section h2 { font-family:Georgia,serif; font-size:27px; font-weight:400; margin:0; }
+.checkout-section select { background:var(--paper); border:1px solid var(--line); color:var(--ink); padding:14px; }
+.payment-options { display:flex; flex-wrap:wrap; gap:16px; }
+.payment-options label { border:1px solid var(--line); cursor:pointer; font-size:13px; padding:14px 18px; }
+.shipping-options { display:grid; gap:10px; }
+.shipping-options div { border-bottom:1px solid var(--line); display:flex; justify-content:space-between; padding:12px 0; }
+.checkout-total { align-items:center; border-top:2px solid var(--ink); display:flex; justify-content:space-between; padding:22px 0; }
+.checkout-total strong { color:var(--green); font-family:Georgia,serif; font-size:25px; }
+.checkout-form > .primary-button { justify-content:center; max-width:260px; }
+.checkout-section a { color:var(--green); font-weight:700; }

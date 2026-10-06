@@ -80,3 +80,17 @@ export async function markNotificationRead(id: number): Promise<CustomerNotifica
   const response = await requestJson<DataResponse<CustomerNotification>>(`/customer/notifications/${id}/read`, { method: 'PATCH' })
   return response.data
 }
+
+export type ShippingMethod = { id: number; code?: string; name?: string; carrier?: string; base_fee?: number; currency?: string }
+
+export async function getShippingMethods(): Promise<ShippingMethod[]> {
+  const response = await requestJson<DataResponse<ShippingMethod[]>>('/customer/shipping-methods', { cache: 'no-store' })
+  return response.data
+}
+
+export type CheckoutInput = { address_id: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string }
+
+export async function checkout(input: CheckoutInput): Promise<CustomerOrderDetails> {
+  const response = await requestJson<DataResponse<CustomerOrderDetails>>('/customer/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': input.idempotency_key }, body: JSON.stringify(input) })
+  return response.data
+}
