@@ -1,4 +1,4 @@
-import { requestJson } from '@/core/http/client'
+import { ApiError, requestJson } from '@/core/http/client'
 import type { Customer } from '@/domain/customer/customer'
 
 type DataResponse<T> = { data: T }
@@ -88,7 +88,7 @@ export async function getShippingMethods(): Promise<ShippingMethod[]> {
   return response.data
 }
 
-export type CheckoutInput = { address_id: number; shipping_method_id?: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string }
+export type CheckoutInput = { address_id: number; shipping_method_id?: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string; preview_token: string }
 
 export type CheckoutPreview = {
   items?: Array<{ product_id?: number; variant_id?: number; name?: string; quantity?: number; unit_price?: number; total_amount?: number }>
@@ -100,6 +100,14 @@ export type CheckoutPreview = {
   shipping_amount: number
   total_amount: number
   currency: string
+  preview_token: string
+}
+
+export class CheckoutPreviewStaleError extends Error {
+  constructor(message: string, public readonly preview: CheckoutPreview) {
+    super(message)
+    this.name = 'CheckoutPreviewStaleError'
+  }
 }
 
 export type CheckoutPreviewInput = Pick<CheckoutInput, 'address_id' | 'shipping_method_id' | 'currency' | 'coupon_code'>
@@ -110,8 +118,18 @@ export async function previewCheckout(input: CheckoutPreviewInput): Promise<Chec
 }
 
 export async function checkout(input: CheckoutInput): Promise<CustomerOrderDetails> {
-  const response = await requestJson<DataResponse<CustomerOrderDetails>>('/customer/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': input.idempotency_key }, body: JSON.stringify(input) })
-  return response.data
+  try {
+    const response = await requestJson<DataResponse<CustomerOrderDetails>>('/customer/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': input.idempotency_key }, body: JSON.stringify(input) })
+    return response.data
+  } catch (reason) {
+    if (reason instanceof ApiError && reason.status === 409) {
+      const payload = reason.payload as { error_code?: string; data?: CheckoutPreview } | undefined
+      if (payload?.error_code === 'checkout_preview_stale' && payload.data?.preview_token) {
+        throw new CheckoutPreviewStaleError(reason.message, payload.data)
+      }
+    }
+    throw reason
+  }
 }
 
 export async function cancelCustomerOrder(id: number): Promise<CustomerOrderDetails> {

@@ -33,6 +33,7 @@ final class CheckoutRequest extends FormRequest
             'payment_method' => ['nullable', 'string', 'in:cash_on_delivery,paymob,kashier'],
             'payment_idempotency_key' => ['nullable', 'string', 'max:100', 'required_with:payment_method'],
             'coupon_code' => ['nullable', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'preview_token' => ['nullable', 'string', 'size:64'],
         ];
 
         if ($this->user() === null) {

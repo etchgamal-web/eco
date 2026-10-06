@@ -83,9 +83,6 @@ final class ReconcilePayment
                     'metadata' => array_merge((array) $locked->metadata, (array) ($result['metadata'] ?? [])),
                 ]);
                 $this->operations->complete((int) $updated->id, 'create', $status === 'confirmed' ? 'confirmed' : $status, $result['provider_reference'] ?? null, $result, $leaseToken);
-                if ($status === 'confirmed' && $updated->order->status === 'pending') {
-                    $this->orders->updateStatus((int) $updated->order_id, 'confirmed');
-                }
 
                 return $updated;
             });

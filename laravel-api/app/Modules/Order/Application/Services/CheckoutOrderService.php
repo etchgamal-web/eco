@@ -6,11 +6,12 @@ use App\Modules\Customer\Domain\Contracts\CheckoutCustomerContextInterface;
 use App\Modules\Inventory\Domain\Contracts\InventoryRepositoryInterface;
 use App\Modules\Order\Domain\Contracts\CheckoutGatewayInterface;
 use App\Modules\Order\Domain\Exceptions\CheckoutException;
+use App\Modules\Order\Domain\Exceptions\CheckoutPreviewStaleException;
 use App\Modules\Order\Domain\ValueObjects\CheckoutData;
 use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
-use App\Modules\Tax\Domain\Contracts\TaxCalculatorInterface;
 use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;
+use App\Modules\Tax\Domain\Contracts\TaxCalculatorInterface;
 
 final class CheckoutOrderService
 {
@@ -47,6 +48,15 @@ final class CheckoutOrderService
     /** @return array<string, mixed> */
     public function preview(CheckoutData $data, int $userId): array
     {
+        $quote = $this->customerQuote($data, $userId);
+        $quote['preview_token'] = $this->previewToken($data, $userId, $quote);
+
+        return $quote;
+    }
+
+    /** @return array<string, mixed> */
+    private function customerQuote(CheckoutData $data, int $userId): array
+    {
         $cart = $this->customers->cartForUser($userId);
         $items = $cart->items;
         if ($items->isEmpty()) {
@@ -75,30 +85,28 @@ final class CheckoutOrderService
 
     private function checkoutCustomer(CheckoutData $data, int $userId): object
     {
-        $cart = $this->customers->cartForUser($userId);
-        $items = $cart->items;
-        if ($items->isEmpty()) {
-            throw CheckoutException::emptyCart();
+        $address = $this->customers->addressForUser($userId, $data->addressId);
+        $quote = $this->customerQuote($data, $userId);
+        if ($data->previewToken !== null && ! hash_equals($this->previewToken($data, $userId, $quote), $data->previewToken)) {
+            throw new CheckoutPreviewStaleException($quote + ['preview_token' => $this->previewToken($data, $userId, $quote)]);
         }
 
-        $address = $this->customers->addressForUser($userId, $data->addressId);
-        [$subtotal, $snapshots] = $this->priceCustomerItems($items);
-        $promotion = $this->coupons->apply($data->couponCode, $userId, $subtotal);
-        $tax = $this->taxes->calculate($subtotal - $promotion['discount'], (string) $address->country, $address->state);
-        $shippingAmount = $this->shippingAmount($data->shippingMethodId, (string) $data->currency);
+        foreach ($quote['items'] as $item) {
+            $this->inventory->reserve((int) $item['product_id'], isset($item['variant_id']) ? (int) $item['variant_id'] : null, (int) $item['quantity']);
+        }
 
         $order = $this->gateway->createOrder([
             'user_id' => $userId,
             'status' => 'pending',
-            'total_amount' => $subtotal - $promotion['discount'] + $tax['amount'] + $shippingAmount,
-            'subtotal_amount' => $subtotal,
-            'discount_amount' => $promotion['discount'],
-            'coupon_code' => $promotion['code'],
-            'tax_amount' => $tax['amount'],
-            'tax_rate' => $tax['rate'],
-            'tax_rule_id' => $tax['rule_id'],
-            'shipping_amount' => $shippingAmount,
-            'shipping_cost' => $shippingAmount,
+            'total_amount' => $quote['total_amount'],
+            'subtotal_amount' => $quote['subtotal_amount'],
+            'discount_amount' => $quote['discount_amount'],
+            'coupon_code' => $quote['coupon_code'],
+            'tax_amount' => $quote['tax_amount'],
+            'tax_rate' => $quote['tax_rate'],
+            'tax_rule_id' => $quote['tax_rule_id'],
+            'shipping_amount' => $quote['shipping_amount'],
+            'shipping_cost' => $quote['shipping_amount'],
             'shipping_subsidy' => 0,
             'currency' => $data->currency,
             'shipping_address' => [
@@ -113,13 +121,28 @@ final class CheckoutOrderService
             ],
             'idempotency_key' => $data->idempotencyKey,
         ]);
-        $this->gateway->createOrderItems($order, $snapshots);
-        if ($promotion['code'] !== null) {
-            $this->gateway->recordCouponUsage($promotion['code'], $userId, (int) $order->id, $promotion['discount']);
+        $this->gateway->createOrderItems($order, $quote['items']);
+        if ($quote['coupon_code'] !== null) {
+            $this->gateway->recordCouponUsage($quote['coupon_code'], $userId, (int) $order->id, (int) $quote['discount_amount']);
         }
         $this->customers->clearCartForUser($userId);
 
         return $order->load('items');
+    }
+
+    /** @param array<string, mixed> $quote */
+    private function previewToken(CheckoutData $data, int $userId, array $quote): string
+    {
+        $snapshot = [
+            'user_id' => $userId,
+            'address_id' => $data->addressId,
+            'shipping_method_id' => $data->shippingMethodId,
+            'currency' => strtoupper($data->currency),
+            'coupon_code' => strtoupper(trim((string) $data->couponCode)),
+            'quote' => $quote,
+        ];
+
+        return hash_hmac('sha256', json_encode($snapshot, JSON_THROW_ON_ERROR), (string) config('app.key'));
     }
 
     private function checkoutGuest(CheckoutData $data): object

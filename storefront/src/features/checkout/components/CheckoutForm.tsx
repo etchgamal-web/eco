@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/features/auth/auth-context'
 import { useCart } from '@/features/cart/store'
-import { checkout, getCustomerAddresses, getShippingMethods, previewCheckout, type CheckoutPreview, type CustomerAddress, type ShippingMethod } from '@/infrastructure/api/customer-api'
+import { checkout, CheckoutPreviewStaleError, getCustomerAddresses, getShippingMethods, previewCheckout, type CheckoutPreview, type CustomerAddress, type ShippingMethod } from '@/infrastructure/api/customer-api'
 import { formatPrice } from '@/core/i18n/formatters'
 
 export default function CheckoutForm() {
@@ -76,10 +76,16 @@ export default function CheckoutForm() {
         idempotency_key: key,
         payment_idempotency_key: `${key}-payment`,
         coupon_code: couponCode.trim() || undefined,
+        preview_token: preview.preview_token,
       })
       clearCart()
       router.push(`/checkout/success?orderId=${order.id}`)
     } catch (reason) {
+      if (reason instanceof CheckoutPreviewStaleError) {
+        setPreview(reason.preview)
+        setError('تغيّر السعر أو تفاصيل الطلب منذ المعاينة. راجع الإجمالي المحدّث واضغط «تأكيد الطلب» مرة أخرى.')
+        return
+      }
       setError(reason instanceof Error ? reason.message : 'تعذر إنشاء الطلب')
     } finally {
       setSubmitting(false)

@@ -9,7 +9,7 @@ final class PaymobWebhookVerifier implements PaymobWebhookVerifierInterface
 {
     public function __construct(private readonly PaymentGatewaySettings $settings) {}
 
-    public function verify(array $payload, string $providedHmac): bool
+    public function verify(array $payload, string $providedHmac = ''): bool
     {
         $secret = (string) $this->settings->value('paymob', 'hmac_secret', config('services.paymob.hmac_secret'));
         if ($secret === '' || $providedHmac === '') {

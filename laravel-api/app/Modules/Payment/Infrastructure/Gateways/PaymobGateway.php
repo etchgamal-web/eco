@@ -3,6 +3,7 @@
 namespace App\Modules\Payment\Infrastructure\Gateways;
 
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
+use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
 use App\Modules\Payment\Domain\Exceptions\PaymentException;
 use App\Modules\Payment\Infrastructure\Configuration\PaymentGatewaySettings;
 use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
@@ -24,8 +25,10 @@ final class PaymobGateway implements PaymentGatewayInterface
         $secretKey = (string) $this->settings->value('paymob', 'secret_key', config('services.paymob.secret_key'));
         $publicKey = (string) $this->settings->value('paymob', 'public_key', config('services.paymob.public_key'));
         $integrationIds = $this->settings->value('paymob', 'integration_ids', config('services.paymob.integration_ids', []));
+        $notificationUrl = (string) $this->settings->value('paymob', 'notification_url', config('services.paymob.notification_url'));
+        $redirectionUrl = (string) $this->settings->value('paymob', 'redirection_url', config('services.paymob.redirection_url'));
 
-        if ($secretKey === '' || $publicKey === '' || $integrationIds === []) {
+        if ($secretKey === '' || $publicKey === '' || $integrationIds === [] || $notificationUrl === '' || $redirectionUrl === '') {
             throw new PaymentException('Paymob is not configured.');
         }
 
@@ -33,7 +36,7 @@ final class PaymobGateway implements PaymentGatewayInterface
         foreach ($order->items as $item) {
             $items[] = [
                 'name' => (string) $item->name,
-                'amount' => (int) $item->total_amount,
+                'amount' => $this->amountInMinorUnits((int) $item->total_amount),
                 'description' => (string) ($item->sku ?: $item->name),
                 'quantity' => (int) $item->quantity,
             ];
@@ -41,7 +44,7 @@ final class PaymobGateway implements PaymentGatewayInterface
         if ((int) $order->shipping_amount > 0) {
             $items[] = [
                 'name' => 'Shipping',
-                'amount' => (int) $order->shipping_amount,
+                'amount' => $this->amountInMinorUnits((int) $order->shipping_amount),
                 'description' => 'Shipping fee',
                 'quantity' => 1,
             ];
@@ -49,14 +52,14 @@ final class PaymobGateway implements PaymentGatewayInterface
 
         $billing = $this->billingData($order);
         $payload = [
-            'amount' => (int) $order->total_amount,
+            'amount' => $this->amountInMinorUnits((int) $order->total_amount),
             'currency' => (string) $order->currency,
             'payment_methods' => array_values($integrationIds),
             'items' => $items,
             'billing_data' => $billing,
             'special_reference' => $idempotencyKey,
-            'notification_url' => $this->settings->value('paymob', 'notification_url', config('services.paymob.notification_url')),
-            'redirection_url' => $this->settings->value('paymob', 'redirection_url', config('services.paymob.redirection_url')),
+            'notification_url' => $notificationUrl,
+            'redirection_url' => $redirectionUrl,
         ];
 
         try {
@@ -95,9 +98,18 @@ final class PaymobGateway implements PaymentGatewayInterface
         }
         $response = $this->client((string) $this->settings->value('paymob', 'secret_key', config('services.paymob.secret_key')))
             ->get('/api/acceptance/transactions/'.rawurlencode($reference))->throw()->json();
-        $status = (bool) ($response['success'] ?? false) ? 'confirmed' : ((bool) ($response['pending'] ?? false) ? 'pending' : 'failed');
+        $details = (array) ($response['data'] ?? $response);
+        $amountCents = $details['amount_cents'] ?? $details['amount_cents_int'] ?? null;
+        $currency = strtoupper((string) ($details['currency'] ?? ''));
+        if ($amountCents === null || $currency === '') {
+            throw new PaymentException('Paymob reconciliation response omitted the amount or currency.');
+        }
+        if ((int) $amountCents !== $this->amountInMinorUnits((int) $payment->amount) || $currency !== strtoupper((string) $payment->currency)) {
+            throw new PaymentAmountMismatchException('Paymob reconciliation amount or currency does not match the local payment.');
+        }
+        $status = (bool) ($details['success'] ?? false) ? 'confirmed' : ((bool) ($details['pending'] ?? false) ? 'pending' : 'failed');
 
-        return ['status' => $status, 'provider_reference' => $reference, 'metadata' => ['provider' => 'paymob', 'reconciliation' => $response]];
+        return ['status' => $status, 'provider_reference' => $reference, 'metadata' => ['provider' => 'paymob', 'reconciliation' => $details]];
     }
 
     public function refundPayment(object $payment): array
@@ -110,7 +122,7 @@ final class PaymobGateway implements PaymentGatewayInterface
         $response = $this->client((string) $this->settings->value('paymob', 'secret_key', config('services.paymob.secret_key')))
             ->post('/api/acceptance/void_refund/refund', [
                 'transaction_id' => (int) $transactionId,
-                'amount_cents' => (int) $payment->amount,
+                'amount_cents' => $this->amountInMinorUnits((int) $payment->amount),
             ])->throw()->json();
 
         if (($response['success'] ?? true) !== true) {
@@ -165,5 +177,14 @@ final class PaymobGateway implements PaymentGatewayInterface
             'floor' => 'NA',
             'state' => (string) data_get($order->shipping_address, 'state', 'NA'),
         ];
+    }
+
+    private function amountInMinorUnits(int $amount): int
+    {
+        if ($amount < 0 || $amount > intdiv(PHP_INT_MAX, 100)) {
+            throw new PaymentException('Paymob amount is outside the supported range.');
+        }
+
+        return $amount * 100;
     }
 }

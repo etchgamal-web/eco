@@ -11,7 +11,10 @@ final class KashierWebhookController extends Controller
 {
     public function __invoke(WebhookRequest $request, ProcessKashierWebhook $process): JsonResponse
     {
-        $process->execute($request->all());
+        $payment = $process->execute($request->all(), (string) $request->header('x-kashier-signature', ''));
+        if ($payment === null) {
+            return response()->json(['received' => true, 'duplicate' => true], 409);
+        }
 
         return response()->json(['received' => true]);
     }

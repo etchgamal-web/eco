@@ -3,6 +3,7 @@
 namespace App\Modules\Payment\Infrastructure\Gateways;
 
 use App\Modules\Payment\Domain\Contracts\PaymentGatewayInterface;
+use App\Modules\Payment\Domain\Exceptions\PaymentAmountMismatchException;
 use App\Modules\Payment\Domain\Exceptions\PaymentException;
 use App\Modules\Payment\Infrastructure\Configuration\PaymentGatewaySettings;
 use App\Shared\Domain\Exceptions\AmbiguousExternalResultException;
@@ -24,7 +25,9 @@ final class KashierGateway implements PaymentGatewayInterface
         $merchantId = (string) $this->settings->value('kashier', 'merchant_id', config('services.kashier.merchant_id'));
         $secretKey = (string) $this->settings->value('kashier', 'secret_key', config('services.kashier.secret_key'));
         $paymentApiKey = (string) $this->settings->value('kashier', 'payment_api_key', config('services.kashier.payment_api_key'));
-        if ($merchantId === '' || $secretKey === '' || $paymentApiKey === '') {
+        $redirectUrl = (string) $this->settings->value('kashier', 'redirect_url', config('services.kashier.redirect_url'));
+        $webhookUrl = (string) $this->settings->value('kashier', 'webhook_url', config('services.kashier.webhook_url'));
+        if ($merchantId === '' || $secretKey === '' || $paymentApiKey === '' || $redirectUrl === '' || $webhookUrl === '') {
             throw new PaymentException('Kashier is not configured.');
         }
 
@@ -38,7 +41,7 @@ final class KashierGateway implements PaymentGatewayInterface
             'amount' => $amount,
             'currency' => (string) $order->currency,
             'order' => $idempotencyKey,
-            'merchantRedirect' => $this->settings->value('kashier', 'redirect_url', config('services.kashier.redirect_url')),
+            'merchantRedirect' => $redirectUrl,
             'display' => 'en',
             'type' => 'one-time',
             'allowedMethods' => 'card,wallet',
@@ -51,7 +54,7 @@ final class KashierGateway implements PaymentGatewayInterface
             ],
             'interactionSource' => 'ECOMMERCE',
             'enable3DS' => true,
-            'serverWebhook' => $this->settings->value('kashier', 'webhook_url', config('services.kashier.webhook_url')),
+            'serverWebhook' => $webhookUrl,
         ];
 
         try {
@@ -84,21 +87,35 @@ final class KashierGateway implements PaymentGatewayInterface
 
     public function reconcilePayment(object $payment): array
     {
-        $orderId = (string) ($payment->provider_reference ?: data_get($payment->metadata, 'kashier_order_id', ''));
-        if ($orderId === '') {
-            throw new PaymentException('Kashier reconciliation reference is missing.');
+        $sessionId = (string) ($payment->provider_reference ?: data_get($payment->metadata, 'session_id', ''));
+        if ($sessionId === '') {
+            throw new PaymentException('Kashier payment session reference is missing.');
         }
-        $response = $this->fepClient((string) $this->settings->value('kashier', 'secret_key', config('services.kashier.secret_key')))
-            ->get('/v3/orders/'.rawurlencode($orderId))->throw()->json();
-        $providerStatus = strtoupper((string) ($response['status'] ?? data_get($response, 'response.status', '')));
-        $status = $providerStatus === 'SUCCESS' ? 'confirmed' : ($providerStatus === 'PENDING' ? 'pending' : 'failed');
+        $secretKey = (string) $this->settings->value('kashier', 'secret_key', config('services.kashier.secret_key'));
+        $paymentApiKey = (string) $this->settings->value('kashier', 'payment_api_key', config('services.kashier.payment_api_key'));
+        $response = $this->apiClient($secretKey, $paymentApiKey)
+            ->get('/v3/payment/sessions/'.rawurlencode($sessionId).'/payment')->throw()->json();
+        $details = (array) ($response['data'] ?? $response);
+        if (! isset($details['amount'], $details['currency'])) {
+            throw new PaymentException('Kashier reconciliation response omitted the amount or currency.');
+        }
+        if (abs((float) $details['amount'] - (float) $payment->amount) > 0.001 || strtoupper((string) $details['currency']) !== strtoupper((string) $payment->currency)) {
+            throw new PaymentAmountMismatchException('Kashier reconciliation amount or currency does not match the local payment.');
+        }
+        $providerStatus = strtoupper((string) ($details['status'] ?? ''));
+        $status = match ($providerStatus) {
+            'SUCCESS', 'CAPTURED', 'PAID' => 'confirmed',
+            'FAILURE', 'FAILED', 'DECLINED', 'EXPIRED', 'ABANDONED' => 'failed',
+            'PENDING', 'CREATED', 'INITIATED', 'PROCESSING', 'OPENED' => 'pending',
+            default => 'processing',
+        };
 
-        return ['status' => $status, 'provider_reference' => $orderId, 'metadata' => ['provider' => 'kashier', 'reconciliation' => $response]];
+        return ['status' => $status, 'provider_reference' => $sessionId, 'metadata' => ['provider' => 'kashier', 'reconciliation' => $details]];
     }
 
     public function refundPayment(object $payment): array
     {
-        $orderId = (string) ($payment->provider_reference ?: data_get($payment->metadata, 'kashier_order_id', ''));
+        $orderId = (string) (data_get($payment->metadata, 'kashier_order_id') ?: $payment->provider_reference);
         if ($orderId === '') {
             throw new PaymentException('Kashier order reference is missing.');
         }
@@ -121,7 +138,7 @@ final class KashierGateway implements PaymentGatewayInterface
         if (! is_string($endpoint) || trim($endpoint) === '') {
             return ['status' => 'ambiguous', 'provider_reference' => $payment->provider_reference, 'metadata' => ['provider' => 'kashier', 'reason' => 'provider_refund_status_endpoint_not_configured']];
         }
-        $reference = (string) ($operation->provider_reference ?: ($payment->provider_reference ?: data_get($payment->metadata, 'kashier_order_id', '')));
+        $reference = (string) ($operation->provider_reference ?: (data_get($payment->metadata, 'kashier_order_id') ?: $payment->provider_reference));
         $path = str_replace(['{reference}', '{operation_id}', '{return_id}'], [rawurlencode($reference), (string) $operation->id, (string) ($operation->return_id ?? '')], $endpoint);
         $response = $this->fepClient((string) $this->settings->value('kashier', 'secret_key', config('services.kashier.secret_key')))->get($path, ['refund_operation_id' => $operation->id, 'return_id' => $operation->return_id, 'requested_amount' => $operation->requested_amount])->throw()->json();
         $status = strtoupper((string) ($response['status'] ?? data_get($response, 'response.status', data_get($response, 'refund.status', ''))));

@@ -2,11 +2,13 @@ import { env } from '@/core/config/env'
 
 export class ApiError extends Error {
   status: number
+  payload?: unknown
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, payload?: unknown) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.payload = payload
   }
 }
 
@@ -24,13 +26,14 @@ export async function requestJson<T>(path: string, init?: RequestInit): Promise<
 
   if (!response.ok) {
     let message = 'تعذر الاتصال بالمتجر'
+    let payload: unknown
     try {
-      const payload = (await response.json()) as { message?: string }
-      if (payload.message) message = payload.message
+      payload = await response.json()
+      if (payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string') message = payload.message
     } catch {
       // Keep the safe fallback when the API does not return JSON.
     }
-    throw new ApiError(message, response.status)
+    throw new ApiError(message, response.status, payload)
   }
 
   return (await response.json()) as T

@@ -11,15 +11,31 @@ final class KashierWebhookVerifier implements KashierWebhookVerifierInterface
 
     public function verify(array $payload, string $signature = ''): bool
     {
-        $provided = (string) ($payload['signature'] ?? '');
+        $data = (array) ($payload['data'] ?? []);
+        $keys = $data['signatureKeys'] ?? null;
         $key = (string) $this->settings->value('kashier', 'payment_api_key', config('services.kashier.payment_api_key'));
-        if ($provided === '' || $key === '') {
+        $provided = trim($signature);
+
+        if (! is_array($keys) || $keys === [] || $key === '' || $provided === '') {
             return false;
         }
 
-        $fields = ['paymentStatus', 'cardDataToken', 'maskedCard', 'merchantOrderId', 'orderId', 'cardBrand', 'orderReference', 'transactionId', 'amount', 'currency'];
-        $body = implode('&', array_map(static fn (string $field): string => $field.'='.($payload[$field] ?? 'null'), $fields));
-        $calculated = hash_hmac('sha256', $body, $key);
+        $keys = array_values(array_filter($keys, 'is_string'));
+        sort($keys, SORT_STRING);
+        $parts = [];
+        foreach ($keys as $field) {
+            if (! array_key_exists($field, $data) || ! is_scalar($data[$field])) {
+                return false;
+            }
+            $value = is_bool($data[$field]) ? ($data[$field] ? 'true' : 'false') : (string) $data[$field];
+            $parts[] = $field.'='.rawurlencode($value);
+        }
+
+        if ($parts === []) {
+            return false;
+        }
+
+        $calculated = hash_hmac('sha256', implode('&', $parts), $key);
 
         return hash_equals(strtolower($calculated), strtolower($provided));
     }

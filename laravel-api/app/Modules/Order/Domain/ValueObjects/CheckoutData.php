@@ -14,5 +14,6 @@ final readonly class CheckoutData
         public ?string $couponCode = null,
         public array $guestItems = [],
         public array $guestDetails = [],
+        public ?string $previewToken = null,
     ) {}
 }

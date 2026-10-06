@@ -22,6 +22,7 @@ use App\Modules\Inventory\Domain\Exceptions\InvalidStockAdjustmentException;
 use App\Modules\Inventory\Domain\Exceptions\InventoryNotFoundException;
 use App\Modules\Monitoring\Domain\Exceptions\OperationalAlertException;
 use App\Modules\Order\Domain\Exceptions\CheckoutException;
+use App\Modules\Order\Domain\Exceptions\CheckoutPreviewStaleException;
 use App\Modules\Order\Domain\Exceptions\InvalidOrderStatusTransitionException;
 use App\Modules\Order\Domain\Exceptions\InvalidShippingChargeException;
 use App\Modules\Order\Domain\Exceptions\OrderActionNotAllowedException;
@@ -137,6 +138,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (InsufficientStockException|InvalidStockAdjustmentException $e, Request $r) {
             if ($r->is('api/*')) {
                 return response()->json(['message' => $e->getMessage()], 422);
+            }
+        });
+        $exceptions->render(function (CheckoutPreviewStaleException $e, Request $r) {
+            if ($r->is('api/*')) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'error_code' => 'checkout_preview_stale',
+                    'data' => $e->quote,
+                ], 409);
             }
         });
         $exceptions->render(function (CheckoutException|InvalidShippingChargeException $e, Request $r) {

@@ -2,7 +2,6 @@
 
 namespace App\Modules\Payment\Application\UseCases;
 
-use App\Modules\Order\Domain\Contracts\OrderRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentOperationRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentWebhookEventRepositoryInterface;
@@ -16,7 +15,6 @@ final class ProcessPaymobWebhook
     public function __construct(
         private readonly PaymentRepositoryInterface $payments,
         private readonly PaymentOperationRepositoryInterface $operations,
-        private readonly OrderRepositoryInterface $orders,
         private readonly TransactionManagerInterface $transactions,
         private readonly PaymobWebhookVerifierInterface $verifier,
         private readonly PaymentWebhookEventRepositoryInterface $events,
@@ -58,8 +56,9 @@ final class ProcessPaymobWebhook
         if ($payment === null) {
             throw new PaymentException('Paymob webhook does not match a local payment.');
         }
-        if ((int) ($object['amount_cents'] ?? $payload['amount_cents'] ?? -1) !== (int) $payment->amount) {
-            throw new PaymentAmountMismatchException('Paymob webhook amount does not match the local payment.');
+        $webhookCurrency = strtoupper((string) ($object['currency'] ?? $payload['currency'] ?? ''));
+        if ((int) ($object['amount_cents'] ?? $payload['amount_cents'] ?? -1) !== ((int) $payment->amount * 100) || $webhookCurrency !== strtoupper((string) $payment->currency)) {
+            throw new PaymentAmountMismatchException('Paymob webhook amount or currency does not match the local payment.');
         }
 
         $pending = (bool) ($object['pending'] ?? false);
@@ -82,9 +81,6 @@ final class ProcessPaymobWebhook
             $locked = $this->payments->findForUpdate((int) $payment->id);
             $updated = $this->payments->updateStatus($locked, $status, ['metadata' => $metadata]);
             $this->operations->complete((int) $updated->id, 'create', $status === 'confirmed' ? 'confirmed' : ($status === 'failed' ? 'failed' : ($status === 'provider_created' ? 'provider_created' : 'processing')), $reference, $payload);
-            if ($status === 'confirmed' && $updated->order->status === 'pending') {
-                $this->orders->updateStatus((int) $updated->order_id, 'confirmed');
-            }
             $this->events->markProcessed('paymob', $eventId);
 
             return $updated;
