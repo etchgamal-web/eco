@@ -13,6 +13,7 @@ final class DatabaseSeederTest extends TestCase
 
     public function test_local_seeder_populates_domain_fixtures_idempotently(): void
     {
+        $this->app['env'] = 'testing';
         $this->seed();
 
         foreach ([

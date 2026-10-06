@@ -149,6 +149,12 @@
 - إخفاء `metadata` و`idempotency_key` من JSON العام لمنع كشف أسرار البوابات.
 - اختبارات الدفع وCheckout والعميل: `27/27` ناجحة، وواجهة المتجر lint/build ناجحان.
 
+**دفعة تنظيف الاختبارات — 2026-10-06**
+
+- عزل `DatabaseSeederTest` صراحةً على بيئة `testing` حتى يختبر عقد الـSeeder المحلي دون اعتماد مخفي على بيئة التشغيل.
+- تثبيت `created_at` في `SalesAnalyticsApiTest` عبر query builder بعد اكتشاف أن timestamp غير قابل للـmass assignment.
+- النتيجة النهائية: Laravel `299/299` اختبارًا ناجحًا و`10646` assertion.
+
 الدفعة السابقة:
 
 **Commit `b00c54f` — `refactor(storefront): isolate catalog contracts from infrastructure`**
