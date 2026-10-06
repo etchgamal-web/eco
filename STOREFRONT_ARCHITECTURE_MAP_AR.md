@@ -391,9 +391,15 @@ src/shared/components/ProductCard.tsx
 - [x] إنشاء صفحات `/categories/[slug]` و`/brands/[slug]` وربطها بفلترة المنتجات.
 - [~] تنفيذ Hybrid Cart جزئيًا: دمج كميات الزائر وجلب السلة البعيدة يعملان، لكن عمليات السلة للمستخدم المسجل ما زالت تحتاج ربطًا مستمرًا بالـAPI.
 - [x] إضافة اختبارات API للصلاحيات ودورة حياة السلة، مع نجاح lint وbuild وaudit.
-- [ ] نقل عقود الكتالوج من `infrastructure` إلى `application` أو `domain` ومنع اعتماد `application` و`features` على `infrastructure` مباشرة.
+- [x] نقل عقود الكتالوج من `infrastructure` إلى `application`، ومنع صفحات ومكونات المتجر من استيراد factories أو DTOs من `infrastructure` مباشرة عبر `src/features/catalog/api.ts`.
 - [ ] إضافة `GetCategoryBySlug` و`GetBrandBySlug` أو endpoints slug مباشرة.
 - [ ] تحويل قائمة المنتجات إلى Server Component مع Client Component للفلاتر التفاعلية.
 - [ ] ربط عمليات السلة للمستخدم المسجل بـLaravel مع حالات المزامنة والفشل.
+
+### آخر تحقق
+
+- `storefront`: `npm run lint` و`npm run build` ناجحان.
+- `storefront` و`admin-dashboard`: `npm audit` بلا ثغرات عالية أو حرجة بعد تثبيت الاعتمادات.
+- Laravel: `composer audit` بلا advisories؛ اختبار Laravel الكامل مرّ فيه 291 اختبارًا وفشل 5 اختبارات قائمة تحتاج دفعة منفصلة.
 
 الحالة الحالية: **المرحلتان 0 و1 مكتملتان، والمرحلة 2 مكتملة وظيفيًا، والمرحلة 3 مكتملة للزائر وجزئيًا للمستخدم المسجل، والمرحلة 4 منفذة جزئيًا، ومرحلة الجودة والإطلاق بدأت**. آخر commit مرفوع هو `95e389d` بتاريخ 2026-10-06. وفق المراجعة الأخيرة، الأولوية الآن هي Dependency Rule لعقود الكتالوج، lookup بالـslug، Server-first catalog، ثم مزامنة السلة المستمرة. بعد ذلك نكمل الإجمالي النهائي في Checkout وSEO الديناميكي واختبارات الواجهة وE2E.

@@ -1,6 +1,6 @@
 # خارطة تحسين واجهة متجر Eco
 
-> **آخر تحديث:** 2026-10-06 — commit `c5584a3` على فرع `main`.
+> **آخر تحديث:** 2026-10-06 — commit `b00c54f` على فرع `main`.
 >
 > يتم تحديث هذا الملف مع كل دفعة تنفيذ وقبل رفع التغييرات إلى GitHub.
 
@@ -112,6 +112,18 @@
 
 ## آخر دفعة منفذة
 
+**Commit `b00c54f` — `refactor(storefront): isolate catalog contracts from infrastructure`**
+
+شملت:
+
+- نقل `CatalogFilterOption` و`ProductListOptions` و`ProductListResult` إلى `src/application/catalog/catalog-types.ts`.
+- توسيع `CatalogRepository` بعقود التصنيفات والعلامات.
+- إضافة واجهة تركيب للكتالوج داخل `src/features/catalog/api.ts` ومنع صفحات المتجر من استيراد factories مباشرة.
+- تحديث exports القديمة في `src/lib/api/catalog.ts` للحفاظ على التوافق.
+- تثبيت اعتمادات storefront وadmin-dashboard وLaravel، وإصلاح ثغرة `sharp` العالية عبر `npm audit fix`.
+
+الدفعة السابقة:
+
 **Commit `c5584a3` — `feat(storefront): add taxonomy pages and remote cart sync`**
 
 شملت:
@@ -122,6 +134,13 @@
 - مزامنة السلة البعيدة بعد تسجيل الدخول.
 - دمج كميات العناصر المتكررة.
 - تحديث السلة المحلية من Laravel كمصدر للحقيقة.
+
+## نتيجة التحقق الأخيرة
+
+- `storefront`: `npm run lint` و`npm run build` ناجحان.
+- `storefront` و`admin-dashboard`: `npm audit` بلا ثغرات عالية أو حرجة بعد الإصلاح.
+- Laravel: تم تثبيت PHP 8.3 وComposer والاعتمادات؛ `composer audit` بلا advisories.
+- Laravel: **291 اختبارًا ناجحًا و5 إخفاقات قائمة** في اختبارات authorization والطبقات وseeder وتحليلات المبيعات؛ لم تُنسب هذه الإخفاقات إلى دفعة المتجر دون إثبات.
 
 ## نتيجة المراجعة المعمارية المرفقة
 
