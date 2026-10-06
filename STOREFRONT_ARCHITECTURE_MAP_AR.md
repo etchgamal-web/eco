@@ -282,7 +282,7 @@ src/shared/components/ProductCard.tsx
 - إضافة تسجيل الدخول والتسجيل وحالة العميل.
 - إضافة الحساب والعناوين والطلبات والمفضلة.
 
-**الحالة:** مكتملة جزئيًا. تم تنفيذ local-first عبر `src/domain/cart/cart.ts` و`src/features/cart/store.tsx`، وربط `CartProvider` بالـlayout، وعدّاد السلة بالرأس، وزر الإضافة، وصفحة `/cart` مع تعديل الكميات والحذف والتفريغ. تم إنشاء Adapter لعقود `customer/cart` في `src/infrastructure/api/cart-api.ts`، وإضافة مصادقة العميل عبر `src/features/auth/auth-context.tsx` وصفحتي `/account/login` و`/account/register`. بعد تسجيل الدخول يتم دمج السلة المحلية ثم تفريغها بعد النجاح فقط. تم تنفيذ `/account` و`/account/orders` و`/account/orders/[id]` و`/account/addresses` و`/account/profile` و`/account/wishlist` و`/account/notifications`، مع عرض الطلبات وتفاصيلها وإدارة العناوين وتعديل بيانات العميل وإزالة عناصر المفضلة وتعليم الإشعارات كمقروءة عبر `customer-api.ts`. المتبقي: جلب السلة البعيدة إلى الواجهة، دمج العناصر المتعارضة بسياسة واضحة، وربط المفضلة مباشرة ببطاقات المنتجات.
+**الحالة:** مكتملة جزئيًا. تم تنفيذ local-first عبر `src/domain/cart/cart.ts` و`src/features/cart/store.tsx`، وربط `CartProvider` بالـlayout، وعدّاد السلة بالرأس، وزر الإضافة، وصفحة `/cart` مع تعديل الكميات والحذف والتفريغ. تم إنشاء Adapter لعقود `customer/cart` في `src/infrastructure/api/cart-api.ts`، وإضافة مصادقة العميل عبر `src/features/auth/auth-context.tsx` وصفحتي `/account/login` و`/account/register`. بعد تسجيل الدخول يتم دمج السلة المحلية ثم تفريغها بعد النجاح فقط. تم تنفيذ `/account` و`/account/orders` و`/account/orders/[id]` و`/account/addresses` و`/account/profile` و`/account/wishlist` و`/account/notifications`، مع عرض الطلبات وتفاصيلها وإلغاء الطلب في الحالات المسموحة وإدارة العناوين وتعديل بيانات العميل وإزالة عناصر المفضلة وتعليم الإشعارات كمقروءة عبر `customer-api.ts`. المتبقي: جلب السلة البعيدة إلى الواجهة، دمج العناصر المتعارضة بسياسة واضحة، وربط المفضلة مباشرة ببطاقات المنتجات.
 
 ### المرحلة 4 — Checkout
 
@@ -311,14 +311,14 @@ src/shared/components/ProductCard.tsx
 | P0 | بطاقة المنتج | موجودة في `shared/components/ProductCard.tsx` وتدعم رابط المنتج، مع fallback زخرفي للصور | ربط صور Laravel عبر `Next Image` وإضافة إجراءات السلة عند الحاجة |
 | P0 | صفحة تفاصيل المنتج | منفذة في `/products/[slug]` مع الوصف والسعر والوسائط والـvariants والكمية | تقييمات، structured data فعلي، والتحقق النهائي من المخزون قبل checkout |
 | P0 | السلة | local-first منفذة في `/cart` مع Adapter لـ`customer/cart` ومزامنة بعد login | جلب السلة البعيدة، merge conflicts، والتحقق من السعر والمخزون في checkout |
-| P0 | Checkout | `/checkout` و`/checkout/success` و`/checkout/failure` منفذة، مع العنوان وطرق الشحن وخيارات الدفع وidempotency وربط `customer/checkout`، وتفريغ السلة بعد النجاح فقط | عرض الإجمالي النهائي من الخادم، حالات الدفع الخارجية، وتفاصيل الشحن المختار |
+| P0 | Checkout | `/checkout` ونتائج النجاح والفشل منفذة، مع العنوان وطرق الشحن وخيارات الدفع وidempotency وربط `customer/checkout`، وتفريغ السلة بعد النجاح فقط | عرض الإجمالي النهائي من الخادم، حالات الدفع الخارجية، وتفاصيل الشحن المختار |
 | P1 | طبقة HTTP | client موحد في `src/core/http/client.ts` مع `ApiError` وBearer token وcredentials | timeouts، retry policy، ونقل API القديم إلى adapters المنظمة |
 | P1 | صور المنتجات | تفاصيل المنتج تدعم `media/images`، والبطاقة تستخدم fallback CSS | `ProductImage` و`Next Image` وتحسين التحميل |
 | P1 | التصنيفات والعلامات | فلاتر `category_id` و`brand_id` مرتبطة بـLaravel، والخيارات من المنتجات المحملة | endpoints عامة وخيارات مستقلة وصفحات التصنيف والعلامة |
 | P1 | variants | اختيار الـvariant والسعر والمخزون الجزئي في تفاصيل المنتج | ربط كل variant بوسائطه والتحقق الخادمي الكامل |
 | P1 | إعدادات المتجر العامة | إعدادات لوحة التحكم داخلية | public configuration آمن للعملة والشحن والدفع، مع عدم كشف secrets |
 | P1 | المصادقة | login/register/logout وAuthProvider وBearer token منفذة | حماية الصفحات، refresh/session strategy، ورسائل validation التفصيلية |
-| P1 | الحساب | مسارات الحساب والطلبات والعناوين والملف والمفضلة والإشعارات منفذة، مع القراءة والإضافة والحذف وتحديث الملف وتعليم الإشعار كمقروء | تعديل العناوين، إجراءات الطلب مثل الإلغاء حسب سياسة المنتج، وتحسين حماية واجهات الحساب |
+| P1 | الحساب | مسارات الحساب والطلبات والعناوين والملف والمفضلة والإشعارات منفذة، مع القراءة والإضافة والحذف وتحديث الملف وتعليم الإشعار كمقروء وإلغاء الطلب في الحالات المسموحة | تعديل العناوين، تحسين حماية واجهات الحساب، وربط إجراءات إضافية حسب سياسة المنتج |
 | P1 | البحث | submit search وpagination وempty state والفلاتر منفذة | debounce، حفظ query في URL، وفرز/فلترة أوسع |
 | P2 | صفحات CMS | Hero `home` فقط | renderer للأقسام مثل banner وfeatured وbenefits وFAQ |
 | P2 | التقييمات | غير موجودة في المتجر | عرض التقييمات وإرسالها للعميل الموثق |
@@ -379,6 +379,7 @@ src/shared/components/ProductCard.tsx
 - [x] إنشاء `/account/wishlist` و`/account/notifications` وربطهما بعقود Laravel.
 - [x] إنشاء `/checkout` وربطه بالسلة والعناوين وطرق الشحن و`customer/checkout`.
 - [x] إنشاء صفحات نجاح وفشل Checkout وإعادة المحاولة، وضبط تفريغ السلة بعد نجاح الطلب فقط.
+- [x] إضافة إلغاء الطلب للحالات `pending` و`reviewing` و`confirmed` مع تأكيد المستخدم وتحديث الحالة.
 - [x] إضافة `Pagination` و`ProductListing` كمكونات قابلة لإعادة الاستخدام.
 - [x] إضافة `src/app/robots.ts` و`src/app/sitemap.ts` وأدوات SEO الحالية ضمن الملفات الموجودة.
 - [ ] إضافة اختبارات للمكونات وعميل API.

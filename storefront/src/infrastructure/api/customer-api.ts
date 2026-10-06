@@ -94,3 +94,8 @@ export async function checkout(input: CheckoutInput): Promise<CustomerOrderDetai
   const response = await requestJson<DataResponse<CustomerOrderDetails>>('/customer/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': input.idempotency_key }, body: JSON.stringify(input) })
   return response.data
 }
+
+export async function cancelCustomerOrder(id: number): Promise<CustomerOrderDetails> {
+  const response = await requestJson<DataResponse<CustomerOrderDetails>>(`/customer/orders/${id}/cancel`, { method: 'POST' })
+  return response.data
+}

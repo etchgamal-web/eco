@@ -166,3 +166,7 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .checkout-result-card .primary-button,.checkout-result-card .secondary-button { justify-content:center; }
 .checkout-result-card.is-failure { border-top:3px solid #a04436; }
 .form-error a { color:var(--green); font-weight:700; }
+
+.cancel-order-button { background:transparent; border:1px solid #a04436; color:#a04436; cursor:pointer; font-size:13px; margin-bottom:25px; padding:11px 18px; }
+.cancel-order-button:disabled { cursor:wait; opacity:.55; }
+.account-section-heading a { color:var(--green); font-size:12px; }
