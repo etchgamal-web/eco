@@ -130,3 +130,17 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .order-details h2 { font-family:Georgia,serif; font-size:27px; font-weight:400; }
 .orders-list a { color:var(--green); font-weight:700; }
 @media (max-width:800px) { .account-heading-actions { width:100%; } .order-detail-summary { grid-template-columns:1fr; } }
+
+.account-shortcuts { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:45px; }
+.account-shortcuts a { border:1px solid var(--line); color:var(--green); font-size:13px; padding:12px 18px; }
+.wishlist-grid { display:grid; gap:15px; grid-template-columns:repeat(2,1fr); max-width:850px; }
+.wishlist-card { align-items:center; border:1px solid var(--line); display:flex; justify-content:space-between; padding:20px; }
+.wishlist-card p { color:var(--muted); font-size:13px; margin:8px 0 0; }
+.wishlist-card > div:last-child { align-items:end; display:flex; flex-direction:column; gap:10px; }
+.wishlist-card a { color:var(--green); font-size:13px; font-weight:700; }
+.notifications-list { display:grid; gap:12px; max-width:850px; }
+.notification-card { align-items:center; border-right:3px solid var(--green); border-top:1px solid var(--line); display:flex; justify-content:space-between; padding:20px; }
+.notification-card.is-read { border-right-color:var(--line); opacity:.65; }
+.notification-card p { color:var(--muted); font-size:13px; margin:8px 0 0; }
+.notification-card span { color:var(--muted); font-size:11px; }
+@media (max-width:800px) { .wishlist-grid { grid-template-columns:1fr; } .wishlist-card,.notification-card { align-items:flex-start; flex-direction:column; gap:15px; } }

@@ -58,3 +58,25 @@ export async function getCustomerOrder(id: number): Promise<CustomerOrderDetails
   const response = await requestJson<DataResponse<CustomerOrderDetails>>(`/customer/orders/${id}`, { cache: 'no-store' })
   return response.data
 }
+
+export type WishlistItem = { id: number; product_id?: number; product?: { name?: string; slug?: string; price?: number; currency?: string } }
+export type CustomerNotification = { id: number; type?: string; title?: string; body?: string; read_at?: string | null; created_at?: string }
+
+export async function getWishlist(): Promise<WishlistItem[]> {
+  const response = await requestJson<DataResponse<WishlistItem[]>>('/customer/wishlist', { cache: 'no-store' })
+  return response.data
+}
+
+export async function removeFromWishlist(productId: number): Promise<void> {
+  await requestJson<unknown>(`/customer/wishlist/${productId}`, { method: 'DELETE' })
+}
+
+export async function getNotifications(): Promise<CustomerNotification[]> {
+  const response = await requestJson<DataResponse<CustomerNotification[]>>('/customer/notifications', { cache: 'no-store' })
+  return response.data
+}
+
+export async function markNotificationRead(id: number): Promise<CustomerNotification> {
+  const response = await requestJson<DataResponse<CustomerNotification>>(`/customer/notifications/${id}/read`, { method: 'PATCH' })
+  return response.data
+}

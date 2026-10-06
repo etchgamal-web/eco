@@ -282,7 +282,7 @@ src/shared/components/ProductCard.tsx
 - إضافة تسجيل الدخول والتسجيل وحالة العميل.
 - إضافة الحساب والعناوين والطلبات والمفضلة.
 
-**الحالة:** مكتملة جزئيًا. تم تنفيذ local-first عبر `src/domain/cart/cart.ts` و`src/features/cart/store.tsx`، وربط `CartProvider` بالـlayout، وعدّاد السلة بالرأس، وزر الإضافة، وصفحة `/cart` مع تعديل الكميات والحذف والتفريغ. تم إنشاء Adapter لعقود `customer/cart` في `src/infrastructure/api/cart-api.ts`، وإضافة مصادقة العميل عبر `src/features/auth/auth-context.tsx` وصفحتي `/account/login` و`/account/register`. بعد تسجيل الدخول يتم دمج السلة المحلية ثم تفريغها بعد النجاح فقط. تم تنفيذ `/account` و`/account/orders` و`/account/orders/[id]` و`/account/addresses` و`/account/profile`، مع عرض الطلبات وتفاصيلها وإضافة وحذف عناوين الشحن وتعديل بيانات العميل عبر `customer-api.ts`. المتبقي: جلب السلة البعيدة إلى الواجهة، دمج العناصر المتعارضة بسياسة واضحة، المفضلة والإشعارات.
+**الحالة:** مكتملة جزئيًا. تم تنفيذ local-first عبر `src/domain/cart/cart.ts` و`src/features/cart/store.tsx`، وربط `CartProvider` بالـlayout، وعدّاد السلة بالرأس، وزر الإضافة، وصفحة `/cart` مع تعديل الكميات والحذف والتفريغ. تم إنشاء Adapter لعقود `customer/cart` في `src/infrastructure/api/cart-api.ts`، وإضافة مصادقة العميل عبر `src/features/auth/auth-context.tsx` وصفحتي `/account/login` و`/account/register`. بعد تسجيل الدخول يتم دمج السلة المحلية ثم تفريغها بعد النجاح فقط. تم تنفيذ `/account` و`/account/orders` و`/account/orders/[id]` و`/account/addresses` و`/account/profile` و`/account/wishlist` و`/account/notifications`، مع عرض الطلبات وتفاصيلها وإدارة العناوين وتعديل بيانات العميل وإزالة عناصر المفضلة وتعليم الإشعارات كمقروءة عبر `customer-api.ts`. المتبقي: جلب السلة البعيدة إلى الواجهة، دمج العناصر المتعارضة بسياسة واضحة، وربط المفضلة مباشرة ببطاقات المنتجات.
 
 ### المرحلة 4 — Checkout
 
@@ -316,7 +316,7 @@ src/shared/components/ProductCard.tsx
 | P1 | variants | اختيار الـvariant والسعر والمخزون الجزئي في تفاصيل المنتج | ربط كل variant بوسائطه والتحقق الخادمي الكامل |
 | P1 | إعدادات المتجر العامة | إعدادات لوحة التحكم داخلية | public configuration آمن للعملة والشحن والدفع، مع عدم كشف secrets |
 | P1 | المصادقة | login/register/logout وAuthProvider وBearer token منفذة | حماية الصفحات، refresh/session strategy، ورسائل validation التفصيلية |
-| P1 | الحساب | `/account` و`/account/orders` و`/account/orders/[id]` و`/account/addresses` و`/account/profile` منفذة، مع قراءة الطلبات وتفاصيلها وإدارة العناوين وتعديل الملف | المفضلة، الإشعارات، تعديل العناوين، وإجراءات الطلب مثل الإلغاء حسب سياسة المنتج |
+| P1 | الحساب | مسارات الحساب والطلبات والعناوين والملف والمفضلة والإشعارات منفذة، مع القراءة والإضافة والحذف وتحديث الملف وتعليم الإشعار كمقروء | تعديل العناوين، إجراءات الطلب مثل الإلغاء حسب سياسة المنتج، وتحسين حماية واجهات الحساب |
 | P1 | البحث | submit search وpagination وempty state والفلاتر منفذة | debounce، حفظ query في URL، وفرز/فلترة أوسع |
 | P2 | صفحات CMS | Hero `home` فقط | renderer للأقسام مثل banner وfeatured وbenefits وFAQ |
 | P2 | التقييمات | غير موجودة في المتجر | عرض التقييمات وإرسالها للعميل الموثق |
@@ -374,8 +374,9 @@ src/shared/components/ProductCard.tsx
 - [x] إنشاء `/account/addresses` لإضافة وحذف عناوين الشحن.
 - [x] إنشاء `/account/orders/[id]` لعرض تفاصيل الطلب.
 - [x] إنشاء `/account/profile` لتعديل بيانات العميل وتحديث جلسة المصادقة.
+- [x] إنشاء `/account/wishlist` و`/account/notifications` وربطهما بعقود Laravel.
 - [x] إضافة `Pagination` و`ProductListing` كمكونات قابلة لإعادة الاستخدام.
 - [x] إضافة `src/app/robots.ts` و`src/app/sitemap.ts` وأدوات SEO الحالية ضمن الملفات الموجودة.
 - [ ] إضافة اختبارات للمكونات وعميل API.
 
-الحالة الحالية: **المرحلتان 0 و1 مكتملتان، والمرحلة 2 مكتملة جزئيًا، والمرحلة 3 مكتملة جزئيًا**. تم الحفاظ على دعم RTL والواجهة العربية واتصال Laravel، ونجح `npm run lint` و`npm run build` بعد آخر التغييرات. ما زالت Checkout والمفضلة والإشعارات والاختبارات وSEO الديناميكي وتحسين الصور ضمن خارطة الطريق.
+الحالة الحالية: **المرحلتان 0 و1 مكتملتان، والمرحلة 2 مكتملة جزئيًا، والمرحلة 3 مكتملة جزئيًا**. تم الحفاظ على دعم RTL والواجهة العربية واتصال Laravel، ونجح `npm run lint` و`npm run build` بعد آخر التغييرات. ما زالت Checkout وربط المفضلة ببطاقات المنتجات وتعديل العناوين وإجراءات الطلب والاختبارات وSEO الديناميكي وتحسين الصور ضمن خارطة الطريق.
