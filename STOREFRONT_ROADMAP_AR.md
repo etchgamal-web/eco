@@ -1,6 +1,6 @@
 # خارطة تحسين واجهة متجر Eco
 
-> **آخر تحديث:** 2026-10-06 — commit `b00c54f` على فرع `main`.
+> **آخر تحديث:** 2026-10-06 — commit `3bc6afc` على فرع `main`.
 >
 > يتم تحديث هذا الملف مع كل دفعة تنفيذ وقبل رفع التغييرات إلى GitHub.
 
@@ -112,6 +112,18 @@
 
 ## آخر دفعة منفذة
 
+**Commit `3bc6afc` — `feat(catalog): add public taxonomy slug lookup`**
+
+شملت هذه الدفعة:
+
+- إضافة `GET /categories/{slug}` و`GET /brands/{slug}`.
+- استخدام use cases وrepository contracts بدل استعلامات Eloquent داخل المتحكم العام.
+- حماية المسارات الرقمية القديمة بقيود route واضحة.
+- تحديث OpenAPI واختبارات authorization وversioning.
+- ربط صفحات `/categories/[slug]` و`/brands/[slug]` بالـlookup المباشر.
+
+الدفعة السابقة:
+
 **Commit `b00c54f` — `refactor(storefront): isolate catalog contracts from infrastructure`**
 
 شملت:
@@ -140,7 +152,7 @@
 - `storefront`: `npm run lint` و`npm run build` ناجحان.
 - `storefront` و`admin-dashboard`: `npm audit` بلا ثغرات عالية أو حرجة بعد الإصلاح.
 - Laravel: تم تثبيت PHP 8.3 وComposer والاعتمادات؛ `composer audit` بلا advisories.
-- Laravel: **291 اختبارًا ناجحًا و5 إخفاقات قائمة** في اختبارات authorization والطبقات وseeder وتحليلات المبيعات؛ لم تُنسب هذه الإخفاقات إلى دفعة المتجر دون إثبات.
+- Laravel: اختبارات الكتالوج والطبقات وOpenAPI نجحت؛ الاختبار الكامل وصل إلى **295 اختبارًا ناجحًا و2 إخفاقات قائمة** في `DatabaseSeederTest` و`SalesAnalyticsApiTest`، وهما خارج نطاق دفعة lookup الحالية.
 
 ## نتيجة المراجعة المعمارية المرفقة
 
