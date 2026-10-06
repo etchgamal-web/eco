@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import type { Product, ProductVariant } from '@/domain/catalog/product'
 import { formatPrice } from '@/core/i18n/formatters'
 import { useCart } from '@/features/cart/store'
+import ProductImage from '@/shared/components/ProductImage'
 
 type ProductDetailsProps = {
   product: Product
@@ -21,6 +22,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const { addItem } = useCart()
   const selectedVariant = variants.find((variant) => variant.id === selectedVariantId)
   const media = product.media?.length ? product.media : product.images
+  const mainImage = media?.[0]
   const price = useMemo(() => variantPrice(product, selectedVariant), [product, selectedVariant])
   const maxQuantity = selectedVariant?.stock && selectedVariant.stock > 0 ? selectedVariant.stock : 99
 
@@ -32,17 +34,12 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   return (
     <article className="product-details">
       <div className="product-gallery">
-        <div
-          className={`product-detail-image${media?.[0]?.url ? ' has-image' : ''}`}
-          role="img"
-          aria-label={media?.[0]?.alt || product.name}
-          style={media?.[0]?.url ? { backgroundImage: `url(${media[0].url})` } : undefined}
-        >
-          {!media?.[0]?.url ? <div className="product-shape" /> : null}
-        </div>
+        <ProductImage src={mainImage?.url} alt={mainImage?.alt || product.name} sizes="(max-width: 800px) 100vw, 55vw" className="product-detail-image" />
         {media && media.length > 1 ? (
           <div className="product-thumbnails" aria-label="صور المنتج">
-            {media.slice(0, 4).map((item) => <span key={item.id ?? item.url} style={{ backgroundImage: `url(${item.url})` }} />)}
+            {media.slice(0, 4).map((item) => (
+              <ProductImage key={item.id ?? item.url} src={item.url} alt={item.alt || product.name} sizes="72px" className="product-thumbnail" />
+            ))}
           </div>
         ) : null}
       </div>

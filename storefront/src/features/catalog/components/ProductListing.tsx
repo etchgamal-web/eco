@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import type { Product } from '@/domain/catalog/product'
-import { listProducts } from '@/src/lib/api/catalog'
+import { listProducts } from '@/infrastructure/repositories/repository-factories'
 import ProductGrid from './ProductGrid'
 import Pagination from '@/shared/components/Pagination'
 

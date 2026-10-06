@@ -170,3 +170,17 @@ footer { align-items:center; background:var(--green); color:#f5f2eb; display:fle
 .cancel-order-button { background:transparent; border:1px solid #a04436; color:#a04436; cursor:pointer; font-size:13px; margin-bottom:25px; padding:11px 18px; }
 .cancel-order-button:disabled { cursor:wait; opacity:.55; }
 .account-section-heading a { color:var(--green); font-size:12px; }
+
+.product-image-frame { align-items:center; background:transparent; display:flex; height:100%; justify-content:center; overflow:hidden; position:relative; width:100%; }
+.product-image-frame img { object-fit:cover; transition:transform .25s ease; }
+.product-card:hover .product-image-frame img { transform:scale(1.03); }
+.product-image-frame:not(.has-image) .product-shape { position:relative; z-index:1; }
+.product-detail-image { height:clamp(380px,52vw,620px); width:100%; }
+.product-detail-image img { object-fit:cover; }
+.product-thumbnail { background:var(--cream); border:1px solid var(--line); height:72px; width:72px; }
+.product-thumbnail img { object-fit:cover; }
+.route-state-shell { align-items:center; display:flex; justify-content:center; min-height:70vh; padding:40px 5%; }
+.loading-state { align-items:center; display:flex; flex-direction:column; gap:12px; }
+.loading-mark { animation:pulse 1.2s infinite ease-in-out; background:var(--green); border-radius:50%; height:18px; width:18px; }
+.route-state-shell .primary-button { justify-content:center; margin-top:12px; }
+@media (max-width:800px) { .product-detail-image { height:420px; } }

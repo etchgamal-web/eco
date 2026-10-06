@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { env } from '@/core/config/env'
+import { siteConfig } from '@/core/config/site'
 import './globals.css'
 import { CartProvider } from '@/features/cart/store'
 import { AuthProvider } from '@/features/auth/auth-context'
@@ -15,10 +17,10 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'إيكو — أشياء أجمل لحياة أبسط',
-  description: 'منتجات يومية مختارة بعناية، بجودة تدوم وأثر أفضل.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  openGraph: { title: 'إيكو — أشياء أجمل لحياة أبسط', description: 'منتجات يومية مدروسة لحياة أبسط.', locale: 'ar_EG', type: 'website' },
+  title: siteConfig.title,
+  description: siteConfig.description,
+  metadataBase: new URL(env.siteUrl),
+  openGraph: { title: siteConfig.title, description: siteConfig.description, locale: 'ar_EG', type: 'website' },
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

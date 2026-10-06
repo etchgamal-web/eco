@@ -1,3 +1,5 @@
+import { env } from '@/core/config/env'
+
 export class ApiError extends Error {
   status: number
 
@@ -8,15 +10,13 @@ export class ApiError extends Error {
   }
 }
 
-const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '')
-
 export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers)
   const token = typeof window !== 'undefined' ? window.localStorage.getItem('eco-auth-token') : null
   if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`)
   headers.set('Accept', 'application/json')
 
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await fetch(`${env.apiUrl}${path}`, {
     ...init,
     credentials: init?.credentials ?? 'include',
     headers,
