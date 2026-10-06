@@ -52,7 +52,7 @@ export async function updateCustomerProfile(input: Pick<Customer, 'name' | 'emai
   return response.data
 }
 
-export type CustomerOrderDetails = CustomerOrder & { items?: Array<{ id: number; quantity?: number; product_name?: string; unit_price?: number; total_amount?: number }>; payments?: Array<{ id: number; method?: string; amount?: number; currency?: string; status?: string; provider_reference?: string | null }>; shipping_amount?: number; subtotal_amount?: number; payment_status?: string }
+export type CustomerOrderDetails = CustomerOrder & { items?: Array<{ id: number; quantity?: number; product_name?: string; unit_price?: number; total_amount?: number }>; payments?: Array<{ id: number; method?: string; amount?: number; currency?: string; status?: string; provider_reference?: string | null; checkout_url?: string | null }>; shipping_amount?: number; subtotal_amount?: number; payment_status?: string }
 
 export async function getCustomerOrder(id: number): Promise<CustomerOrderDetails> {
   const response = await requestJson<DataResponse<CustomerOrderDetails>>(`/customer/orders/${id}`, { cache: 'no-store' })

@@ -46,6 +46,26 @@ final class PaymentApiTest extends TestCase
             ->assertOk()->assertJsonCount(1, 'data');
     }
 
+    public function test_customer_payment_serialization_exposes_checkout_url_without_provider_secret(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $order = $this->orderFor($customer, 1500);
+        $payment = Payment::query()->create([
+            'order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'paymob',
+            'amount' => 1500, 'currency' => 'EGP', 'status' => 'provider_created',
+            'idempotency_key' => 'safe-url-payment', 'metadata' => [
+                'client_secret' => 'do-not-expose',
+                'checkout_url' => 'https://accept.paymob.com/unifiedcheckout/?clientSecret=do-not-expose',
+            ],
+        ]);
+
+        $serialized = json_decode(json_encode($payment), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('https://accept.paymob.com/unifiedcheckout/?clientSecret=do-not-expose', $serialized['checkout_url']);
+        $this->assertArrayNotHasKey('metadata', $serialized);
+        $this->assertArrayNotHasKey('idempotency_key', $serialized);
+    }
+
     public function test_payment_uses_server_order_amount_and_is_idempotent(): void
     {
         $this->seed(RbacSeeder::class);

@@ -23,7 +23,12 @@ export default function CheckoutPaymentStatus({ orderId }: { orderId: string }) 
         const nextOrder = await getCustomerOrder(Number(orderId))
         if (cancelled) return
         setOrder(nextOrder)
-        const status = nextOrder.payments?.[0]?.status
+        const payment = nextOrder.payments?.[0]
+        const status = payment?.status
+        if (payment?.checkout_url && status === 'provider_created') {
+          window.location.assign(payment.checkout_url)
+          return
+        }
         if (status && !['pending', 'processing', 'initiating', 'provider_created'].includes(status)) return
         if (attempts < 5) {
           attempts += 1
@@ -41,5 +46,5 @@ export default function CheckoutPaymentStatus({ orderId }: { orderId: string }) 
   if (!order) return <p className="muted-text">جارٍ قراءة حالة الدفع...</p>
 
   const payment = order.payments?.[0]
-  return <div className="checkout-payment-status"><p><strong>الإجمالي النهائي:</strong> {formatPrice(order.total_amount || 0, order.currency)}</p>{payment ? <p><strong>حالة الدفع:</strong> {paymentLabel(payment.status)}</p> : <p className="muted-text">الدفع عند الاستلام — سيتم تأكيده عند التسليم.</p>}</div>
+  return <div className="checkout-payment-status"><p><strong>الإجمالي النهائي:</strong> {formatPrice(order.total_amount || 0, order.currency)}</p>{payment ? <><p><strong>حالة الدفع:</strong> {paymentLabel(payment.status)}</p>{payment.checkout_url ? <a className="primary-button" href={payment.checkout_url}>متابعة الدفع</a> : null}</> : <p className="muted-text">الدفع عند الاستلام — سيتم تأكيده عند التسليم.</p>}</div>
 }
