@@ -11010,6 +11010,21 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": { "type": "integer", "minimum": 1, "description": "Optional partial refund amount in the payment currency units." },
+                  "return_id": { "type": "integer", "minimum": 1, "description": "Optional linked return record." }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful response",

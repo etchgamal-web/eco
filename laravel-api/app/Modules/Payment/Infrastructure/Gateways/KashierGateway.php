@@ -30,6 +30,7 @@ final class KashierGateway implements PaymentGatewayInterface
         if ($merchantId === '' || $secretKey === '' || $paymentApiKey === '' || $redirectUrl === '' || $webhookUrl === '') {
             throw new PaymentException('Kashier is not configured.');
         }
+        $redirectUrl = $this->appendOrderId($redirectUrl, (int) $order->id);
 
         $amount = number_format((float) $order->total_amount, 2, '.', '');
         $hashPath = '/?payment='.$merchantId.'.'.$idempotencyKey.'.'.$amount.'.'.$order->currency;
@@ -158,5 +159,12 @@ final class KashierGateway implements PaymentGatewayInterface
         return Http::baseUrl(rtrim((string) $this->settings->value('kashier', 'fep_base_url', config('services.kashier.fep_base_url')), '/'))
             ->acceptJson()->asJson()->withHeaders(['Authorization' => $secretKey])
             ->timeout((int) $this->settings->value('kashier', 'timeout', config('services.kashier.timeout', 15)))->retry(2, 250, throw: false);
+    }
+
+    private function appendOrderId(string $url, int $orderId): string
+    {
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        return $url.$separator.'orderId='.rawurlencode((string) $orderId);
     }
 }

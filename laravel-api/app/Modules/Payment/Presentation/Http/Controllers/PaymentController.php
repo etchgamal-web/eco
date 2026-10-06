@@ -64,6 +64,12 @@ final class PaymentController extends Controller
 
     public function refund(PaymentManagementRequest $request, int $paymentId, RefundPayment $refund): JsonResponse
     {
-        return response()->json(['data' => $refund->execute($paymentId)]);
+        $data = $request->validated();
+
+        return response()->json(['data' => $refund->execute(
+            $paymentId,
+            isset($data['amount']) ? (int) $data['amount'] : null,
+            isset($data['return_id']) ? (int) $data['return_id'] : null,
+        )]);
     }
 }

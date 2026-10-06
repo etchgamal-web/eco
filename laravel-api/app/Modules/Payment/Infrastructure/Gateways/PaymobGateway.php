@@ -31,6 +31,7 @@ final class PaymobGateway implements PaymentGatewayInterface
         if ($secretKey === '' || $publicKey === '' || $integrationIds === [] || $notificationUrl === '' || $redirectionUrl === '') {
             throw new PaymentException('Paymob is not configured.');
         }
+        $redirectionUrl = $this->appendOrderId($redirectionUrl, (int) $order->id);
 
         $items = [];
         foreach ($order->items as $item) {
@@ -186,5 +187,12 @@ final class PaymobGateway implements PaymentGatewayInterface
         }
 
         return $amount * 100;
+    }
+
+    private function appendOrderId(string $url, int $orderId): string
+    {
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        return $url.$separator.'orderId='.rawurlencode((string) $orderId);
     }
 }

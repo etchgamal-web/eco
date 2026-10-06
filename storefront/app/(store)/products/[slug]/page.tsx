@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ApiError } from '@/core/http/client'
 import { getProduct } from '@/features/catalog/api'
@@ -9,6 +10,23 @@ import ProductDetails from '@/features/catalog/components/ProductDetails'
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params
+  try {
+    const product = await getProduct(slug)
+    const description = product.description?.trim() || `اشترِ ${product.name} من متجر Eco.`
+
+    return {
+      title: product.name,
+      description,
+      alternates: { canonical: `/products/${product.slug ?? slug}` },
+      openGraph: { title: product.name, description, type: 'website' },
+    }
+  } catch {
+    return { title: 'المنتج غير متاح' }
+  }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
