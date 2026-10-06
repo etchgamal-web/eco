@@ -9,6 +9,7 @@ final readonly class CheckoutData
         public string $currency = 'EGP',
         public ?string $idempotencyKey = null,
         public ?string $paymentMethod = null,
+        public ?int $shippingMethodId = null,
         public ?string $paymentIdempotencyKey = null,
         public ?string $couponCode = null,
         public array $guestItems = [],

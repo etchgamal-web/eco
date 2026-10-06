@@ -52,7 +52,7 @@ export async function updateCustomerProfile(input: Pick<Customer, 'name' | 'emai
   return response.data
 }
 
-export type CustomerOrderDetails = CustomerOrder & { items?: Array<{ id: number; quantity?: number; product_name?: string; unit_price?: number; total_amount?: number }>; shipping_amount?: number; subtotal_amount?: number; payment_status?: string }
+export type CustomerOrderDetails = CustomerOrder & { items?: Array<{ id: number; quantity?: number; product_name?: string; unit_price?: number; total_amount?: number }>; payments?: Array<{ id: number; method?: string; amount?: number; currency?: string; status?: string; provider_reference?: string | null }>; shipping_amount?: number; subtotal_amount?: number; payment_status?: string }
 
 export async function getCustomerOrder(id: number): Promise<CustomerOrderDetails> {
   const response = await requestJson<DataResponse<CustomerOrderDetails>>(`/customer/orders/${id}`, { cache: 'no-store' })
@@ -88,7 +88,7 @@ export async function getShippingMethods(): Promise<ShippingMethod[]> {
   return response.data
 }
 
-export type CheckoutInput = { address_id: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string }
+export type CheckoutInput = { address_id: number; shipping_method_id?: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string }
 
 export async function checkout(input: CheckoutInput): Promise<CustomerOrderDetails> {
   const response = await requestJson<DataResponse<CustomerOrderDetails>>('/customer/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': input.idempotency_key }, body: JSON.stringify(input) })

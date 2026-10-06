@@ -16,6 +16,7 @@ final class CheckoutController extends Controller
 
         $order = $checkout->execute(new CheckoutData(
             addressId: isset($data['address_id']) ? (int) $data['address_id'] : null,
+            shippingMethodId: isset($data['shipping_method_id']) ? (int) $data['shipping_method_id'] : null,
             currency: strtoupper($data['currency'] ?? 'EGP'),
             idempotencyKey: $data['idempotency_key'] ?? null,
             paymentMethod: $data['payment_method'] ?? null,

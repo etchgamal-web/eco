@@ -10,6 +10,7 @@ use App\Modules\Order\Domain\ValueObjects\CheckoutData;
 use App\Modules\Promotion\Domain\Contracts\CouponServiceInterface;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
 use App\Modules\Tax\Domain\Contracts\TaxCalculatorInterface;
+use App\Modules\Shipping\Domain\Contracts\ShippingMethodRepositoryInterface;
 
 final class CheckoutOrderService
 {
@@ -19,6 +20,7 @@ final class CheckoutOrderService
         private readonly InventoryRepositoryInterface $inventory,
         private readonly CouponServiceInterface $coupons,
         private readonly TaxCalculatorInterface $taxes,
+        private readonly ShippingMethodRepositoryInterface $shippingMethods,
         private readonly TransactionManagerInterface $transactions,
     ) {}
 
@@ -54,18 +56,21 @@ final class CheckoutOrderService
         [$subtotal, $snapshots] = $this->priceCustomerItems($items);
         $promotion = $this->coupons->apply($data->couponCode, $userId, $subtotal);
         $tax = $this->taxes->calculate($subtotal - $promotion['discount'], (string) $address->country, $address->state);
+        $shippingAmount = $this->shippingAmount($data->shippingMethodId, (string) $data->currency);
 
         $order = $this->gateway->createOrder([
             'user_id' => $userId,
             'status' => 'pending',
-            'total_amount' => $subtotal - $promotion['discount'] + $tax['amount'],
+            'total_amount' => $subtotal - $promotion['discount'] + $tax['amount'] + $shippingAmount,
             'subtotal_amount' => $subtotal,
             'discount_amount' => $promotion['discount'],
             'coupon_code' => $promotion['code'],
             'tax_amount' => $tax['amount'],
             'tax_rate' => $tax['rate'],
             'tax_rule_id' => $tax['rule_id'],
-            'shipping_amount' => 0,
+            'shipping_amount' => $shippingAmount,
+            'shipping_cost' => $shippingAmount,
+            'shipping_subsidy' => 0,
             'currency' => $data->currency,
             'shipping_address' => [
                 'recipient_name' => $address->recipient_name,
@@ -195,5 +200,19 @@ final class CheckoutOrderService
         }
 
         return [$subtotal, $snapshots];
+    }
+
+    private function shippingAmount(?int $shippingMethodId, string $currency): int
+    {
+        if ($shippingMethodId === null) {
+            return 0;
+        }
+
+        $method = $this->shippingMethods->find($shippingMethodId);
+        if (! (bool) $method->is_active || strtoupper((string) $method->currency) !== strtoupper($currency)) {
+            throw new CheckoutException('The selected shipping method is not available for this order.');
+        }
+
+        return max(0, (int) $method->base_fee);
     }
 }

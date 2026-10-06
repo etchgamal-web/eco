@@ -27,6 +27,7 @@ final class CheckoutRequest extends FormRequest
 
         $rules = [
             'address_id' => ['nullable', 'integer', 'min:1'],
+            'shipping_method_id' => ['nullable', 'integer', 'exists:shipping_methods,id'],
             'currency' => ['sometimes', 'string', 'size:3'],
             'idempotency_key' => ['nullable', 'string', 'max:100'],
             'payment_method' => ['nullable', 'string', 'in:cash_on_delivery,paymob,kashier'],

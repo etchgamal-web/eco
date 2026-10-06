@@ -11,6 +11,7 @@ use App\Modules\Inventory\Infrastructure\Models\InventoryItem;
 use App\Modules\Promotion\Infrastructure\Models\Coupon;
 use App\Modules\Settings\Infrastructure\Models\Setting;
 use App\Modules\Tax\Infrastructure\Models\TaxRule;
+use App\Modules\Shipping\Infrastructure\Models\ShippingMethod;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -158,6 +159,21 @@ final class CheckoutApiTest extends TestCase
         $this->assertDatabaseCount('customer_orders', 1);
         $this->assertDatabaseCount('shipments', 0);
         $this->assertDatabaseCount('payments', 1);
+    }
+
+    public function test_checkout_includes_selected_shipping_method_in_server_total(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $user = $this->userWithRole('customer');
+        $product = Product::query()->create(['name' => 'Shipping Product', 'slug' => 'shipping-product', 'type' => 'simple', 'status' => 'active', 'price' => 1000]);
+        $address = CustomerAddress::query()->create(['user_id' => $user->id, 'recipient_name' => 'Customer', 'phone' => '01000000000', 'address_line1' => 'Street 1', 'city' => 'Cairo', 'country' => 'EG', 'is_default' => true]);
+        $cart = CustomerCart::query()->create(['user_id' => $user->id]);
+        $cart->items()->create(['product_id' => $product->id, 'quantity' => 1]);
+        InventoryItem::query()->create(['product_id' => $product->id, 'on_hand' => 2, 'reserved' => 0]);
+        $shipping = ShippingMethod::query()->create(['code' => 'standard', 'name' => 'Standard', 'base_fee' => 150, 'currency' => 'EGP', 'is_active' => true]);
+
+        $this->actingAs($user)->postJson('/api/v1/customer/checkout', ['address_id' => $address->id, 'shipping_method_id' => $shipping->id, 'currency' => 'EGP', 'idempotency_key' => 'shipping-checkout-1'])
+            ->assertCreated()->assertJsonPath('data.subtotal_amount', 1000)->assertJsonPath('data.shipping_amount', 150)->assertJsonPath('data.total_amount', 1150);
     }
 
     public function test_checkout_does_not_validate_or_create_shipping_provider_state(): void
