@@ -60,6 +60,11 @@ export function ContentPage({ onToast, access }: Props) {
     return items.filter((item) => [item.title, item.slug, item.excerpt ?? ''].some((value) => value.toLocaleLowerCase().includes(normalizedQuery)))
   }, [items, query])
 
+  const syncUpdatedItem = (updated: ApiContent) => {
+    const matchesFilters = (type === 'all' || updated.type === type) && (status === 'all' || updated.status === status)
+    setItems((current) => matchesFilters ? current.map((item) => item.id === updated.id ? updated : item) : current.filter((item) => item.id !== updated.id))
+  }
+
   const openCreate = async () => {
     setEditing(null)
     setForm(emptyForm)
@@ -90,8 +95,9 @@ export function ContentPage({ onToast, access }: Props) {
     setSaving(true)
     const payload: ContentPayload = { type: form.type, title: form.title.trim(), slug: form.slug.trim(), excerpt: form.excerpt.trim() || null, body: form.body || null, status: form.status, seo_title: form.seo_title.trim() || null, seo_description: form.seo_description.trim() || null, canonical_url: form.canonical_url.trim() || null, featured_image: form.featured_image.trim() || null, product_ids: form.product_ids.map(Number), category_ids: form.category_ids.map(Number) }
     try {
-      const saved = editing ? await updateContent(editing.id, payload) : await createContent(payload)
-      setItems((current) => editing ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current])
+      if (editing) await updateContent(editing.id, payload)
+      else await createContent(payload)
+      await load()
       setFormOpen(false)
       setEditing(null)
       onToast(editing ? 'تم تحديث المحتوى' : 'تم إنشاء المحتوى كمسودة')
@@ -108,11 +114,11 @@ export function ContentPage({ onToast, access }: Props) {
     try {
       if (action === 'publish') {
         const updated = await publishContent(item.id)
-        setItems((current) => current.map((entry) => entry.id === item.id ? updated : entry))
+        syncUpdatedItem(updated)
         onToast('تم نشر المحتوى')
       } else if (action === 'unpublish') {
         const updated = await unpublishContent(item.id)
-        setItems((current) => current.map((entry) => entry.id === item.id ? updated : entry))
+        syncUpdatedItem(updated)
         onToast('تم إلغاء نشر المحتوى')
       } else {
         await deleteContent(item.id)
