@@ -1,0 +1,142 @@
+name: Deployment Dry Run
+
+on:
+  push:
+    paths:
+      - '.github/workflows/deployment-dry-run.yml'
+      - '.github/workflows/deploy.yml'
+      - 'laravel-api/deploy/**'
+      - 'laravel-api/scripts/**'
+      - 'laravel-api/database/migrations/**'
+  pull_request:
+    paths:
+      - '.github/workflows/deployment-dry-run.yml'
+      - '.github/workflows/deploy.yml'
+      - 'laravel-api/deploy/**'
+      - 'laravel-api/scripts/**'
+      - 'laravel-api/database/migrations/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deployment-files:
+    name: Validate deployment files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check shell syntax and executable bits
+        run: |
+          set -Eeuo pipefail
+          bash -n laravel-api/deploy/release.sh
+          bash -n laravel-api/scripts/verify_migration_safety.sh
+          bash -n laravel-api/scripts/alertmanager-smoke.sh
+          test -x laravel-api/deploy/release.sh
+          test -x laravel-api/scripts/verify_migration_safety.sh
+          test -x laravel-api/scripts/alertmanager-smoke.sh
+
+      - name: Check Supervisor contract
+        run: |
+          set -Eeuo pipefail
+          grep -Fx 'directory=/var/www/ecommerce-platform/current' laravel-api/deploy/supervisor/ecommerce-worker.conf
+          grep -F 'command=/usr/bin/php artisan queue:work ' laravel-api/deploy/supervisor/ecommerce-worker.conf
+          grep -F 'shared/.env' laravel-api/deploy/README.md
+          grep -F 'releases/<SHA>/laravel-api' laravel-api/deploy/README.md
+
+      - name: Check migration safety script with safe and unsafe fixtures
+        run: |
+          set -Eeuo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          printf '%s\n' '<?php $table->string("new_column");' > "$tmp/safe.php"
+          laravel-api/scripts/verify_migration_safety.sh "$tmp/safe.php"
+          printf '%s\n' '<?php $table->dropColumn("old_column");' > "$tmp/unsafe.php"
+          if laravel-api/scripts/verify_migration_safety.sh "$tmp/unsafe.php"; then
+            echo 'Unsafe migration was accepted.' >&2
+            exit 1
+          fi
+
+  release-filesystem:
+    name: Simulate release, shared storage, and rollback
+    runs-on: ubuntu-latest
+    needs: deployment-files
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Simulate deployment and rollback
+        run: |
+          set -Eeuo pipefail
+          root="$(mktemp -d)"
+          trap 'rm -rf "$root"' EXIT
+          export PATH="$root/bin:$PATH"
+          mkdir -p "$root/bin" "$root/releases/old/laravel-api/public" "$root/releases/new/laravel-api/public" "$root/shared"
+          printf 'APP_ENV=testing\nAPP_DEBUG=false\n' > "$root/shared/.env"
+
+          for release in old new; do
+            printf '#!/usr/bin/env bash\n' > "$root/releases/$release/laravel-api/artisan"
+            chmod +x "$root/releases/$release/laravel-api/artisan"
+          done
+          touch -d '2 minutes ago' "$root/releases/old/laravel-api/artisan"
+
+          cat > "$root/bin/composer" <<'EOF'
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+          exit 0
+          EOF
+          chmod +x "$root/bin/composer"
+
+          cat > "$root/bin/php" <<'EOF'
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+          if [[ "${1:-}" == "artisan" && "${2:-}" == "storage:link" ]]; then
+            mkdir -p public
+            ln -sfn ../storage/app/public public/storage
+          fi
+          exit 0
+          EOF
+          chmod +x "$root/bin/php"
+
+          ln -s "$root/releases/old/laravel-api" "$root/current"
+          RELEASE_DIR="$root/releases/new/laravel-api" \
+            APP_ROOT="$root" \
+            RELEASES_DIR="$root/releases" \
+            SHARED_DIR="$root/shared" \
+            CURRENT_LINK="$root/current" \
+            SKIP_HEALTH_CHECK=1 \
+            bash laravel-api/deploy/release.sh
+
+          test "$(readlink -f "$root/current")" = "$root/releases/new/laravel-api"
+          test "$(readlink -f "$root/releases/new/laravel-api/storage")" = "$root/shared/storage"
+          test "$(readlink -f "$root/releases/new/laravel-api/.env")" = "$root/shared/.env"
+          test -L "$root/releases/new/laravel-api/public/storage"
+
+          ROLLBACK=1 \
+            APP_ROOT="$root" \
+            RELEASES_DIR="$root/releases" \
+            SHARED_DIR="$root/shared" \
+            CURRENT_LINK="$root/current" \
+            SKIP_HEALTH_CHECK=1 \
+            bash laravel-api/deploy/release.sh
+
+          test "$(readlink -f "$root/current")" = "$root/releases/old/laravel-api"
+          test -f "$root/current/artisan"
+          echo 'Deployment and rollback filesystem simulation passed.'
+
+      - name: Build release artifact and inspect contents
+        run: |
+          set -Eeuo pipefail
+          tar --exclude='.git' --exclude='*/node_modules' --exclude='*/vendor' --exclude='*/.next' --exclude='*/dist' --exclude='*/.env' -czf /tmp/eco-release.tgz .
+          tar -tzf /tmp/eco-release.tgz > /tmp/eco-release.list
+          grep -Fx './laravel-api/deploy/release.sh' /tmp/eco-release.list
+          ! grep -E '(^|/)(node_modules|vendor|\.next|dist)(/|$)' /tmp/eco-release.list
+          ! grep -E '(^|/)\.env$' /tmp/eco-release.list
+
+      - name: Upload dry-run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-deployment-dry-run-${{ github.sha }}
+          path: /tmp/eco-release.tgz
+          if-no-files-found: error
+          retention-days: 7
