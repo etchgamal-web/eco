@@ -8,7 +8,12 @@ use Illuminate\Foundation\Http\FormRequest;
 final class ContentWriteRequest extends FormRequest
 {
     use AuthorizesRequest;
-    public function authorize(): bool { return $this->authorizePermission('cms.manage'); }
+
+    public function authorize(): bool
+    {
+        return $this->authorizePermission('cms.manage');
+    }
+
     public function rules(): array
     {
         return [
