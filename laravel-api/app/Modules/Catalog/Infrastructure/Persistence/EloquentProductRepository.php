@@ -69,6 +69,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
             'name_asc' => $query->orderBy('name')->orderByDesc('id'),
             default => $query->orderByDesc('id'),
         };
+
         return $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
     }
 
@@ -99,6 +100,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
         if ($model === null) {
             throw new ProductNotFoundException($id);
         }
+
         return $model;
     }
 
@@ -170,6 +172,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
         if ($model === null) {
             throw new VariantNotFoundException($variantId);
         }
+
         return $model;
     }
 
