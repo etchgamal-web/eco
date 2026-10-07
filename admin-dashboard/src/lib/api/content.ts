@@ -45,6 +45,10 @@ export async function updateContent(id: number, payload: ContentPayload) {
   return (await request<{ data: ApiContent }>(`/admin/content/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data
 }
 
+export async function previewContent(id: number) {
+  return (await request<{ data: ApiContent }>(`/admin/content/${id}/preview`)).data
+}
+
 export async function publishContent(id: number) {
   return (await request<{ data: ApiContent }>(`/admin/content/${id}/publish`, { method: 'POST' })).data
 }
