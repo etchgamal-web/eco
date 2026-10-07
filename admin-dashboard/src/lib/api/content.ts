@@ -23,6 +23,7 @@ export type ApiContent = {
 }
 
 export type ContentFilters = { type?: ContentType; status?: ContentStatus }
+export type ContentPayload = Omit<Partial<ApiContent>, 'id' | 'author' | 'products' | 'categories' | 'updated_at' | 'published_at'> & { type: ContentType; title: string; slug: string; status?: ContentStatus; product_ids?: number[]; category_ids?: number[]; published_at?: string | null }
 
 export async function listContent(filters: ContentFilters = {}) {
   const query = new URLSearchParams()
@@ -34,6 +35,14 @@ export async function listContent(filters: ContentFilters = {}) {
 
 export async function getContent(id: number) {
   return (await request<{ data: ApiContent }>(`/admin/content/${id}`)).data
+}
+
+export async function createContent(payload: ContentPayload) {
+  return (await request<{ data: ApiContent }>('/admin/content', { method: 'POST', body: JSON.stringify(payload) })).data
+}
+
+export async function updateContent(id: number, payload: ContentPayload) {
+  return (await request<{ data: ApiContent }>(`/admin/content/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })).data
 }
 
 export async function publishContent(id: number) {
