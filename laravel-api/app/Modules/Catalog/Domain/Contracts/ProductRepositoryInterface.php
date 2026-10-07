@@ -10,11 +10,17 @@ interface ProductRepositoryInterface
 {
     public function all(): iterable;
 
+    public function allPublic(): iterable;
+
     public function search(ProductListCriteria $criteria): object;
+
+    public function searchPublic(ProductListCriteria $criteria): object;
 
     public function findOrFail(int $id): object;
 
     public function findBySlugOrFail(string $slug): object;
+
+    public function findPublicOrFail(string|int $id): object;
 
     public function slugExists(string $slug, ?int $exceptId = null): bool;
 
@@ -28,7 +34,11 @@ interface ProductRepositoryInterface
 
     public function variants(int $productId): iterable;
 
+    public function publicVariants(int $productId): iterable;
+
     public function findVariantOrFail(int $productId, int $variantId): object;
+
+    public function findPublicVariantOrFail(int $productId, int $variantId): object;
 
     public function skuExists(string $sku, ?int $exceptId = null): bool;
 

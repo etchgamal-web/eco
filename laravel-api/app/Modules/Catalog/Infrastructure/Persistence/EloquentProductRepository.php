@@ -24,6 +24,11 @@ class EloquentProductRepository implements ProductRepositoryInterface
         return Product::query()->with(['brand', 'category'])->orderByDesc('id')->get();
     }
 
+    public function allPublic(): iterable
+    {
+        return Product::query()->where('status', 'active')->with(['brand', 'category'])->orderByDesc('id')->get();
+    }
+
     public function search(ProductListCriteria $criteria): object
     {
         $query = Product::query()->with(['brand', 'category'])
@@ -47,6 +52,26 @@ class EloquentProductRepository implements ProductRepositoryInterface
         return $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
     }
 
+    public function searchPublic(ProductListCriteria $criteria): object
+    {
+        $query = Product::query()->where('status', 'active')->with(['brand', 'category'])
+            ->when($criteria->search, fn ($q, $search) => $q->where(function ($inner) use ($search): void {
+                $inner->where('name', 'like', '%'.$search.'%')->orWhereHas('variants', fn ($variants) => $variants->where('sku', 'like', '%'.$search.'%'));
+            }))
+            ->when($criteria->categoryId, fn ($q, $id) => $q->where('category_id', $id))
+            ->when($criteria->brandId, fn ($q, $id) => $q->where('brand_id', $id))
+            ->when($criteria->type, fn ($q, $type) => $q->where('type', $type))
+            ->when($criteria->minPrice !== null, fn ($q) => $q->where('price', '>=', $criteria->minPrice))
+            ->when($criteria->maxPrice !== null, fn ($q) => $q->where('price', '<=', $criteria->maxPrice));
+        match ($criteria->sort) {
+            'price_asc' => $query->orderBy('price')->orderByDesc('id'),
+            'price_desc' => $query->orderByDesc('price')->orderByDesc('id'),
+            'name_asc' => $query->orderBy('name')->orderByDesc('id'),
+            default => $query->orderByDesc('id'),
+        };
+        return $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
+    }
+
     public function findOrFail(int $id): object
     {
         $model = Product::query()->with(['brand', 'category', 'variants.attributeValues.attribute'])->find($id);
@@ -64,6 +89,16 @@ class EloquentProductRepository implements ProductRepositoryInterface
             throw new ProductNotFoundException($slug);
         }
 
+        return $model;
+    }
+
+    public function findPublicOrFail(string|int $id): object
+    {
+        $query = Product::query()->where('status', 'active')->with(['brand', 'category', 'variants.attributeValues.attribute']);
+        $model = ctype_digit((string) $id) ? $query->find((int) $id) : $query->where('slug', (string) $id)->first();
+        if ($model === null) {
+            throw new ProductNotFoundException($id);
+        }
         return $model;
     }
 
@@ -112,6 +147,11 @@ class EloquentProductRepository implements ProductRepositoryInterface
         return $this->findOrFail($productId)->variants()->with('attributeValues.attribute')->orderBy('id')->get();
     }
 
+    public function publicVariants(int $productId): iterable
+    {
+        return $this->findPublicOrFail($productId)->variants()->where('status', 'active')->with('attributeValues.attribute')->orderBy('id')->get();
+    }
+
     public function findVariantOrFail(int $productId, int $variantId): object
     {
         $product = $this->findOrFail($productId);
@@ -120,6 +160,16 @@ class EloquentProductRepository implements ProductRepositoryInterface
             throw new VariantNotFoundException($variantId);
         }
 
+        return $model;
+    }
+
+    public function findPublicVariantOrFail(int $productId, int $variantId): object
+    {
+        $product = $this->findPublicOrFail($productId);
+        $model = $product->variants()->where('status', 'active')->with('attributeValues.attribute')->find($variantId);
+        if ($model === null) {
+            throw new VariantNotFoundException($variantId);
+        }
         return $model;
     }
 

@@ -3,6 +3,7 @@
 use App\Modules\AI\AIServiceProvider;
 use App\Modules\Auth\AuthServiceProvider;
 use App\Modules\Catalog\CatalogServiceProvider;
+use App\Modules\Content\ContentServiceProvider;
 use App\Modules\Customer\CustomerServiceProvider;
 use App\Modules\Integration\IntegrationServiceProvider;
 use App\Modules\Inventory\InventoryServiceProvider;
@@ -21,4 +22,4 @@ use App\Modules\Staff\StaffServiceProvider;
 use App\Modules\Tax\TaxServiceProvider;
 use App\Providers\AppServiceProvider;
 
-return [AppServiceProvider::class, AuthServiceProvider::class, CatalogServiceProvider::class, CustomerServiceProvider::class, SettingsServiceProvider::class, StaffServiceProvider::class, InventoryServiceProvider::class, IntegrationServiceProvider::class, OrderServiceProvider::class, PaymentServiceProvider::class, ShippingServiceProvider::class, PromotionServiceProvider::class, TaxServiceProvider::class, SharedServiceProvider::class, SocialCommerceServiceProvider::class, LandingPageServiceProvider::class, MonitoringServiceProvider::class, SettlementServiceProvider::class, ReportingServiceProvider::class, AIServiceProvider::class];
+return [AppServiceProvider::class, AuthServiceProvider::class, CatalogServiceProvider::class, ContentServiceProvider::class, CustomerServiceProvider::class, SettingsServiceProvider::class, StaffServiceProvider::class, InventoryServiceProvider::class, IntegrationServiceProvider::class, OrderServiceProvider::class, PaymentServiceProvider::class, ShippingServiceProvider::class, PromotionServiceProvider::class, TaxServiceProvider::class, SharedServiceProvider::class, SocialCommerceServiceProvider::class, LandingPageServiceProvider::class, MonitoringServiceProvider::class, SettlementServiceProvider::class, ReportingServiceProvider::class, AIServiceProvider::class];

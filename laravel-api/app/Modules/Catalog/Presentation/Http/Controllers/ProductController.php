@@ -7,11 +7,11 @@ use App\Modules\Catalog\Application\UseCases\Products\CreateProduct;
 use App\Modules\Catalog\Application\UseCases\Products\CreateProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\DeleteProduct;
 use App\Modules\Catalog\Application\UseCases\Products\DeleteProductVariant;
-use App\Modules\Catalog\Application\UseCases\Products\GetProduct;
-use App\Modules\Catalog\Application\UseCases\Products\GetProductVariant;
+use App\Modules\Catalog\Application\UseCases\Products\GetPublicProduct;
+use App\Modules\Catalog\Application\UseCases\Products\GetPublicProductVariant;
 use App\Modules\Catalog\Application\UseCases\Products\ImportProducts;
-use App\Modules\Catalog\Application\UseCases\Products\ListProducts;
-use App\Modules\Catalog\Application\UseCases\Products\ListProductVariants;
+use App\Modules\Catalog\Application\UseCases\Products\ListPublicProductVariants;
+use App\Modules\Catalog\Application\UseCases\Products\ListPublicProducts;
 use App\Modules\Catalog\Application\UseCases\Products\UpdateProduct;
 use App\Modules\Catalog\Application\UseCases\Products\UpdateProductVariant;
 use App\Modules\Catalog\Domain\ValueObjects\ProductData;
@@ -27,7 +27,7 @@ use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
-    public function index(CatalogActionRequest $request, ListProducts $useCase): JsonResponse
+    public function index(CatalogActionRequest $request, ListPublicProducts $useCase): JsonResponse
     {
         $filters = $request->validated();
         $products = $filters === [] ? $useCase->execute() : $useCase->execute(ProductListCriteria::fromArray($filters));
@@ -47,7 +47,7 @@ class ProductController extends Controller
         return response()->json(['data' => $useCase->execute((string) $file->getRealPath(), $file->getClientOriginalExtension(), $request->user())], 201);
     }
 
-    public function show(CatalogActionRequest $request, string $product, GetProduct $useCase): JsonResponse
+    public function show(CatalogActionRequest $request, string $product, GetPublicProduct $useCase): JsonResponse
     {
         return response()->json(['data' => $useCase->execute($product)]);
     }
@@ -64,7 +64,7 @@ class ProductController extends Controller
         return response()->json(null, 204);
     }
 
-    public function variants(CatalogActionRequest $request, int $product, ListProductVariants $useCase): JsonResponse
+    public function variants(CatalogActionRequest $request, int $product, ListPublicProductVariants $useCase): JsonResponse
     {
         return response()->json(['data' => $useCase->execute($product)]);
     }
@@ -74,7 +74,7 @@ class ProductController extends Controller
         return response()->json(['data' => $useCase->execute($product, ProductVariantData::fromArray($request->validated()))], 201);
     }
 
-    public function showVariant(CatalogActionRequest $request, int $product, int $variant, GetProductVariant $useCase): JsonResponse
+    public function showVariant(CatalogActionRequest $request, int $product, int $variant, GetPublicProductVariant $useCase): JsonResponse
     {
         return response()->json(['data' => $useCase->execute($product, $variant)]);
     }
