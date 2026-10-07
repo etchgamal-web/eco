@@ -75,6 +75,9 @@ final class PrometheusMetrics
             $lines[] = '# HELP ecommerce_outbox_pending_events Number of outbox events waiting to be dispatched.';
             $lines[] = '# TYPE ecommerce_outbox_pending_events gauge';
             $lines[] = 'ecommerce_outbox_pending_events '.($this->pendingOutboxCount() ?? 0);
+            $lines[] = '# HELP ecommerce_metrics_available Whether application metrics storage is available.';
+            $lines[] = '# TYPE ecommerce_metrics_available gauge';
+            $lines[] = 'ecommerce_metrics_available 1';
 
             return implode("\n", $lines)."\n";
         } catch (Throwable) {

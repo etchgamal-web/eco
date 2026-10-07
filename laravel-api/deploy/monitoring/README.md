@@ -9,7 +9,7 @@ This directory provides the Prometheus scrape configuration and alert rules for 
 - **Grafana:** dashboards built from Prometheus metrics.
 - **Alertmanager:** routes critical and warning alerts to email, Slack, or PagerDuty.
 
-The API exports request totals, request duration sums/counts, failed queue job count, and pending outbox event count.
+The API exports request totals, request duration sums/counts, failed queue job count, pending outbox event count, and metrics availability.
 
 ## Application settings
 
@@ -37,5 +37,24 @@ The metrics token must be stored in a secret manager and must never be committed
 4. Replace `api.example.com` with the real HTTPS API host.
 5. Reload Prometheus and validate the rules.
 6. Configure Alertmanager receivers and test a notification.
+
+## Alertmanager
+
+`alertmanager.yml` routes grouped alerts to a webhook URL loaded from:
+
+```text
+/etc/alertmanager/secrets/ecommerce-webhook-url
+```
+
+Create that file with mode `0600`, install the configuration, and validate it with `amtool check-config`. The repository deliberately contains no webhook URL or notification credential. The alert rules cover API downtime, 5xx rate, latency, failed jobs, outbox backlog, metrics storage, authentication failures, webhook failures, and payment failures.
+
+Recommended verification after installation:
+
+```bash
+promtool check config /etc/prometheus/prometheus.yml
+promtool check rules /etc/prometheus/ecommerce-alerts.yml
+amtool check-config /etc/alertmanager/alertmanager.yml
+curl -fsS -H "Authorization: Bearer $METRICS_TOKEN" https://api.example.com/metrics
+```
 
 Never expose `/metrics` publicly without the Bearer token. Do not include tokens, card data, provider secrets, or raw customer PII in metrics labels.

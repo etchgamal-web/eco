@@ -23,6 +23,22 @@ chmod +x install.sh
 8. نفّذ smoke tests على `/up` و`/ready` و`/api/v1/products` وعمليات authentication، ثم تحقق من queue وwebhook logs.
 9. احتفظ بالrelease السابق حتى ينجح smoke test، ولا تحذف آخر release قابل للرجوع.
 
+## Automated deployment
+
+يوجد workflow يدوي في `.github/workflows/deploy.yml` ويستخدم GitHub Environment باسم `staging` أو `production`. لا يعمل workflow إلا بعد ضبط secrets التالية داخل البيئة المطلوبة:
+
+- `DEPLOY_SSH_HOST`
+- `DEPLOY_SSH_PORT`
+- `DEPLOY_SSH_KNOWN_HOSTS`
+- `DEPLOY_SSH_USER`
+- `DEPLOY_SSH_PRIVATE_KEY`
+- `DEPLOY_APP_ROOT`
+- `DEPLOY_HEALTH_URL`
+
+يستخدم الـworkflow `release.sh` لإنشاء release منفصل، تثبيت dependencies، تشغيل migrations، بناء config cache، إعادة تشغيل workers، ثم فحص `/ready`. عند فشل الفحص لا ينبغي تحويل traffic إلى الإصدار الجديد. خيار `rollback` يعيد symlink إلى آخر release سابق ويعيد تشغيل queue workers.
+
+شغّل النشر من GitHub Actions فقط بعد تفعيل environment protection والمراجعة المطلوبة للإنتاج.
+
 ## Queue and scheduler checks
 
 يجب مراقبة `failed_jobs`، وعمر أقدم outbox event، ونجاح `cart:mark-abandoned` و`outbox:dispatch` و`payments:reconcile` و`shipments:reconcile`. عند تغيير الكود، نفّذ `php artisan queue:restart` بعد نشر الملفات.
@@ -50,6 +66,13 @@ php artisan backup:database --force
 ## Rollback and incident response
 
 عند فشل release، أوقف استقبال traffic أو فعّل maintenance mode، احتفظ بالـlogs و`X-Correlation-Id`، أعد توجيه traffic إلى آخر release سليم، ولا تعمل `migrate:rollback` تلقائيًا على production إلا بعد مراجعة أثر migration. استخدم forward-fix عندما تكون migration قد غيّرت بيانات لا يمكن عكسها.
+
+للتراجع الآلي من الخادم:
+
+```bash
+APP_ROOT=/var/www/ecommerce-platform \
+  ROLLBACK=1 bash "$APP_ROOT/current/deploy/release.sh"
+```
 
 ## Health expectations
 

@@ -1,0 +1,81 @@
+name: Deploy API
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub Environment to deploy
+        required: true
+        type: choice
+        options: [staging, production]
+      action:
+        description: Deployment action
+        required: true
+        type: choice
+        options: [deploy, rollback]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Prepare release archive
+        if: inputs.action == 'deploy'
+        run: |
+          tar --exclude='.git' --exclude='*/node_modules' --exclude='*/vendor' --exclude='*/.next' --exclude='*/dist' -czf /tmp/eco-release.tgz .
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          test -n "$SSH_KNOWN_HOSTS"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Upload release
+        if: inputs.action == 'deploy'
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+        run: |
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" /tmp/eco-release.tgz "$SSH_USER@$SSH_HOST:/tmp/eco-release-${GITHUB_SHA}.tgz"
+
+      - name: Activate release or rollback
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+          APP_ROOT: ${{ secrets.DEPLOY_APP_ROOT }}
+          HEALTH_URL: ${{ secrets.DEPLOY_HEALTH_URL }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "APP_ROOT='$APP_ROOT' HEALTH_URL='$HEALTH_URL' ACTION='$ACTION' SHA='$GITHUB_SHA' bash -s" <<'REMOTE'
+          set -Eeuo pipefail
+          APP_ROOT="${APP_ROOT:?DEPLOY_APP_ROOT is required}"
+          if [[ "$ACTION" == rollback ]]; then
+            ROLLBACK=1 bash "$APP_ROOT/current/deploy/release.sh"
+            exit 0
+          fi
+          RELEASE_DIR="$APP_ROOT/releases/$SHA"
+          mkdir -p "$RELEASE_DIR"
+          tar -xzf "/tmp/eco-release-$SHA.tgz" -C "$RELEASE_DIR"
+          install -m 0755 "$RELEASE_DIR/laravel-api/deploy/release.sh" "$RELEASE_DIR/deploy-release.sh"
+          (cd "$RELEASE_DIR/laravel-api" && APP_ROOT="$APP_ROOT" RELEASES_DIR="$APP_ROOT/releases" CURRENT_LINK="$APP_ROOT/current" RELEASE_DIR="$RELEASE_DIR/laravel-api" HEALTH_URL="$HEALTH_URL" bash deploy/release.sh)
+          rm -f "/tmp/eco-release-$SHA.tgz"
+          REMOTE

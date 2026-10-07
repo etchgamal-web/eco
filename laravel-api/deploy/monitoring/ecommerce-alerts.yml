@@ -41,3 +41,39 @@ groups:
           severity: warning
         annotations:
           summary: Ecommerce outbox backlog is above 100 events
+
+      - alert: EcommerceMetricsUnavailable
+        expr: ecommerce_metrics_available{job="ecommerce-api"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Ecommerce metrics storage is unavailable
+          description: The API cannot read its Redis-backed metrics storage.
+
+      - alert: EcommerceAuthenticationFailures
+        expr: sum(rate(ecommerce_http_requests_total{job="ecommerce-api",route=~"/api/v1/auth/.*",status=~"401|403|429"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authentication failures are elevated
+          description: Authentication and authorization failures exceed one request per second.
+
+      - alert: EcommerceWebhookFailures
+        expr: sum(rate(ecommerce_http_requests_total{job="ecommerce-api",route=~"/api/v1/webhooks/.*",status=~"4..|5.."}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Payment or shipping webhook failures detected
+          description: Signed webhook requests are returning errors.
+
+      - alert: EcommercePaymentFailures
+        expr: sum(rate(ecommerce_http_requests_total{job="ecommerce-api",route=~"/api/v1/payments.*",status=~"4..|5.."}[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: Payment API failures are elevated
+          description: Payment endpoints are returning client or server errors.
