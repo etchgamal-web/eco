@@ -4,10 +4,7 @@ namespace App\Modules\Content\Infrastructure\Persistence;
 
 use App\Modules\Content\Domain\Contracts\ContentRepositoryInterface;
 use App\Modules\Content\Infrastructure\Models\ContentItem;
-use App\Modules\Catalog\Infrastructure\Models\Category;
-use App\Modules\Catalog\Infrastructure\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 
 final class EloquentContentRepository implements ContentRepositoryInterface
 {
@@ -53,7 +50,7 @@ final class EloquentContentRepository implements ContentRepositoryInterface
         $productIds = $data['product_ids'] ?? [];
         $categoryIds = $data['category_ids'] ?? [];
         unset($data['product_ids'], $data['category_ids']);
-        $item = $id === null ? new ContentItem() : $this->find($id);
+        $item = $id === null ? new ContentItem : $this->find($id);
         $item->fill($data);
         if (($data['status'] ?? $item->status) === 'published' && $item->published_at === null) {
             $item->published_at = now();
@@ -64,6 +61,7 @@ final class EloquentContentRepository implements ContentRepositoryInterface
         $item->save();
         $item->products()->sync($this->orderedIds($productIds));
         $item->categories()->sync($this->orderedIds($categoryIds));
+
         return $item->load($this->relations());
     }
 
@@ -76,6 +74,7 @@ final class EloquentContentRepository implements ContentRepositoryInterface
     {
         $item = $this->find($id);
         $item->forceFill(['status' => 'published', 'published_at' => $item->published_at ?? now()])->save();
+
         return $item->load($this->relations());
     }
 
@@ -83,6 +82,7 @@ final class EloquentContentRepository implements ContentRepositoryInterface
     {
         $item = $this->find($id);
         $item->forceFill(['status' => 'draft', 'published_at' => null])->save();
+
         return $item->load($this->relations());
     }
 
@@ -105,6 +105,7 @@ final class EloquentContentRepository implements ContentRepositoryInterface
     private function orderedIds(array $ids): array
     {
         $ids = array_values(array_unique(array_map('intval', $ids)));
+
         return collect($ids)->mapWithKeys(fn (int $id, int $index) => [$id => ['sort_order' => $index]])->all();
     }
 }

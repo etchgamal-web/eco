@@ -51,6 +51,7 @@ final class ContentController extends Controller
     public function destroy(ContentReadRequest $request, int $content, ManageContent $manage): JsonResponse
     {
         $manage->remove($content);
+
         return response()->json(null, 204);
     }
 
