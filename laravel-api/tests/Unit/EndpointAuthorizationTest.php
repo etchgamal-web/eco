@@ -58,7 +58,7 @@ final class EndpointAuthorizationTest extends TestCase
     private function isPublicRoute(Route $route): bool
     {
         $name = (string) $route->getName();
-        if (in_array($name, ['auth.register', 'auth.login', 'auth.password.forgot', 'auth.password.reset', 'webhooks.paymob', 'webhooks.kashier', 'webhooks.bosta', 'social.webhooks.verify', 'social.webhooks.receive', 'customer.checkout', 'landing.public.show', 'landing.public.leads', 'landing.public.events', 'public.shipments.track', 'categories.public.index', 'categories.public.show', 'brands.public.index', 'brands.public.show'], true)) {
+        if (in_array($name, ['auth.register', 'auth.login', 'auth.password.forgot', 'auth.password.reset', 'webhooks.paymob', 'webhooks.kashier', 'webhooks.bosta', 'social.webhooks.verify', 'social.webhooks.receive', 'customer.checkout', 'landing.public.show', 'landing.public.leads', 'landing.public.events', 'public.shipments.track', 'categories.public.index', 'categories.public.show', 'brands.public.index', 'brands.public.show', 'content.public.index', 'content.public.show'], true)) {
             return true;
         }
 

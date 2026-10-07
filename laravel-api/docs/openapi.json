@@ -23455,7 +23455,560 @@
         ],
         "description": "Calculate current cart pricing without creating an order, payment, or inventory reservation. The final checkout request recalculates all values."
       }
+    },
+
+  "/content": {
+    "get": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "public content index",
+      "operationId": "content_public_index",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [],
+      "x-required-permission": "public"
     }
+  },
+  "/content/{slug}": {
+    "get": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "public content show",
+      "operationId": "content_public_show",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [],
+      "x-required-permission": "public"
+    }
+  },
+  "/admin/content": {
+    "get": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "admin content index",
+      "operationId": "content_admin_index",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.view"
+    },
+    "post": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "admin content store",
+      "operationId": "content_admin_store",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.manage",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "examples": {
+              "default": {
+                "summary": "Content payload",
+                "value": {
+                  "type": "article",
+                  "title": "Example content",
+                  "slug": "example-content",
+                  "body": "Content body",
+                  "status": "draft",
+                  "product_ids": [],
+                  "category_ids": []
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/admin/content/{content}": {
+    "get": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "admin content show",
+      "operationId": "content_admin_show",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.view"
+    },
+    "put": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "admin content update",
+      "operationId": "content_admin_update_put",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.manage",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "examples": {
+              "default": {
+                "summary": "Content payload",
+                "value": {
+                  "type": "article",
+                  "title": "Example content",
+                  "slug": "example-content",
+                  "body": "Content body",
+                  "status": "draft",
+                  "product_ids": [],
+                  "category_ids": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "patch": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "admin content update",
+      "operationId": "content_admin_update_patch",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.manage",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "examples": {
+              "default": {
+                "summary": "Content payload",
+                "value": {
+                  "type": "article",
+                  "title": "Example content",
+                  "slug": "example-content",
+                  "body": "Content body",
+                  "status": "draft",
+                  "product_ids": [],
+                  "category_ids": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "admin content destroy",
+      "operationId": "content_admin_destroy",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.manage"
+    }
+  },
+  "/admin/content/{content}/publish": {
+    "post": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "publish content",
+      "operationId": "content_admin_publish",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.manage",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "examples": {
+              "default": {
+                "summary": "Content payload",
+                "value": {
+                  "type": "article",
+                  "title": "Example content",
+                  "slug": "example-content",
+                  "body": "Content body",
+                  "status": "draft",
+                  "product_ids": [],
+                  "category_ids": []
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/admin/content/{content}/unpublish": {
+    "post": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "unpublish content",
+      "operationId": "content_admin_unpublish",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.manage",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "examples": {
+              "default": {
+                "summary": "Content payload",
+                "value": {
+                  "type": "article",
+                  "title": "Example content",
+                  "slug": "example-content",
+                  "body": "Content body",
+                  "status": "draft",
+                  "product_ids": [],
+                  "category_ids": []
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/admin/content/{content}/preview": {
+    "get": {
+      "tags": [
+        "Content"
+      ],
+      "summary": "preview content",
+      "operationId": "content_admin_preview",
+      "responses": {
+        "200": {
+          "description": "Successful response"
+        },
+        "201": {
+          "description": "Resource created"
+        },
+        "204": {
+          "description": "No content"
+        },
+        "401": {
+          "description": "Unauthenticated or invalid webhook signature"
+        },
+        "403": {
+          "description": "Missing required permission"
+        },
+        "404": {
+          "description": "Resource not found"
+        },
+        "422": {
+          "description": "Validation or business rule failure"
+        },
+        "429": {
+          "description": "Rate limit exceeded"
+        }
+      },
+      "x-rate-limit": "api",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "x-required-permission": "cms.view"
+    }
+  }
+
   },
   "components": {
     "securitySchemes": {

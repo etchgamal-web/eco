@@ -37,6 +37,9 @@ final class EloquentContentRepository implements ContentRepositoryInterface
 
     public function save(array $data, ?int $id = null): object
     {
+        $productIds = $data['product_ids'] ?? [];
+        $categoryIds = $data['category_ids'] ?? [];
+        unset($data['product_ids'], $data['category_ids']);
         $item = $id === null ? new ContentItem() : $this->find($id);
         $item->fill($data);
         if (($data['status'] ?? $item->status) === 'published' && $item->published_at === null) {
@@ -46,8 +49,8 @@ final class EloquentContentRepository implements ContentRepositoryInterface
             $item->published_at = $data['published_at'] ?? null;
         }
         $item->save();
-        $item->products()->sync($this->orderedIds($data['product_ids'] ?? []));
-        $item->categories()->sync($this->orderedIds($data['category_ids'] ?? []));
+        $item->products()->sync($this->orderedIds($productIds));
+        $item->categories()->sync($this->orderedIds($categoryIds));
         return $item->load($this->relations());
     }
 
