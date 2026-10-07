@@ -5,6 +5,7 @@ export type CatalogFilterOption = {
   name: string
   slug?: string | null
   products_count?: number
+  updated_at?: string | null
 }
 
 export type ProductListOptions = {

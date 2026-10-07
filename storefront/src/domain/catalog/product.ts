@@ -20,6 +20,7 @@ export type Product = {
   description?: string | null
   type?: string | null
   status?: string | null
+  updated_at?: string | null
   price: number
   currency?: string
   brand?: { id: number; name: string } | null

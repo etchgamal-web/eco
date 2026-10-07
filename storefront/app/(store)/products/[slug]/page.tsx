@@ -8,6 +8,7 @@ import SiteHeader from '@/shared/layout/SiteHeader'
 import SiteFooter from '@/shared/layout/SiteFooter'
 import ProductDetails from '@/features/catalog/components/ProductDetails'
 import ProductStructuredData from '@/shared/seo/ProductStructuredData'
+import BreadcrumbStructuredData from '@/shared/seo/BreadcrumbStructuredData'
 import { env } from '@/core/config/env'
 import { siteConfig } from '@/core/config/site'
 
@@ -80,6 +81,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </nav>
         <ProductDetails product={product} />
         <ProductStructuredData product={product} slug={slug} />
+        <BreadcrumbStructuredData items={[{ name: 'الرئيسية', path: '/' }, { name: 'المنتجات', path: '/products' }, { name: product.name, path: `/products/${product.slug ?? slug}` }]} />
       </div>
       <SiteFooter />
     </main>

@@ -5,6 +5,7 @@ import { siteConfig } from '@/core/config/site'
 import './globals.css'
 import { CartProvider } from '@/features/cart/store'
 import { AuthProvider } from '@/features/auth/auth-context'
+import OrganizationStructuredData from '@/shared/seo/OrganizationStructuredData'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -43,5 +44,5 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ar" dir="rtl" className={`${geistSans.variable} ${geistMono.variable}`}><body><CartProvider><AuthProvider>{children}</AuthProvider></CartProvider></body></html>
+  return <html lang="ar" dir="rtl" className={`${geistSans.variable} ${geistMono.variable}`}><body><OrganizationStructuredData /><CartProvider><AuthProvider>{children}</AuthProvider></CartProvider></body></html>
 }

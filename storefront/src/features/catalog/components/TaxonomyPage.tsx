@@ -5,6 +5,7 @@ import AnnouncementBar from '@/shared/layout/AnnouncementBar'
 import SiteHeader from '@/shared/layout/SiteHeader'
 import SiteFooter from '@/shared/layout/SiteFooter'
 import ProductGrid from './ProductGrid'
+import BreadcrumbStructuredData from '@/shared/seo/BreadcrumbStructuredData'
 
 type TaxonomyPageProps = {
   kind: 'category' | 'brand'
@@ -35,6 +36,7 @@ export default async function TaxonomyPage({ kind, slug }: TaxonomyPageProps) {
           <p className="taxonomy-count">{option.products_count ?? products.items.length} منتج</p>
         </div>
         <ProductGrid products={products.items} />
+        <BreadcrumbStructuredData items={[{ name: 'الرئيسية', path: '/' }, { name: 'المنتجات', path: '/products' }, { name: option.name, path: `/${kind === 'category' ? 'categories' : 'brands'}/${slug}` }]} />
       </section>
       <SiteFooter />
     </main>
