@@ -14,14 +14,16 @@ chmod +x install.sh
 ## Release sequence
 
 1. أنشئ release directory جديدًا، ثم ثبّت dependencies باستخدام `composer install --no-dev --prefer-dist --optimize-autoloader`.
-2. اربط ملف `.env` الإنتاجي، وتأكد من أن `APP_DEBUG=false` و`APP_ENV=production` وأن قاعدة البيانات managed وليست SQLite.
+2. أنشئ `$APP_ROOT/shared/.env`، وتأكد من أن `APP_DEBUG=false` و`APP_ENV=production` وأن قاعدة البيانات managed وليست SQLite. لا يوضع `.env` داخل release.
 3. شغّل `php artisan migrate --force` بعد أخذ backup والتحقق من خطة migration.
-4. شغّل `php artisan storage:link` عند استخدام local public storage.
+4. اربط `$APP_ROOT/shared/storage` بكل releases؛ السكربت ينشئ symlink إلى storage المشترك قبل تشغيل `storage:link`. استخدم S3/object storage عند تعدد الخوادم أو الأحمال الكبيرة.
 5. شغّل `php artisan optimize`، ثم أعد تشغيل workers باستخدام `php artisan queue:restart`.
 6. فعّل Supervisor من `supervisor/ecommerce-worker.conf` بعملية أو أكثر حسب حجم الحمل.
 7. ثبّت `ecommerce-scheduler.cron` في crontab لمستخدم التطبيق.
 8. نفّذ smoke tests على `/up` و`/ready` و`/api/v1/products` وعمليات authentication، ثم تحقق من queue وwebhook logs.
 9. احتفظ بالrelease السابق حتى ينجح smoke test، ولا تحذف آخر release قابل للرجوع.
+
+الـworkflow يعيد symlink إلى آخر مجلد Laravel صالح (`releases/<SHA>/laravel-api`) عند rollback، ويعيد تشغيل workers، ثم يفحص `/ready` إلزاميًا. إذا فشل الفحص يعيد symlink السابق بدل إعلان rollback ناجحًا. لا تستخدم `SKIP_HEALTH_CHECK=1` إلا في محاكاة محلية معزولة.
 
 ## Automated deployment
 
@@ -42,6 +44,16 @@ chmod +x install.sh
 ## Queue and scheduler checks
 
 يجب مراقبة `failed_jobs`، وعمر أقدم outbox event، ونجاح `cart:mark-abandoned` و`outbox:dispatch` و`payments:reconcile` و`shipments:reconcile`. عند تغيير الكود، نفّذ `php artisan queue:restart` بعد نشر الملفات.
+
+## Database migration compatibility
+
+الـrollback يغيّر الكود ولا يرجع قاعدة البيانات. لذلك يجب استخدام **expand → migrate/backfill → contract**:
+
+1. أضف أعمدة/جداول اختيارية مع إبقاء الكود القديم صالحًا.
+2. انشر الكود الذي يقرأ الجديد ويكتب القديم والجديد عند الحاجة، ثم نفّذ backfill.
+3. بعد اكتمال كل workers والـreleases القديمة، نفّذ contract في إصدار مستقل.
+
+شغّل `scripts/verify_migration_safety.sh` على أي migrations جديدة. يرفض الفحص حذف/إعادة تسمية الأعمدة والجداول و`change()` حتى تتم مراجعتها يدويًا كعملية contract منفصلة.
 
 ## Backup
 

@@ -57,4 +57,12 @@ amtool check-config /etc/alertmanager/alertmanager.yml
 curl -fsS -H "Authorization: Bearer $METRICS_TOKEN" https://api.example.com/metrics
 ```
 
+اختبار الإشعار الفعلي على Staging:
+
+```bash
+./scripts/alertmanager-smoke.sh https://alertmanager.staging.example.com
+```
+
+تحقق يدويًا من وصول `EcommerceAlertmanagerSmokeTest` إلى الوجهة المكوّنة، ثم سجّل وقت الاختبار والوجهة والنتيجة. قبول Alertmanager للطلب لا يثبت وحده وصول الرسالة إلى Slack أو البريد أو PagerDuty.
+
 Never expose `/metrics` publicly without the Bearer token. Do not include tokens, card data, provider secrets, or raw customer PII in metrics labels.

@@ -33,6 +33,11 @@ jobs:
       - name: Prepare release archive
         if: inputs.action == 'deploy'
         run: |
+          migration_files="$(git diff --name-only HEAD^ HEAD -- 'laravel-api/database/migrations/*.php' || true)"
+          if [[ -n "$migration_files" ]]; then
+            # shellcheck disable=SC2086
+            bash laravel-api/scripts/verify_migration_safety.sh $migration_files
+          fi
           tar --exclude='.git' --exclude='*/node_modules' --exclude='*/vendor' --exclude='*/.next' --exclude='*/dist' -czf /tmp/eco-release.tgz .
 
       - name: Configure SSH
