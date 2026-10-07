@@ -11,9 +11,22 @@ use Illuminate\Support\Carbon;
 
 final class EloquentContentRepository implements ContentRepositoryInterface
 {
-    public function listPublic(?string $type = null): iterable
+    public function listPublic(?string $type = null, int $page = 1, int $perPage = 20): array
     {
-        return $this->publicQuery($type)->latest('published_at')->get();
+        $paginator = $this->publicQuery($type)
+            ->latest('published_at')
+            ->orderByDesc('id')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return [
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ];
     }
 
     public function findPublicBySlug(string $slug): object

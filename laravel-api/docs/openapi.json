@@ -23464,9 +23464,50 @@
       ],
       "summary": "public content index",
       "operationId": "content_public_index",
+      "parameters": [
+        {
+          "name": "type",
+          "in": "query",
+          "required": false,
+          "schema": { "type": "string", "enum": ["article", "guide", "faq", "comparison"] }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": { "type": "integer", "minimum": 1, "default": 1 }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+        }
+      ],
       "responses": {
         "200": {
-          "description": "Successful response"
+          "description": "Paginated published content",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["data", "meta"],
+                "properties": {
+                  "data": { "type": "array", "items": { "type": "object" } },
+                  "meta": {
+                    "type": "object",
+                    "required": ["current_page", "per_page", "total", "last_page"],
+                    "properties": {
+                      "current_page": { "type": "integer", "minimum": 1 },
+                      "per_page": { "type": "integer", "minimum": 1, "maximum": 100 },
+                      "total": { "type": "integer", "minimum": 0 },
+                      "last_page": { "type": "integer", "minimum": 1 }
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         "201": {
           "description": "Resource created"

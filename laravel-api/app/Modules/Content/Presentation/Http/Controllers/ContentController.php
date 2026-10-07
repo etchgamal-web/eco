@@ -16,7 +16,11 @@ final class ContentController extends Controller
 {
     public function publicIndex(PublicContentRequest $request, ListPublicContent $list): JsonResponse
     {
-        return response()->json(['data' => $list->execute($request->validated('type'))]);
+        $type = $request->validated('type');
+        $page = (int) $request->validated('page', 1);
+        $perPage = (int) $request->validated('per_page', 20);
+
+        return response()->json($list->execute($type, $page, $perPage));
     }
 
     public function publicShow(PublicContentRequest $request, string $slug, GetPublicContent $get): JsonResponse

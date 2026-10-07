@@ -4,7 +4,8 @@ namespace App\Modules\Content\Domain\Contracts;
 
 interface ContentRepositoryInterface
 {
-    public function listPublic(?string $type = null): iterable;
+    /** @return array{data: list<object>, meta: array{current_page: int, per_page: int, total: int, last_page: int}} */
+    public function listPublic(?string $type = null, int $page = 1, int $perPage = 20): array;
     public function findPublicBySlug(string $slug): object;
     public function listAdmin(array $filters = []): iterable;
     public function find(int $id): object;
