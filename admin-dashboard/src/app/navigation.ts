@@ -8,6 +8,7 @@ export const navItems = [
   { label: 'العملاء', path: '/customers', icon: Users, permission: 'customers.view' },
   { label: 'المنتجات', path: '/catalog', icon: Package, permission: 'products.view' },
   { label: 'هيكلة الكتالوج', path: '/catalog/taxonomy', icon: Boxes, permission: 'products.view' },
+  { label: 'المحتوى', path: '/content', icon: FileText, permission: 'cms.view' },
   { label: 'المخزون', path: '/inventory', icon: Boxes, permission: 'inventory.view' },
   { label: 'التقارير', path: '/reports', icon: TrendingUp, permission: 'orders.view' },
   { label: 'الإدارة', path: '/management', icon: Shield, permission: 'assistants.view' },
