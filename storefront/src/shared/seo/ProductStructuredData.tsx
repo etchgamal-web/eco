@@ -38,7 +38,7 @@ export default function ProductStructuredData({ product, slug }: ProductStructur
         ...baseOffer,
         lowPrice: uniquePrices[0],
         highPrice: uniquePrices[uniquePrices.length - 1],
-        offerCount: variants.length,
+        offerCount: variantPrices.length,
       }
     : {
         '@type': 'Offer',

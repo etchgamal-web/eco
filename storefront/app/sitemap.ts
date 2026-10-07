@@ -4,6 +4,7 @@ import { listBrands, listCategories, listProducts } from '@/features/catalog/api
 import type { ProductListResult } from '@/application/catalog/catalog-types'
 
 const PRODUCTS_PER_PAGE = 100
+const SITEMAP_PAGE_BATCH_SIZE = 5
 
 function optionalLastModified(value?: string | null) {
   if (!value) return undefined
@@ -16,9 +17,13 @@ async function listAllProducts(): Promise<ProductListResult['items']> {
   if (firstPage.totalPages <= 1) return firstPage.items
 
   const remainingPages = Array.from({ length: firstPage.totalPages - 1 }, (_, index) => index + 2)
-  const pages = await Promise.all(
-    remainingPages.map((page) => listProducts('', { page, perPage: PRODUCTS_PER_PAGE })),
-  )
+  const pages: ProductListResult[] = []
+  for (let index = 0; index < remainingPages.length; index += SITEMAP_PAGE_BATCH_SIZE) {
+    const batch = remainingPages.slice(index, index + SITEMAP_PAGE_BATCH_SIZE)
+    pages.push(...await Promise.all(
+      batch.map((page) => listProducts('', { page, perPage: PRODUCTS_PER_PAGE })),
+    ))
+  }
 
   return [firstPage, ...pages].flatMap((result) => result.items)
 }
