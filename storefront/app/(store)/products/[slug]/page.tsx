@@ -7,6 +7,9 @@ import AnnouncementBar from '@/shared/layout/AnnouncementBar'
 import SiteHeader from '@/shared/layout/SiteHeader'
 import SiteFooter from '@/shared/layout/SiteFooter'
 import ProductDetails from '@/features/catalog/components/ProductDetails'
+import ProductStructuredData from '@/shared/seo/ProductStructuredData'
+import { env } from '@/core/config/env'
+import { siteConfig } from '@/core/config/site'
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>
@@ -16,16 +19,31 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const { slug } = await params
   try {
     const product = await getProduct(slug)
-    const description = product.description?.trim() || `اشترِ ${product.name} من متجر Eco.`
+    const description = (product.description?.trim() || `اشترِ ${product.name} من متجر ${siteConfig.name}.`).slice(0, 160)
+    const image = (product.media?.length ? product.media : product.images)?.[0]
+    const canonical = `/products/${product.slug ?? slug}`
 
     return {
       title: product.name,
       description,
-      alternates: { canonical: `/products/${product.slug ?? slug}` },
-      openGraph: { title: product.name, description, type: 'website' },
+      alternates: { canonical },
+      openGraph: {
+        title: product.name,
+        description,
+        url: `${env.siteUrl}${canonical}`,
+        siteName: siteConfig.name,
+        type: 'website',
+        ...(image ? { images: [{ url: image.url, alt: image.alt || product.name }] } : {}),
+      },
+      twitter: {
+        card: image ? 'summary_large_image' : 'summary',
+        title: product.name,
+        description,
+        ...(image ? { images: [image.url] } : {}),
+      },
     }
   } catch {
-    return { title: 'المنتج غير متاح' }
+    return { title: 'المنتج غير متاح', robots: { index: false, follow: false } }
   }
 }
 
@@ -61,6 +79,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <Link href="/">الرئيسية</Link><span>/</span><span>{product.name}</span>
         </nav>
         <ProductDetails product={product} />
+        <ProductStructuredData product={product} slug={slug} />
       </div>
       <SiteFooter />
     </main>

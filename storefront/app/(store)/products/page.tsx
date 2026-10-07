@@ -4,6 +4,9 @@ import SiteFooter from '@/shared/layout/SiteFooter'
 import ProductListing from '@/features/catalog/components/ProductListing'
 import { listBrands, listCategories, listProducts } from '@/features/catalog/api'
 import type { CatalogFilterOption, ProductListResult } from '@/application/catalog/catalog-types'
+import type { Metadata } from 'next'
+import { env } from '@/core/config/env'
+import { siteConfig } from '@/core/config/site'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -12,6 +15,23 @@ type ProductsPageProps = {
 }
 
 type SortValue = 'newest' | 'price_asc' | 'price_desc' | 'name_asc'
+
+export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
+  const params = searchParams ? await searchParams : {}
+  const hasFilters = ['search', 'category_id', 'brand_id', 'page', 'sort'].some((key) => Boolean(firstValue(params[key])))
+  return {
+    title: 'المنتجات',
+    description: `تصفح منتجات ${siteConfig.name} المختارة بعناية، وابحث عن القطعة المناسبة لبيتك ويومك.`,
+    alternates: { canonical: `${env.siteUrl}/products` },
+    robots: hasFilters ? { index: false, follow: true } : { index: true, follow: true },
+    openGraph: {
+      title: `المنتجات | ${siteConfig.name}`,
+      description: siteConfig.description,
+      url: `${env.siteUrl}/products`,
+      type: 'website',
+    },
+  }
+}
 
 const sortValues: SortValue[] = ['newest', 'price_asc', 'price_desc', 'name_asc']
 const PER_PAGE = 12
