@@ -13,6 +13,14 @@ export async function login(identifier: string, password: string, remember = fal
   return requestJson<AuthResponse>('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier, password, remember }) })
 }
 
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  return requestJson<{ message: string }>('/auth/password/forgot', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+}
+
 export async function getCurrentCustomer(): Promise<Customer> {
   const response = await requestJson<MeResponse>('/auth/me', { cache: 'no-store' })
   return response.data

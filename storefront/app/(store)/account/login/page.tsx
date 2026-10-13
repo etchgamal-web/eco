@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError('')
     try {
       await login(identifier, password, remember)
-      router.push('/')
+      router.push('/account')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'تعذر تسجيل الدخول')
     } finally {
@@ -32,6 +32,6 @@ export default function LoginPage() {
   }
 
   return (
-    <main><AnnouncementBar /><SiteHeader /><div className="auth-page-shell"><div className="auth-card"><p className="kicker">مرحبًا بعودتك</p><h1>تسجيل الدخول</h1><form onSubmit={submit}><label>البريد الإلكتروني أو الهاتف<input required value={identifier} onChange={(event) => setIdentifier(event.target.value)} autoComplete="username" /></label><label>كلمة المرور<input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /></label><label className="checkbox-label"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /> تذكرني</label>{error ? <p className="form-error" role="alert">{error}</p> : null}<button className="primary-button auth-submit" type="submit" disabled={submitting}>{submitting ? 'جارٍ الدخول...' : 'دخول'}</button></form><p className="auth-help">ليس لديك حساب؟ <Link href="/account/register">إنشاء حساب</Link></p></div></div><SiteFooter /></main>
+    <main><AnnouncementBar /><SiteHeader /><div className="auth-page-shell"><div className="auth-card"><p className="kicker">مرحبًا بعودتك</p><h1>تسجيل الدخول</h1><form onSubmit={submit}><label>البريد الإلكتروني أو الهاتف<input required value={identifier} onChange={(event) => setIdentifier(event.target.value)} autoComplete="username" /></label><label>كلمة المرور<input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /></label><label className="checkbox-label"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /> تذكرني</label>{error ? <p className="form-error" role="alert">{error}</p> : null}<button className="primary-button auth-submit" type="submit" disabled={submitting}>{submitting ? 'جارٍ الدخول...' : 'دخول'}</button></form><p className="auth-help"><Link href="/account/forgot-password">نسيت كلمة المرور؟</Link></p><p className="auth-help">ليس لديك حساب؟ <Link href="/account/register">إنشاء حساب</Link></p></div></div><SiteFooter /></main>
   )
 }

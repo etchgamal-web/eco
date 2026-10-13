@@ -77,6 +77,10 @@ footer { align-items:center; background:var(--chrome-bg); color:var(--chrome-fg)
 
 .header-actions { align-items:center; display:flex; gap:12px; }
 .account-link { background:transparent; border:0; color:var(--muted); cursor:pointer; font-size:13px; padding:8px 4px; }
+.account-profile-link { align-items:center; color:var(--ink); display:inline-flex; gap:8px; max-width:220px; text-decoration:none; }
+.account-display-name { max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.account-avatar { align-items:center; background:var(--green); border:1px solid var(--line); border-radius:50%; color:var(--on-primary); display:inline-flex; flex:0 0 34px; font-size:14px; font-weight:700; height:34px; justify-content:center; width:34px; }
+.account-loading { color:var(--muted); font-size:12px; white-space:nowrap; }
 .auth-page-shell { align-items:center; display:flex; justify-content:center; min-height:650px; padding:70px 5%; }
 .auth-card { background:var(--cream); max-width:480px; padding:45px; width:100%; }
 .auth-card h1 { font-family:var(--font-display); font-size:46px; font-weight:400; letter-spacing:-.05em; margin:0 0 30px; }
