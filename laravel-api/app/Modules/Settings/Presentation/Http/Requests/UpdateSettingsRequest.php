@@ -3,7 +3,7 @@
 namespace App\Modules\Settings\Presentation\Http\Requests;
 
 use App\Modules\Auth\Presentation\Http\Concerns\AuthorizesRequest;
-use App\Modules\Settings\Presentation\Http\Controllers\PublicAppearanceController;
+use App\Modules\Settings\Domain\ValueObjects\StorefrontTheme;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -34,7 +34,7 @@ class UpdateSettingsRequest extends FormRequest
                 Rule::when($this->input('key') === 'catalog.sku_prefix', ['regex:/^[A-Za-z][A-Za-z0-9_-]{0,19}$/']),
                 Rule::when($this->input('key') === 'store.currency', [Rule::in(['SAR', 'EGP', 'AED', 'USD', 'EUR'])]),
                 Rule::when($this->input('key') === 'store.locale', [Rule::in(['ar', 'en'])]),
-                Rule::when($this->input('key') === PublicAppearanceController::THEME_KEY, ['required', Rule::in(PublicAppearanceController::THEMES)]),
+                Rule::when($this->input('key') === StorefrontTheme::SETTING_KEY, ['required', Rule::in(StorefrontTheme::THEMES)]),
             ],
             'type' => ['required', Rule::in(['string', 'boolean', 'integer', 'float', 'json'])],
             'description' => ['nullable', 'string'],

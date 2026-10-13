@@ -14979,6 +14979,26 @@
         ]
       }
     },
+    "/public/appearance": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Active storefront theme",
+        "description": "Public read-only endpoint. Returns the storefront theme chosen from the admin dashboard (classic, dark-gold or bold). Falls back to classic.",
+        "operationId": "appearance_public",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "x-rate-limit": "api",
+        "security": []
+      }
+    },
     "/settings": {
       "get": {
         "tags": [

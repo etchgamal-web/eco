@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Cairo, El_Messiri, Geist, Geist_Mono, Tajawal } from 'next/font/google'
 import { env } from '@/core/config/env'
 import { siteConfig } from '@/core/config/site'
 import './globals.css'
 import { CartProvider } from '@/features/cart/store'
 import { AuthProvider } from '@/features/auth/auth-context'
 import OrganizationStructuredData from '@/shared/seo/OrganizationStructuredData'
+import { getStorefrontTheme } from '@/src/lib/api/appearance'
+
+// Fonts used by the selectable storefront themes (see the theme blocks in globals.css).
+const elMessiri = El_Messiri({ variable: '--font-messiri', subsets: ['arabic', 'latin'], weight: ['500', '600', '700'], display: 'swap' })
+const tajawal = Tajawal({ variable: '--font-tajawal', subsets: ['arabic', 'latin'], weight: ['400', '500', '700'], display: 'swap' })
+const cairo = Cairo({ variable: '--font-cairo', subsets: ['arabic', 'latin'], weight: ['400', '600', '700', '900'], display: 'swap' })
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -43,6 +49,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ar" dir="rtl" className={`${geistSans.variable} ${geistMono.variable}`}><body><OrganizationStructuredData /><CartProvider><AuthProvider>{children}</AuthProvider></CartProvider></body></html>
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const theme = await getStorefrontTheme()
+  return <html lang="ar" dir="rtl" data-theme={theme} className={`${geistSans.variable} ${geistMono.variable} ${elMessiri.variable} ${tajawal.variable} ${cairo.variable}`}><body><OrganizationStructuredData /><CartProvider><AuthProvider>{children}</AuthProvider></CartProvider></body></html>
 }
