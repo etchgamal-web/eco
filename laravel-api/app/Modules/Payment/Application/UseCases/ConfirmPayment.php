@@ -9,6 +9,7 @@ use App\Modules\Payment\Domain\Contracts\PaymentRepositoryInterface;
 use App\Modules\Payment\Domain\Exceptions\InvalidPaymentTransitionException;
 use App\Modules\Payment\Domain\Exceptions\PaymentFailedException;
 use App\Modules\Shared\Domain\Contracts\TransactionManagerInterface;
+use App\Modules\Shared\Domain\Exceptions\BusinessRuleException;
 use App\Modules\Staff\Domain\Contracts\AuditLogRepositoryInterface;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,7 @@ final class ConfirmPayment
         if (! in_array($payment->status, ['pending', 'processing'], true)) {
             throw InvalidPaymentTransitionException::from($payment->status, 'confirmed');
         }
+        $this->assertOrderCanBeConfirmed($paymentId);
         $operationKey = 'confirm:'.$payment->id.':'.($payment->provider_reference ?: $payment->idempotency_key);
         $previous = $this->operations->successfulResponse((int) $payment->id, 'confirm');
         $result = $previous ?? null;
@@ -59,6 +61,7 @@ final class ConfirmPayment
             if (! in_array($locked->status, ['pending', 'processing'], true)) {
                 throw InvalidPaymentTransitionException::from($locked->status, 'confirmed');
             }
+            $this->assertOrderCanBeConfirmed($paymentId, true);
             $confirmed = $this->payments->updateStatus($locked, 'paid', [
                 'provider_reference' => $result['provider_reference'] ?? $locked->provider_reference,
                 'metadata' => $result['metadata'] ?? $locked->metadata,
@@ -67,5 +70,12 @@ final class ConfirmPayment
 
             return $confirmed;
         });
+    }
+
+    private function assertOrderCanBeConfirmed(int $paymentId, bool $forUpdate = false): void
+    {
+        if (in_array($this->payments->orderStatusForPayment($paymentId, $forUpdate), ['cancelled', 'canceled'], true)) {
+            throw new BusinessRuleException('لا يمكن تأكيد دفعة مرتبطة بطلب ملغي.');
+        }
     }
 }

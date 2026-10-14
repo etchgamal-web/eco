@@ -103,11 +103,18 @@ export default function CheckoutForm() {
     </div>
     <div className="checkout-section">
       <h2>طريقة الدفع</h2>
-      <div className="payment-options">{(['cash_on_delivery', 'paymob', 'kashier'] as const).map((method) => <label key={method}><input type="radio" name="payment" value={method} checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} /> {method === 'cash_on_delivery' ? 'الدفع عند الاستلام' : method === 'paymob' ? 'Paymob' : 'Kashier'}</label>)}</div>
+      <div className="payment-options">{(['cash_on_delivery', 'paymob', 'kashier'] as const).map((method) => {
+        const title = method === 'cash_on_delivery' ? 'الدفع عند الاستلام' : method === 'paymob' ? 'الدفع الإلكتروني — Paymob' : 'الدفع الإلكتروني — Kashier'
+        const description = method === 'cash_on_delivery' ? 'ادفع للمندوب عند وصول الطلب.' : 'ستنتقل إلى بوابة دفع آمنة لإتمام العملية.'
+        return <label key={method} className={`payment-option${paymentMethod === method ? ' is-selected' : ''}`}>
+          <input type="radio" name="payment" value={method} checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} />
+          <span className="payment-option-copy"><strong>{title}</strong><small>{description}</small></span>
+        </label>
+      })}</div>
     </div>
     <div className="checkout-section">
       <h2>طريقة الشحن</h2>
-      {shippingMethods.length === 0 ? <p className="muted-text">سيتم تحديد طريقة الشحن حسب إعدادات المتجر.</p> : <div className="shipping-options">{shippingMethods.map((method) => <label key={method.id}><input type="radio" name="shipping" value={method.id} checked={shippingMethodId === String(method.id)} onChange={() => setShippingMethodId(String(method.id))} /> <span>{method.name || method.code}</span><strong>{formatPrice(method.base_fee || 0, method.currency || cart.items[0]?.currency)}</strong></label>)}</div>}
+      {shippingMethods.length === 0 ? <p className="muted-text">سيتم تحديد طريقة الشحن حسب إعدادات المتجر.</p> : <div className="shipping-options">{shippingMethods.map((method) => <label key={method.id}><input type="radio" name="shipping" value={method.id} checked={shippingMethodId === String(method.id)} onChange={() => setShippingMethodId(String(method.id))} /> <span>{method.name || method.code}</span></label>)}</div>}
     </div>
     <div className="checkout-section">
       <h2>القسيمة</h2>
@@ -116,7 +123,20 @@ export default function CheckoutForm() {
     {error ? <p className="form-error" role="alert">{error} <Link href="/checkout/failure">صفحة إعادة المحاولة</Link></p> : null}
     {previewError ? <p className="form-error" role="alert">{previewError}</p> : null}
     {previewLoading ? <p className="state-card" role="status">جارٍ حساب الإجمالي النهائي من الخادم...</p> : null}
-    {preview ? <div className="checkout-total"><span>إجمالي المنتجات</span><strong>{formatPrice(preview.subtotal_amount, preview.currency)}</strong><span>الخصم</span><strong>{formatPrice(preview.discount_amount, preview.currency)}</strong><span>الضريبة ({preview.tax_rate ?? 0}%)</span><strong>{formatPrice(preview.tax_amount, preview.currency)}</strong><span>الشحن</span><strong>{formatPrice(preview.shipping_amount, preview.currency)}</strong><span>الإجمالي النهائي المتوقع</span><strong>{formatPrice(preview.total_amount, preview.currency)}</strong><small className="muted-text">هذه معاينة فقط؛ سيعيد Laravel الحساب ويتحقق من السعر والمخزون مرة أخرى عند التأكيد.</small></div> : null}
-    <button className="primary-button" disabled={submitting || previewLoading || !preview || !addressId || addresses.length === 0 || (shippingMethods.length > 0 && !shippingMethodId)} type="submit">{submitting ? 'جارٍ إنشاء الطلب...' : 'تأكيد الطلب'}</button>
+    {preview ? <section className="checkout-invoice" aria-label="ملخص فاتورة الطلب">
+      <header className="checkout-invoice-header"><div><p className="kicker">ملخص الطلب</p><h2>تفاصيل الفاتورة</h2></div><span className="checkout-invoice-tag">معاينة</span></header>
+      <dl className="checkout-invoice-lines">
+        <div><dt>إجمالي المنتجات</dt><dd>{formatPrice(preview.subtotal_amount, preview.currency)}</dd></div>
+        {Number(preview.discount_amount) > 0 ? <div className="checkout-invoice-discount"><dt>الخصم</dt><dd>− {formatPrice(preview.discount_amount, preview.currency)}</dd></div> : null}
+        <div><dt>الضريبة <span>({preview.tax_rate ?? 0}%)</span></dt><dd>{formatPrice(preview.tax_amount, preview.currency)}</dd></div>
+        <div><dt>الشحن</dt><dd>{formatPrice(preview.shipping_amount, preview.currency)}</dd></div>
+      </dl>
+      <div className="checkout-invoice-payable">
+        <div><strong>{paymentMethod === 'cash_on_delivery' ? 'المبلغ المطلوب عند الاستلام' : 'المبلغ المطلوب دفعه'}</strong><small>الإجمالي النهائي شامل الضريبة والشحن</small></div>
+        <strong className="checkout-invoice-amount">{formatPrice(preview.total_amount, preview.currency)}</strong>
+      </div>
+      <p className="checkout-invoice-note">هذه معاينة للسعر؛ سيتحقق المتجر من الإجمالي والمخزون مرة أخرى عند تأكيد الطلب.</p>
+    </section> : null}
+    <button className="primary-button" disabled={submitting || previewLoading || !preview || !addressId || addresses.length === 0 || (shippingMethods.length > 0 && !shippingMethodId)} type="submit">{submitting ? 'جارٍ إنشاء الطلب...' : paymentMethod === 'cash_on_delivery' ? 'تأكيد الطلب' : 'تأكيد الطلب ومتابعة الدفع'}</button>
   </form>
 }

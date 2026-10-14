@@ -23,6 +23,8 @@ interface PaymentRepositoryInterface
     /** @return array<string, mixed> */
     public function listForAdmin(array $filters): array;
 
+    public function orderStatusForPayment(int $paymentId, bool $forUpdate = false): ?string;
+
     public function create(array $attributes): object;
 
     public function start(array $attributes): object;

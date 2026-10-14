@@ -28,7 +28,7 @@ final class PaymentApiTest extends TestCase
         $order = $this->orderFor($customer, 1500);
         Payment::query()->create(['order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery', 'provider_reference' => 'global-test', 'amount' => 1500, 'currency' => 'EGP', 'status' => 'pending', 'idempotency_key' => 'global-payment']);
 
-        $this->actingAs($owner)->getJson('/api/v1/payments?status=pending&per_page=1')->assertOk()->assertJsonPath('data.0.provider_reference', 'global-test')->assertJsonPath('meta.total', 1);
+        $this->actingAs($owner)->getJson('/api/v1/payments?status=pending&per_page=1')->assertOk()->assertJsonPath('data.0.provider_reference', 'global-test')->assertJsonPath('data.0.order_status', 'pending')->assertJsonPath('meta.total', 1);
         $this->actingAs($customer)->getJson('/api/v1/payments')->assertForbidden();
     }
 
@@ -112,6 +112,27 @@ final class PaymentApiTest extends TestCase
         $this->assertDatabaseHas('customer_orders', ['id' => $order->id, 'status' => 'pending']);
         $this->actingAs($owner)->postJson("/api/v1/payments/{$payment->id}/refund")
             ->assertConflict();
+    }
+
+    public function test_admin_cannot_confirm_payment_for_cancelled_order(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $customer = $this->userWithRole('customer');
+        $owner = $this->userWithRole('owner');
+        $order = $this->orderFor($customer, 1500);
+        $order->update(['status' => 'cancelled']);
+        $payment = Payment::query()->create([
+            'order_id' => $order->id, 'user_id' => $customer->id, 'method' => 'cash_on_delivery',
+            'provider_reference' => 'cancelled-order-payment', 'amount' => 1500, 'currency' => 'EGP',
+            'status' => 'pending', 'idempotency_key' => 'cancelled-order-payment',
+        ]);
+
+        $this->actingAs($owner)->postJson("/api/v1/payments/{$payment->id}/confirm")
+            ->assertConflict()
+            ->assertJsonPath('message', 'لا يمكن تأكيد دفعة مرتبطة بطلب ملغي.');
+
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'pending']);
+        $this->assertDatabaseMissing('payment_operations', ['payment_id' => $payment->id, 'operation' => 'confirm']);
     }
 
     public function test_partial_refunds_can_be_repeated_until_payment_amount_is_exhausted(): void

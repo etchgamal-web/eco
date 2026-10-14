@@ -1,7 +1,7 @@
 import { request, API_BASE, getToken } from './client'
 
 export type OperationalDashboard = { ambiguous_payments?: Array<Record<string, unknown>>; ambiguous_refunds?: Array<Record<string, unknown>>; stuck_returns?: Array<Record<string, unknown>>; failed_outbox?: Array<Record<string, unknown>>; circuits?: Array<Record<string, unknown>> }
-export type GlobalPayment = { id: number; order_id: number; order_number: string | null; customer: string | null; method: string; provider_reference: string | null; amount: number; currency: string; status: string; created_at: string }
+export type GlobalPayment = { id: number; order_id: number; order_number: string | null; order_status?: string | null; customer: string | null; method: string; provider_reference: string | null; amount: number; currency: string; status: string; created_at: string }
 export type PaymentsPage = { data: GlobalPayment[]; meta: { current_page: number; per_page: number; total: number; last_page: number } }
 export async function getOperationalDashboard() { return (await request<{ data: OperationalDashboard }>('/operations/dashboard')).data }
 export async function listOrderPayments(orderId: number) { return (await request<{ data: Array<Record<string, unknown>> }>(`/orders/${orderId}/payments`)).data }

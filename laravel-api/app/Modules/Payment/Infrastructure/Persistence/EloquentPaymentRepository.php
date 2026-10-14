@@ -37,6 +37,21 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
         return $payment;
     }
 
+    public function orderStatusForPayment(int $paymentId, bool $forUpdate = false): ?string
+    {
+        $payment = Payment::query()->select(['id', 'order_id'])->find($paymentId);
+        if ($payment === null) {
+            throw new PaymentNotFoundException('Payment not found.');
+        }
+
+        $order = $payment->order();
+        if ($forUpdate) {
+            $order->lockForUpdate();
+        }
+
+        return $order->value('status');
+    }
+
     public function findForUserOrder(int $userId, int $orderId, int $paymentId): object
     {
         $payment = Payment::query()->with('order')->where('user_id', $userId)->where('order_id', $orderId)->find($paymentId);
@@ -69,7 +84,7 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
 
     public function listForAdmin(array $filters): array
     {
-        $query = Payment::query()->with(['order:id,order_number', 'user:id,name,email'])->latest();
+        $query = Payment::query()->with(['order:id,order_number,status', 'user:id,name,email'])->latest();
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
@@ -89,7 +104,7 @@ final class EloquentPaymentRepository implements PaymentRepositoryInterface
         $perPage = min(100, max(1, (int) ($filters['per_page'] ?? 25)));
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
-        return ['data' => $paginator->getCollection()->map(fn (Payment $payment) => ['id' => $payment->id, 'order_id' => $payment->order_id, 'order_number' => $payment->order?->order_number, 'customer' => $payment->user?->name ?? $payment->user?->email, 'method' => $payment->method, 'provider_reference' => $payment->provider_reference, 'amount' => (int) $payment->amount, 'currency' => $payment->currency, 'status' => $payment->status, 'created_at' => $payment->created_at?->toIso8601String()])->all(), 'meta' => ['current_page' => $paginator->currentPage(), 'per_page' => $paginator->perPage(), 'total' => $paginator->total(), 'last_page' => $paginator->lastPage()]];
+        return ['data' => $paginator->getCollection()->map(fn (Payment $payment) => ['id' => $payment->id, 'order_id' => $payment->order_id, 'order_number' => $payment->order?->order_number, 'order_status' => $payment->order?->status, 'customer' => $payment->user?->name ?? $payment->user?->email, 'method' => $payment->method, 'provider_reference' => $payment->provider_reference, 'amount' => (int) $payment->amount, 'currency' => $payment->currency, 'status' => $payment->status, 'created_at' => $payment->created_at?->toIso8601String()])->all(), 'meta' => ['current_page' => $paginator->currentPage(), 'per_page' => $paginator->perPage(), 'total' => $paginator->total(), 'last_page' => $paginator->lastPage()]];
     }
 
     public function create(array $attributes): object
