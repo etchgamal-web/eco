@@ -1,5 +1,6 @@
 import { ApiError, requestJson } from '@/core/http/client'
 import type { Customer } from '@/domain/customer/customer'
+import type { ProductMedia } from '@/domain/catalog/product'
 
 type DataResponse<T> = { data: T }
 
@@ -59,7 +60,18 @@ export async function getCustomerOrder(id: number): Promise<CustomerOrderDetails
   return response.data
 }
 
-export type WishlistItem = { id: number; product_id?: number; product?: { name?: string; slug?: string; price?: number; currency?: string } }
+export type WishlistItem = {
+  id: number
+  product_id?: number
+  product?: {
+    name?: string
+    slug?: string
+    price?: number
+    currency?: string
+    category?: { name?: string }
+    media?: ProductMedia[]
+  }
+}
 export type CustomerNotification = { id: number; type?: string; title?: string; body?: string; read_at?: string | null; created_at?: string }
 
 export async function getWishlist(): Promise<WishlistItem[]> {
