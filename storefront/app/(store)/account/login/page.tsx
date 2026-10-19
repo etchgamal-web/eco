@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError('')
     try {
       await login(identifier, password, remember)
-      router.push('/account')
+      router.push('/')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'تعذر تسجيل الدخول')
     } finally {
