@@ -25,7 +25,8 @@ class ProductMedia extends Model
 
         $request = function_exists('request') ? request() : null;
         if ($request instanceof Request && $request->getHost() !== '') {
-            return rtrim($request->getSchemeAndHttpHost(), '/').'/storage/'.ltrim($this->path, '/');
+            $scheme = str_ends_with($request->getHost(), '.manus.computer') ? 'https' : $request->getScheme();
+            return $scheme.'://'.$request->getHost().($request->getPort() && ! str_ends_with($request->getHost(), '.manus.computer') ? ':'.$request->getPort() : '').'/storage/'.ltrim($this->path, '/');
         }
 
         return $value;
