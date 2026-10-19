@@ -1,0 +1,164 @@
+/* ==========================================================================
+   ui-polish.css - طبقة الأنيميشن وتحسينات الـ UI/UX للمتجر
+   تُستورد بعد globals.css في app/layout.tsx. إضافية فقط، والثيمات الأخرى
+   (dark-gold / bold) تتغلب عليها لأن محدداتها أقوى.
+   ========================================================================== */
+
+/* 1) Tokens: إصلاح المتغيرات المعرّفة على نفسها في :root (accent/danger/art-shape)
+      + خطوط عربية للثيم الكلاسيك ------------------------------------------- */
+:root {
+  --accent: #9a5b27;
+  --danger: #b3402f;
+  --art-shape: #bccbb6;
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --dur: .28s;
+  --font-display: var(--font-messiri), Georgia, serif;
+  --font-body: var(--font-tajawal), Arial, sans-serif;
+}
+
+/* 2) العربية: أي letter-spacing (موجب أو سالب) بيفصل الحروف المتصلة ------------ */
+html[lang='ar'] * { letter-spacing: 0; }
+html[lang='ar'] :is(.kicker, .announcement, .brand) { letter-spacing: 0; }
+a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+/* 3) Focus واضح للكيبورد -------------------------------------------------- */
+a:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visible,
+input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+.auth-card input, .address-form input, .profile-form input,
+.checkout-section select, .catalog-filters select, .search-form input {
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.auth-card input:focus, .address-form input:focus, .profile-form input:focus,
+.checkout-section select:focus, .catalog-filters select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent);
+}
+
+/* 4) Keyframes -------------------------------------------------------------- */
+@keyframes rise-in { from { opacity: 0; translate: 0 18px; } }
+@keyframes pop-in { from { opacity: 0; scale: .94; } }
+@keyframes float-y { 50% { translate: 0 -10px; } }
+@keyframes sway { 50% { rotate: 7deg; } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* 5) أنيميشن الدخول (تحميل الصفحة) ------------------------------------------- */
+.hero-copy > * { animation: rise-in .7s var(--ease-out) backwards; }
+.hero-copy > :nth-child(2) { animation-delay: .08s; }
+.hero-copy > :nth-child(3) { animation-delay: .16s; }
+.hero-copy > :nth-child(4) { animation-delay: .24s; }
+.hero-copy > :nth-child(n+5) { animation-delay: .32s; }
+.hero-art { animation: pop-in .9s var(--ease-out) .1s backwards; }
+.sun { animation: float-y 8s ease-in-out infinite; }
+.arch-card { animation: float-y 6.5s ease-in-out -2s infinite; }
+.leaf-one { animation: sway 5s ease-in-out infinite; transform-origin: bottom center; }
+.leaf-two { animation: sway 6s ease-in-out -1.5s infinite; transform-origin: bottom center; }
+
+/* انتقال هادي عند فتح أي صفحة */
+.product-page-shell, .cart-page-shell, .account-page-shell, .checkout-page-shell,
+.auth-page-shell, .checkout-result-shell, .content-page-shell, .content-detail-shell {
+  animation: rise-in .5s var(--ease-out) backwards;
+}
+
+/* 6) ظهور العناصر مع السكرول (بدون JS، ولو المتصفح مش داعم بتظهر عادي) --------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .product-card, .content-card, .account-card, .wishlist-card, .notification-card,
+    .cart-item, .address-list article, .category-strip {
+      animation: rise-in linear backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+/* 7) Skeleton بشكل shimmer ----------------------------------------------------- */
+.skeleton-card { animation: none; }
+.skeleton-card div, .skeleton-card span {
+  background: linear-gradient(100deg, var(--skeleton) 30%, color-mix(in srgb, var(--skeleton) 50%, var(--paper)) 50%, var(--skeleton) 70%) 0 0 / 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* 8) الأزرار والروابط التفاعلية ------------------------------------------------- */
+.primary-button, .secondary-button, .cart-button, .account-link, .variant-option,
+.quantity-stepper button, .pagination button, .account-shortcuts a, .content-pagination a,
+.cancel-order-button, .nav-links a {
+  transition: transform var(--dur) var(--ease-out), background-color .2s ease, color .2s ease,
+    border-color .2s ease, box-shadow .25s ease, filter .2s ease, opacity .2s ease;
+}
+.account-link { align-items: center; display: inline-flex; min-height: 40px; padding-inline: 8px; }
+.product-card, .content-card { transition: transform .35s var(--ease-out), box-shadow .35s var(--ease-out); }
+.product-shape { transition: transform .5s var(--ease-out); }
+.product-image-frame img, .content-card-image img { transition: transform .6s var(--ease-out); }
+
+@media (hover: hover) {
+  .primary-button:not(:disabled):hover {
+    box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--green) 75%, transparent);
+    filter: brightness(1.07);
+    transform: translateY(-2px);
+  }
+  .secondary-button:hover { background: color-mix(in srgb, var(--cream) 85%, var(--green)); transform: translateY(-2px); }
+  .cart-button:hover { background: var(--cream); border-color: var(--green); }
+  .account-link:hover { color: var(--green); }
+  .variant-option:not(.selected):hover { border-color: var(--green); }
+  .quantity-stepper button:hover { background: var(--cream); }
+  .pagination button:not(:disabled):hover, .account-shortcuts a:hover, .content-pagination a:hover { background: var(--cream); border-color: var(--green); }
+  .product-card:hover { transform: translateY(-6px); }
+  .product-card:hover .product-image { box-shadow: 0 24px 40px -24px rgb(0 0 0 / .35); }
+  .product-card:hover .product-shape { transform: rotate(-3deg) scale(1.06); }
+  .product-card:hover .product-image-frame img, .content-card:hover .content-card-image img { transform: scale(1.06); }
+  .content-card:hover { box-shadow: 0 22px 40px -26px rgb(0 0 0 / .35); transform: translateY(-4px); }
+}
+.primary-button:not(:disabled):active, .secondary-button:active { filter: none; transform: translateY(0) scale(.98); }
+.product-card:active { transform: scale(.985); }
+
+/* خط متحرك تحت روابط القايمة (ديسكتوب) */
+@media (min-width: 801px) {
+  .nav-links a { padding-block: 6px; position: relative; }
+  .nav-links a::after {
+    background: var(--green); bottom: 0; content: ''; height: 2px; inset-inline: 0; position: absolute;
+    transform: scaleX(0); transition: transform .3s var(--ease-out);
+  }
+  .nav-links a:hover::after { transform: scaleX(1); }
+}
+
+/* 9) قايمة الموبايل ------------------------------------------------------------- */
+.nav-toggle, .nav-mobile-only { display: none; }
+@media (max-width: 800px) {
+  .site-nav { gap: 12px; padding-block: 18px; position: relative; }
+  .nav-toggle {
+    align-items: stretch; background: transparent; border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
+    display: inline-flex; flex-direction: column; gap: 5px; height: 42px; justify-content: center; padding: 0 11px; width: 42px;
+  }
+  .nav-toggle span { background: var(--ink); border-radius: 2px; display: block; height: 2px; transition: transform .3s var(--ease-out), opacity .2s ease; }
+  .nav-toggle[aria-expanded='true'] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-toggle[aria-expanded='true'] span:nth-child(2) { opacity: 0; }
+  .nav-toggle[aria-expanded='true'] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .nav-links {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 40px -18px rgb(0 0 0 / .3);
+    display: flex; flex-direction: column; font-size: 15px; gap: 0; inset-inline: 5%; opacity: 0; padding: 8px;
+    pointer-events: none; position: absolute; top: calc(100% - 4px); transform: translateY(-8px); visibility: hidden; z-index: 40;
+    transition: opacity .25s ease, transform .3s var(--ease-out), visibility 0s linear .3s;
+  }
+  .nav-links.is-open { opacity: 1; pointer-events: auto; transform: none; transition-delay: 0s; visibility: visible; }
+  .nav-links a { border-radius: 10px; padding: 14px 16px; }
+  .nav-links a:hover { background: var(--cream); color: var(--green); }
+  .section-heading .search-form { max-width: none; width: 100%; }
+  /* 16px يمنع زوم iOS عند الضغط على أي حقل */
+  input, select, textarea { font-size: 16px; }
+}
+@media (max-width: 540px) {
+  .nav-mobile-only { display: block; }
+  .account-wishlist-link, .account-display-name { display: none; }
+}
+
+/* 10) احترام تقليل الحركة ------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important; transition-duration: .01ms !important;
+  }
+}
