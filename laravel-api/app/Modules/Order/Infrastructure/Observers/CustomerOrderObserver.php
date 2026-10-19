@@ -4,11 +4,17 @@ namespace App\Modules\Order\Infrastructure\Observers;
 
 use App\Modules\Order\Infrastructure\Models\CustomerOrder;
 use App\Modules\Order\Infrastructure\Models\OrderActivity;
+use App\Modules\Settings\Infrastructure\Models\Setting;
 
 final class CustomerOrderObserver
 {
     public function created(CustomerOrder $order): void
     {
+        if ($order->order_number === null) {
+            $prefix = trim((string) (Setting::query()->where('key', 'store.order_number_prefix')->first()?->getTypedValue() ?? 'ECO'));
+            $prefix = preg_replace('/[^A-Za-z0-9_-]+/', '-', $prefix) ?: 'ECO';
+            $order->updateQuietly(['order_number' => strtoupper($prefix).'-'.now()->format('Y').'-'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT)]);
+        }
         $this->record($order, 'order_created', null, (string) $order->status);
     }
 

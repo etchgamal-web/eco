@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductVariant extends Model
 {
@@ -31,6 +32,11 @@ class ProductVariant extends Model
             'product_variant_id',
             'attribute_value_id'
         )->withPivot('attribute_id');
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(ProductMedia::class, 'variant_id')->orderBy('sort_order')->orderBy('id');
     }
 
     protected function casts(): array

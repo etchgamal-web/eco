@@ -31,7 +31,12 @@ final class Checkout
         // staff decision after order confirmation.
         $order = $this->checkoutOrders->execute($data, $user?->id);
 
-        if ($data->paymentMethod !== null) {
+        // Cash on delivery does not need an authenticated payment session.
+        // Guest online payments remain disabled until a guest-capable provider is configured.
+        if ($data->paymentMethod !== null && ! ($user === null && $data->paymentMethod === 'cash_on_delivery')) {
+            if ($user === null) {
+                throw new AuthenticationException('Online payment requires customer login.');
+            }
             $this->payments->initiate(
                 orderId: (int) $order->id,
                 method: $data->paymentMethod,

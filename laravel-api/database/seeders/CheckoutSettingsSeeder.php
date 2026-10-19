@@ -9,6 +9,17 @@ final class CheckoutSettingsSeeder extends Seeder
 {
     public function run(): void
     {
+        $prefix = Setting::query()->firstOrNew(['key' => 'store.order_number_prefix']);
+        if (! $prefix->exists) {
+            $prefix->group = 'localization';
+            $prefix->type = 'string';
+            $prefix->description = 'Prefix used for customer-facing order numbers.';
+            $prefix->is_secret = false;
+            $prefix->is_encrypted = false;
+            $prefix->setTypedValue('ECO');
+            $prefix->save();
+        }
+
         $setting = Setting::query()->firstOrNew(['key' => 'checkout.require_authentication']);
         if ($setting->exists) {
             return;

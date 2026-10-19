@@ -11,6 +11,8 @@ export type ProductVariant = {
   price?: number | null
   stock?: number | null
   options?: Record<string, string>
+  attribute_values?: Array<{ id: number; value: string; attribute?: { id: number; name: string } | null }>
+  media?: ProductMedia[]
 }
 
 export type Product = {

@@ -4,6 +4,7 @@ namespace App\Modules\Catalog\Infrastructure\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Http\Request;
 
 class ProductMedia extends Model
 {
@@ -14,6 +15,20 @@ class ProductMedia extends Model
     protected function casts(): array
     {
         return ['size' => 'integer', 'sort_order' => 'integer', 'is_primary' => 'boolean'];
+    }
+
+    public function getUrlAttribute(?string $value): ?string
+    {
+        if (! $this->path) {
+            return $value;
+        }
+
+        $request = function_exists('request') ? request() : null;
+        if ($request instanceof Request && $request->getHost() !== '') {
+            return rtrim($request->getSchemeAndHttpHost(), '/').'/storage/'.ltrim($this->path, '/');
+        }
+
+        return $value;
     }
 
     public function product(): BelongsTo

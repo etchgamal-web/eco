@@ -34,4 +34,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class);
     }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(ProductMedia::class)->whereNull('variant_id')->orderBy('sort_order')->orderBy('id');
+    }
 }

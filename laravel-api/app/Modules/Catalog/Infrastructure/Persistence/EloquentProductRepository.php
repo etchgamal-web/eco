@@ -21,17 +21,17 @@ class EloquentProductRepository implements ProductRepositoryInterface
 {
     public function all(): iterable
     {
-        return Product::query()->with(['brand', 'category'])->orderByDesc('id')->get();
+        return Product::query()->with(['brand', 'category', 'media', 'variants.attributeValues.attribute', 'variants.media'])->orderByDesc('id')->get();
     }
 
     public function allPublic(): iterable
     {
-        return Product::query()->where('status', 'active')->with(['brand', 'category'])->orderByDesc('id')->get();
+        return Product::query()->where('status', 'active')->with(['brand', 'category', 'media', 'variants.attributeValues.attribute', 'variants.media'])->orderByDesc('id')->get();
     }
 
     public function search(ProductListCriteria $criteria): object
     {
-        $query = Product::query()->with(['brand', 'category'])
+        $query = Product::query()->with(['brand', 'category', 'media', 'variants.attributeValues.attribute', 'variants.media'])
             ->when($criteria->search, fn ($q, $search) => $q->where(function ($inner) use ($search): void {
                 $inner->where('name', 'like', '%'.$search.'%')->orWhereHas('variants', fn ($variants) => $variants->where('sku', 'like', '%'.$search.'%'));
             }))
@@ -54,7 +54,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function searchPublic(ProductListCriteria $criteria): object
     {
-        $query = Product::query()->where('status', 'active')->with(['brand', 'category'])
+        $query = Product::query()->where('status', 'active')->with(['brand', 'category', 'media', 'variants.attributeValues.attribute', 'variants.media'])
             ->when($criteria->search, fn ($q, $search) => $q->where(function ($inner) use ($search): void {
                 $inner->where('name', 'like', '%'.$search.'%')->orWhereHas('variants', fn ($variants) => $variants->where('sku', 'like', '%'.$search.'%'));
             }))
@@ -75,7 +75,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function findOrFail(int $id): object
     {
-        $model = Product::query()->with(['brand', 'category', 'variants.attributeValues.attribute'])->find($id);
+        $model = Product::query()->with(['brand', 'category', 'media', 'variants.attributeValues.attribute', 'variants.media'])->find($id);
         if ($model === null) {
             throw new ProductNotFoundException($id);
         }
@@ -85,7 +85,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function findBySlugOrFail(string $slug): object
     {
-        $model = Product::query()->with(['brand', 'category', 'variants.attributeValues.attribute'])->where('slug', $slug)->first();
+        $model = Product::query()->with(['brand', 'category', 'media', 'variants.attributeValues.attribute', 'variants.media'])->where('slug', $slug)->first();
         if ($model === null) {
             throw new ProductNotFoundException($slug);
         }
@@ -95,7 +95,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function findPublicOrFail(string|int $id): object
     {
-        $query = Product::query()->where('status', 'active')->with(['brand', 'category', 'variants.attributeValues.attribute']);
+        $query = Product::query()->where('status', 'active')->with(['brand', 'category', 'media', 'variants.attributeValues.attribute', 'variants.media']);
         $model = ctype_digit((string) $id) ? $query->find((int) $id) : $query->where('slug', (string) $id)->first();
         if ($model === null) {
             throw new ProductNotFoundException($id);

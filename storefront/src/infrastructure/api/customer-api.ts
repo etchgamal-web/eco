@@ -88,7 +88,8 @@ export async function getShippingMethods(): Promise<ShippingMethod[]> {
   return response.data
 }
 
-export type CheckoutInput = { address_id: number; shipping_method_id?: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string; preview_token: string }
+export type GuestCheckoutDetails = { name: string; email?: string; phone: string; address_line1: string; address_line2?: string; city: string; state?: string; postal_code?: string; country?: string }
+export type CheckoutInput = { address_id?: number; shipping_method_id?: number; currency: string; payment_method: 'cash_on_delivery' | 'paymob' | 'kashier'; idempotency_key: string; payment_idempotency_key: string; coupon_code?: string; preview_token?: string; items?: Array<{ product_id: number; variant_id?: number; quantity: number }>; guest?: GuestCheckoutDetails }
 
 export type CheckoutPreview = {
   items?: Array<{ product_id?: number; variant_id?: number; name?: string; quantity?: number; unit_price?: number; total_amount?: number }>
@@ -111,6 +112,11 @@ export class CheckoutPreviewStaleError extends Error {
 }
 
 export type CheckoutPreviewInput = Pick<CheckoutInput, 'address_id' | 'shipping_method_id' | 'currency' | 'coupon_code'>
+
+export async function getCheckoutSettings(): Promise<{ require_authentication: boolean }> {
+  const response = await requestJson<DataResponse<{ require_authentication: boolean }>>('/public/checkout-settings', { cache: 'no-store' })
+  return response.data
+}
 
 export async function previewCheckout(input: CheckoutPreviewInput): Promise<CheckoutPreview> {
   const response = await requestJson<DataResponse<CheckoutPreview>>('/customer/checkout/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
