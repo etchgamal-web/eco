@@ -9,6 +9,7 @@ import ProductGrid from '@/features/catalog/components/ProductGrid'
 import AnnouncementBar from '@/shared/layout/AnnouncementBar'
 import SiteHeader from '@/shared/layout/SiteHeader'
 import SiteFooter from '@/shared/layout/SiteFooter'
+import { Icon } from '@/shared/components/Icon'
 import HomeHero from './HomeHero'
 import BenefitsStrip from './BenefitsStrip'
 
@@ -70,7 +71,7 @@ export default function StorefrontHome() {
           <div><p className="kicker">المجموعة الحالية</p><h2>اختياراتنا لك</h2></div>
           <form className="search-form" onSubmit={submitSearch}>
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث عن منتج..." aria-label="ابحث عن منتج" />
-            <button type="submit">بحث</button>
+            <button type="submit" aria-label="بحث"><Icon name="search" size={20} /></button>
           </form>
         </div>
         <ProductGrid products={products} loading={loading} error={error} searchTerm={search} onRetry={() => void loadProducts(search)} />

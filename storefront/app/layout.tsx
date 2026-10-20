@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Cairo, El_Messiri, Geist, Geist_Mono, Tajawal } from 'next/font/google'
 import { env } from '@/core/config/env'
 import { siteConfig } from '@/core/config/site'
@@ -23,6 +23,13 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 })
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#315948',
+}
 
 export const metadata: Metadata = {
   title: { default: siteConfig.title, template: `%s | ${siteConfig.name}` },

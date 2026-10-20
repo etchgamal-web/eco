@@ -1,5 +1,6 @@
 import type { Product } from '@/domain/catalog/product'
 import ProductCard from '@/shared/components/ProductCard'
+import { Icon } from '@/shared/components/Icon'
 
 type ProductGridProps = {
   products: Product[]
@@ -29,9 +30,10 @@ export default function ProductGrid({ products, loading = false, error, onRetry,
   if (error) {
     return (
       <div className="state-card" role="alert">
+        <Icon name="alert" size={36} className="state-icon is-danger" />
         <strong>{error}</strong>
         <p>تأكد من تشغيل Laravel API وضبط NEXT_PUBLIC_API_URL.</p>
-        {onRetry ? <button className="secondary-button" type="button" onClick={onRetry}>إعادة المحاولة</button> : null}
+        {onRetry ? <button className="secondary-button" type="button" onClick={onRetry}><Icon name="refresh" size={18} />إعادة المحاولة</button> : null}
       </div>
     )
   }
@@ -39,6 +41,7 @@ export default function ProductGrid({ products, loading = false, error, onRetry,
   if (products.length === 0) {
     return (
       <div className="state-card">
+        <Icon name="inbox" size={36} className="state-icon" />
         <strong>لا توجد منتجات مطابقة</strong>
         <p>{searchTerm ? 'جرّب البحث بكلمة أخرى.' : 'ستظهر المنتجات هنا عند توفرها.'}</p>
       </div>

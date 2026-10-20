@@ -3,6 +3,7 @@ import type { Product } from '@/domain/catalog/product'
 import { formatPrice } from '@/core/i18n/formatters'
 import ProductImage from './ProductImage'
 import WishlistButton from './WishlistButton'
+import { Icon } from './Icon'
 
 type ProductCardProps = {
   product: Product
@@ -19,6 +20,7 @@ export default function ProductCard({ product, href }: ProductCardProps) {
         <div className="product-image">
           <span>{product.category?.name || 'إيكو'}</span>
           <ProductImage src={image?.url} alt={image?.alt || product.name} sizes="(max-width: 800px) 50vw, 25vw" />
+          <i className="product-card-arrow" aria-hidden="true"><Icon name="arrow-left" size={18} /></i>
         </div>
         <div className="product-info">
           <p>{product.brand?.name || 'اختيار إيكو'}</p>

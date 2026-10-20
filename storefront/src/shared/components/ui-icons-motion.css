@@ -1,0 +1,117 @@
+/* ==========================================================================
+   ui-icons-motion.css - أيقونات + حركات إضافية للمتجر
+   بيتحمّل تلقائيًا من components/Icon.tsx، فمش محتاج أي استيراد تاني.
+   ========================================================================== */
+:root { --eco-ease: cubic-bezier(.22, 1, .36, 1); }
+.eco-icon { display: inline-block; flex: none; vertical-align: -.22em; }
+
+@keyframes eco-rise { from { opacity: 0; translate: 0 18px; } }
+@keyframes eco-float { 50% { translate: 0 -6px; } }
+@keyframes eco-sway { 50% { rotate: 14deg; } }
+@keyframes eco-nudge { 0%, 55%, 100% { translate: 0 0; } 28% { translate: -5px 0; } }
+@keyframes eco-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@keyframes eco-pop { 0% { scale: .4; } 60% { scale: 1.25; } 100% { scale: 1; } }
+@keyframes eco-heart { 0% { scale: .6; } 50% { scale: 1.3; } 100% { scale: 1; } }
+@keyframes eco-added { 40% { scale: 1.05; } }
+@keyframes eco-drive { 0%, 100% { translate: 0 0; } 50% { translate: -3px 0; } }
+@keyframes eco-wiggle { 25% { rotate: -12deg; } 60% { rotate: 9deg; } 100% { rotate: 0deg; } }
+@keyframes eco-sheen { to { background-position: -200% 0; } }
+@keyframes eco-progress { to { scale: 1 1; } }
+
+/* علامة الصح بترسم نفسها */
+.eco-icon-check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: eco-draw .45s var(--eco-ease) .05s forwards; }
+
+/* --- Hero --- */
+.kicker .eco-icon { animation: eco-sway 4.5s ease-in-out infinite; margin-inline-end: 6px; transform-origin: bottom center; vertical-align: -.3em; }
+.primary-button .eco-icon-arrow-left, .secondary-button .eco-icon-arrow-left { transition: transform .3s var(--eco-ease); }
+.primary-button:hover .eco-icon-arrow-left, .secondary-button:hover .eco-icon-arrow-left { transform: translateX(-5px); }
+.hero .primary-button .eco-icon-arrow-left { animation: eco-nudge 2.2s ease-in-out 1.4s infinite; }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero h1 em {
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: eco-sheen 7s linear infinite;
+    background-image: linear-gradient(100deg, var(--green) 25%, var(--accent) 50%, var(--green) 75%); background-size: 200% 100%;
+  }
+}
+
+/* لمعة بتعدّي على الأزرار الأساسية عند الـ hover */
+.primary-button { isolation: isolate; overflow: hidden; position: relative; }
+.primary-button::after {
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .28) 50%, transparent 70%); content: ''; inset: 0;
+  pointer-events: none; position: absolute; translate: -130% 0; transition: translate .8s var(--eco-ease); z-index: -1;
+}
+@media (hover: hover) { .primary-button:not(:disabled):hover::after { translate: 130% 0; } }
+
+/* --- شريط المزايا --- */
+html .category-strip span::before { content: none; }
+.category-strip span { align-items: center; display: inline-flex; gap: 10px; transition: color .2s ease; }
+.category-strip .eco-icon { color: var(--accent); transition: transform .45s var(--eco-ease); }
+@media (hover: hover) {
+  .category-strip span:hover { color: var(--ink); }
+  .category-strip span:hover .eco-icon { transform: translateY(-3px) rotate(-8deg) scale(1.18); }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .category-strip span { animation: eco-rise linear backwards; animation-range: entry 0% entry 70%; animation-timeline: view(); }
+    .category-strip span:nth-child(2) { animation-range: entry 8% entry 78%; }
+    .category-strip span:nth-child(3) { animation-range: entry 16% entry 86%; }
+    .category-strip span:nth-child(4) { animation-range: entry 24% entry 94%; }
+  }
+}
+
+/* --- شريط الإعلان --- */
+.announce-icon { animation: eco-drive 3s ease-in-out infinite; margin-inline-end: 8px; vertical-align: -.3em; }
+
+/* --- كارت المنتج: سهم يظهر عند الـ hover (ودايمًا على اللمس) --- */
+.product-card-arrow {
+  align-items: center; background: var(--green); border-radius: 50%; bottom: 14px; box-shadow: 0 10px 20px -8px rgb(0 0 0 / .4);
+  color: var(--on-primary); display: grid; font-style: normal; height: 40px; justify-items: center; left: 14px; opacity: 0;
+  pointer-events: none; position: absolute; translate: 0 10px; width: 40px; z-index: 2;
+  transition: opacity .3s ease, translate .45s var(--eco-ease), scale .3s ease;
+}
+.product-card:hover .product-card-arrow { opacity: 1; translate: 0 0; }
+.product-card-arrow:hover { scale: 1.08; }
+@media (hover: none) { .product-card-arrow { height: 34px; opacity: 1; translate: 0 0; width: 34px; } }
+
+/* --- المفضلة --- */
+.wishlist-button svg { transition: scale .2s ease; }
+.wishlist-button:hover svg { scale: 1.12; }
+.wishlist-button.is-active svg { animation: eco-heart .5s var(--eco-ease); }
+
+/* --- حالات فارغة / أخطاء --- */
+.state-icon { animation: eco-float 3.2s ease-in-out infinite; color: var(--accent); display: block; margin: 0 auto 14px; }
+.state-icon.is-danger { color: var(--danger); }
+
+/* --- أيقونات داخل الأزرار والروابط --- */
+.quantity-stepper button { display: grid; place-items: center; }
+.quantity-stepper button:active .eco-icon { scale: .8; }
+html .add-to-cart-button { gap: 12px; justify-content: center; }
+.add-to-cart-button.is-added { animation: eco-added .5s var(--eco-ease); }
+.add-to-cart-button:hover .eco-icon-cart, .checkout-button:hover .eco-icon-lock { animation: eco-wiggle .6s ease; }
+html .checkout-button { gap: 10px; }
+.remove-button { align-items: center; display: inline-flex; gap: 6px; text-decoration: none; transition: color .2s ease; }
+.remove-button:hover { color: var(--danger); }
+.remove-button:hover .eco-icon { animation: eco-wiggle .5s ease; }
+.stock-note .eco-icon { color: var(--accent); margin-inline-end: 6px; vertical-align: -.3em; }
+html .account-link { gap: 6px; }
+html .cart-button { align-items: center; display: inline-flex; gap: 8px; }
+.search-form button { align-items: center; display: inline-flex; transition: transform .2s ease; }
+.search-form button:hover { transform: scale(1.15); }
+.search-form button:active { transform: scale(.9); }
+
+/* عدّاد السلة بيعمل pop لما يتغيّر */
+.cart-button span, .app-tab-badge, .app-drawer-badge { animation: eco-pop .45s var(--eco-ease); }
+
+/* --- شريط تقدّم القراءة أعلى الصفحة --- */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    body::before {
+      animation: eco-progress linear; animation-timeline: scroll(root); background: var(--accent); content: ''; height: 3px;
+      inset-inline: 0; pointer-events: none; position: fixed; scale: 0 1; top: 0; transform-origin: right; z-index: 200;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

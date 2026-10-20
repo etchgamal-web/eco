@@ -1,0 +1,151 @@
+/* ==========================================================================
+   dark-gold.css - تصميم "الأسود الذهبي" للمتجر
+   كل القواعد هنا مقيّدة بـ html[data-theme='dark-gold']، فمش بتأثر على
+   الثيمات التانية (classic / bold). بيتحمّل تلقائيًا من components/Icon.tsx.
+   ========================================================================== */
+html[data-theme='dark-gold'] {
+  --gold-1: #f3d98b; --gold-2: #c9a24b; --gold-3: #8a6a22;
+  --gold-foil: linear-gradient(135deg, #f6e2a0 0%, #c9a24b 40%, #9a7627 62%, #e8cf85 100%);
+  --gold-line: rgb(201 162 75 / .3); --gold-glow: rgb(201 162 75 / .35);
+  scrollbar-color: #4a3d1c #0e0e10;
+}
+html[data-theme='dark-gold'] ::selection { background: rgb(201 162 75 / .35); color: #fff; }
+
+@keyframes dg-spin { to { rotate: 360deg; } }
+@keyframes dg-float { 50% { translate: 0 -10px; } }
+@keyframes dg-breathe {
+  50% { box-shadow: 0 0 130px rgb(201 162 75 / .5), inset -20px -20px 50px rgb(0 0 0 / .25); }
+}
+
+/* --- الخلفية العامة + شريط الإعلان --- */
+html[data-theme='dark-gold'] body {
+  background: radial-gradient(900px 420px at 90% -5%, rgb(201 162 75 / .09), transparent 65%), var(--paper);
+}
+html[data-theme='dark-gold'] body .announcement {
+  background: linear-gradient(90deg, #0b0b0d, #1b160a 50%, #0b0b0d); border-bottom: 1px solid var(--gold-line); color: var(--gold-1);
+}
+html[data-theme='dark-gold'] body .announce-icon { color: var(--gold-2); }
+
+/* --- الشعار والهيدر --- */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  html[data-theme='dark-gold'] body .brand {
+    -webkit-background-clip: text; background-clip: text; background-image: var(--gold-foil); -webkit-text-fill-color: transparent;
+  }
+  html[data-theme='dark-gold'] body .brand span { -webkit-text-fill-color: var(--gold-2); }
+}
+html[data-theme='dark-gold'] body .cart-button { border-color: rgb(201 162 75 / .45); color: var(--gold-1); }
+@media (hover: hover) {
+  html[data-theme='dark-gold'] body .cart-button:hover { background: var(--gold-2); border-color: var(--gold-2); color: #0e0e10; }
+  html[data-theme='dark-gold'] body .cart-button:hover span { background: #0e0e10; color: var(--gold-2); }
+}
+
+/* --- Hero --- */
+html[data-theme='dark-gold'] body .hero {
+  background: radial-gradient(60% 85% at 78% 45%, rgb(201 162 75 / .17), transparent 70%), linear-gradient(180deg, #141417, #0e0e10);
+  box-shadow: inset 0 -1px 0 var(--gold-line);
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  html[data-theme='dark-gold'] body .hero h1 em {
+    background-image: linear-gradient(100deg, #8a6a22 0%, #f3d98b 25%, #c9a24b 50%, #f3d98b 75%, #8a6a22 100%); background-size: 200% 100%;
+  }
+}
+html[data-theme='dark-gold'] body .sun {
+  animation: dg-float 8s ease-in-out infinite, dg-breathe 5s ease-in-out infinite;
+  background: radial-gradient(circle at 35% 30%, #f6e2a0, #c9a24b 55%, #8a6a22);
+  box-shadow: 0 0 90px rgb(201 162 75 / .35), inset -20px -20px 50px rgb(0 0 0 / .25);
+}
+html[data-theme='dark-gold'] body .arch {
+  background: linear-gradient(180deg, #25252b, #141417); border: 1px solid rgb(201 162 75 / .45); border-bottom: 0;
+  box-shadow: 0 0 0 8px rgb(201 162 75 / .06);
+}
+html[data-theme='dark-gold'] body .arch-card {
+  background: #111114; border: 1px solid rgb(201 162 75 / .6); box-shadow: 14px 14px 0 rgb(201 162 75 / .18), 0 30px 60px -20px rgb(0 0 0 / .7);
+  color: var(--gold-1); text-shadow: 0 0 18px var(--gold-glow);
+}
+html[data-theme='dark-gold'] body .leaf { background: linear-gradient(135deg, #f3d98b, #a57f2c); }
+html[data-theme='dark-gold'] body .hero-art::before {
+  animation: dg-spin 60s linear infinite; border: 1px dashed rgb(201 162 75 / .28); border-radius: 50%; content: '';
+  height: 340px; inset-inline-end: 10%; pointer-events: none; position: absolute; top: -2%; width: 340px;
+}
+
+/* --- شريط المزايا --- */
+html[data-theme='dark-gold'] body .category-strip {
+  background: linear-gradient(90deg, transparent, rgb(201 162 75 / .06), transparent); border-color: rgb(201 162 75 / .25);
+}
+html[data-theme='dark-gold'] body .category-strip .eco-icon {
+  border: 1px solid rgb(201 162 75 / .4); border-radius: 50%; box-sizing: content-box; padding: 7px;
+  transition: background-color .3s ease, color .3s ease, transform .45s var(--eco-ease, ease);
+}
+@media (hover: hover) {
+  html[data-theme='dark-gold'] body .category-strip span:hover .eco-icon { background: var(--gold-2); color: #0e0e10; }
+}
+
+/* --- عناوين الأقسام بخط ذهبي --- */
+html[data-theme='dark-gold'] body .section-heading h2::after, html[data-theme='dark-gold'] body .section-heading h1::after {
+  background: var(--gold-foil); content: ''; display: block; height: 2px; margin-top: 14px; width: 56px;
+}
+
+/* --- الأزرار --- */
+html[data-theme='dark-gold'] body .primary-button {
+  background: linear-gradient(135deg, #e8cf85, #c9a24b 45%, #a8842f); box-shadow: 0 6px 24px -8px rgb(201 162 75 / .55), inset 0 1px 0 rgb(255 255 255 / .35);
+  color: #0e0e10; font-weight: 800;
+}
+html[data-theme='dark-gold'] body .primary-button:not(:disabled):hover {
+  box-shadow: 0 12px 34px -8px rgb(201 162 75 / .75), inset 0 1px 0 rgb(255 255 255 / .45); filter: brightness(1.08);
+}
+html[data-theme='dark-gold'] body .secondary-button { background: transparent; border: 1px solid rgb(201 162 75 / .55); color: var(--gold-1); }
+html[data-theme='dark-gold'] body .secondary-button:hover { background: rgb(201 162 75 / .12); }
+
+/* --- كروت المنتجات --- */
+html[data-theme='dark-gold'] body .product-image { background: linear-gradient(160deg, #1c1c21, #121215); transition: border-color .35s ease, box-shadow .35s var(--eco-ease, ease); }
+html[data-theme='dark-gold'] body .product-card:hover .product-image { border-color: rgb(201 162 75 / .6); box-shadow: 0 24px 50px -24px var(--gold-glow); }
+html[data-theme='dark-gold'] body .product-image span { color: var(--gold-2); font-weight: 700; }
+html[data-theme='dark-gold'] body .product-info strong, html[data-theme='dark-gold'] body .product-detail-price { color: var(--gold-1); }
+html[data-theme='dark-gold'] body .wishlist-button.is-active svg { filter: drop-shadow(0 0 6px rgb(201 162 75 / .7)); }
+
+/* --- باقي الكروت واللوحات --- */
+html[data-theme='dark-gold'] body :is(.content-card, .account-card, .cart-summary, .auth-card, .state-card, .address-form, .profile-form, .checkout-result-card, .content-related) {
+  background: linear-gradient(180deg, #1a1a1f, #141417); border: 1px solid rgb(201 162 75 / .22); border-radius: 8px;
+}
+html[data-theme='dark-gold'] body :is(.search-form) { border-bottom-color: rgb(201 162 75 / .6); }
+html[data-theme='dark-gold'] body :is(.search-form input, .auth-card input:not([type='checkbox']), .address-form input:not([type='checkbox']), .profile-form input, .catalog-filters select, .checkout-section select) {
+  background: #111114; color: var(--ink);
+}
+html[data-theme='dark-gold'] body input::placeholder { color: #8d887e; }
+html[data-theme='dark-gold'] body .skeleton-card div, html[data-theme='dark-gold'] body .skeleton-card span {
+  background: linear-gradient(100deg, #1a1a1e 30%, rgb(201 162 75 / .14) 50%, #1a1a1e 70%) 0 0 / 200% 100%;
+}
+
+/* --- الفوتر --- */
+html[data-theme='dark-gold'] body footer { background: linear-gradient(180deg, #141417, #0b0b0d); box-shadow: inset 0 1px 0 var(--gold-line); }
+
+/* --- شريط تقدّم السكرول --- */
+html[data-theme='dark-gold'] body::before { background: var(--gold-foil); box-shadow: 0 0 10px var(--gold-glow); }
+
+/* --- القائمة الجانبية وشريط التبويب (الموبايل) --- */
+@media (max-width: 800px) {
+  html[data-theme='dark-gold'] body .site-nav { background: rgb(14 14 16 / .88); border-bottom-color: var(--gold-line); }
+  html[data-theme='dark-gold'] body .app-menu-button, html[data-theme='dark-gold'] body .app-drawer-close { border-color: rgb(201 162 75 / .4); }
+  html[data-theme='dark-gold'] body .app-menu-button span { background: var(--gold-1); }
+  html[data-theme='dark-gold'] body .app-drawer-backdrop { background: rgb(0 0 0 / .65); }
+  html[data-theme='dark-gold'] body .app-drawer {
+    background: linear-gradient(180deg, #17171b, #0e0e10); box-shadow: -24px 0 60px -20px rgb(0 0 0 / .85), -1px 0 0 var(--gold-line);
+  }
+  html[data-theme='dark-gold'] body .app-drawer-user {
+    background: linear-gradient(135deg, rgb(201 162 75 / .18), rgb(201 162 75 / .04)); border: 1px solid rgb(201 162 75 / .3);
+  }
+  html[data-theme='dark-gold'] body .app-drawer-link[aria-current='page'] { background: rgb(201 162 75 / .12); box-shadow: inset -3px 0 0 var(--gold-2); color: var(--gold-1); }
+  html[data-theme='dark-gold'] body .app-drawer-list + .app-drawer-list { border-top-color: var(--gold-line); }
+  html[data-theme='dark-gold'] body .app-drawer-logout { border-color: rgb(239 143 128 / .4); }
+  html[data-theme='dark-gold'] body .app-tabbar { background: rgb(14 14 16 / .92); border-top: 1px solid var(--gold-line); }
+  html[data-theme='dark-gold'] body .app-tab[aria-current='page'] { background: rgb(201 162 75 / .1); color: var(--gold-1); }
+  html[data-theme='dark-gold'] body .app-tab[aria-current='page']::before {
+    background: var(--gold-foil); border-radius: 2px; box-shadow: 0 0 10px rgb(201 162 75 / .7); content: ''; height: 2px; inset-inline: 25%; position: absolute; top: -7px;
+  }
+  html[data-theme='dark-gold'] body .app-tab[aria-current='page'] svg { filter: drop-shadow(0 0 6px rgb(201 162 75 / .6)); }
+  html[data-theme='dark-gold'] body .hero-art::before { height: 260px; width: 260px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

@@ -5,6 +5,7 @@ import type { Product, ProductVariant } from '@/domain/catalog/product'
 import { formatPrice } from '@/core/i18n/formatters'
 import { useCart } from '@/features/cart/store'
 import ProductImage from '@/shared/components/ProductImage'
+import { Icon } from '@/shared/components/Icon'
 
 type ProductDetailsProps = { product: Product }
 type AttributeGroup = { id: number; name: string; values: Array<{ id: number; value: string }> }
@@ -77,10 +78,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         {attributeGroups.map((group) => <fieldset className="variant-picker" key={group.id}><legend>{group.name}</legend><div>{group.values.map((value) => <button className={selectedValues[String(group.id)] === value.value ? 'variant-option selected' : 'variant-option'} key={value.id} type="button" onClick={() => chooseAttribute(group.id, value.value)}>{value.value}</button>)}</div></fieldset>)}
 
         <div className="purchase-row">
-          <div className="quantity-stepper" aria-label="الكمية"><button type="button" onClick={() => changeQuantity(-1)} aria-label="تقليل الكمية">−</button><span aria-live="polite">{quantity}</span><button type="button" onClick={() => changeQuantity(1)} aria-label="زيادة الكمية">+</button></div>
-          <button className="primary-button add-to-cart-button" type="button" disabled={selectedVariant?.stock === 0} onClick={() => { addItem({ productId: product.id, name: product.name, slug: product.slug, price, currency: product.currency, quantity, variantId: selectedVariant?.id, variantName: selectedVariant?.sku || undefined }); setAdded(true) }}>{added ? 'تمت الإضافة' : 'أضف إلى السلة'}</button>
+          <div className="quantity-stepper" aria-label="الكمية"><button type="button" onClick={() => changeQuantity(-1)} aria-label="تقليل الكمية"><Icon name="minus" size={18} /></button><span aria-live="polite">{quantity}</span><button type="button" onClick={() => changeQuantity(1)} aria-label="زيادة الكمية"><Icon name="plus" size={18} /></button></div>
+          <button className={`primary-button add-to-cart-button${added ? ' is-added' : ''}`} type="button" disabled={selectedVariant?.stock === 0} onClick={() => { addItem({ productId: product.id, name: product.name, slug: product.slug, price, currency: product.currency, quantity, variantId: selectedVariant?.id, variantName: selectedVariant?.sku || undefined }); setAdded(true) }}><Icon name={added ? 'check' : 'cart'} size={20} key={added ? 'done' : 'cart'} />{added ? 'تمت الإضافة' : 'أضف إلى السلة'}</button>
         </div>
-        {selectedVariant?.stock === 0 ? <p className="stock-note">هذا الاختيار غير متاح حاليًا.</p> : <p className="stock-note">شحن مجاني للطلبات فوق 1,500 جنيه داخل مصر.</p>}
+        {selectedVariant?.stock === 0 ? <p className="stock-note">هذا الاختيار غير متاح حاليًا.</p> : <p className="stock-note"><Icon name="truck" size={16} />شحن مجاني للطلبات فوق 1,500 جنيه داخل مصر.</p>}
       </div>
     </article>
   )

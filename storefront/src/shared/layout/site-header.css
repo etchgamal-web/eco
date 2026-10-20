@@ -1,0 +1,108 @@
+/* ==========================================================================
+   site-header.css - على الهاتف: شريط علوي ثابت + قائمة جانبية (Drawer)
+   + شريط تبويب سفلي بشكل التطبيقات. الديسكتوب لا يتأثر.
+   بيتحمّل من SiteHeader.tsx نفسه، فمش بيعتمد على أي ملف تاني.
+   ========================================================================== */
+:root { --drawer-ease: cubic-bezier(.22, 1, .36, 1); }
+
+.app-menu-button, .app-header-spacer, .app-drawer, .app-drawer-backdrop, .app-tabbar { display: none; }
+
+@media (max-width: 800px) {
+  html { scroll-padding-top: 72px; }
+  body:has(.app-tabbar) { padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+
+  /* --- الشريط العلوي --- */
+  html .site-nav {
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    border-bottom: 1px solid var(--line); max-width: none; padding: 10px 14px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px)); position: sticky; top: 0; z-index: 30;
+  }
+  html .site-nav .nav-links, html .site-nav .header-actions { display: none; }
+  html .site-nav .brand { font-size: 26px; }
+  .app-menu-button {
+    align-items: stretch; background: transparent; border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
+    display: inline-flex; flex-direction: column; gap: 5px; height: 42px; justify-content: center; padding: 0 11px; width: 42px;
+  }
+  .app-menu-button span { background: var(--ink); border-radius: 2px; display: block; height: 2px; }
+  .app-menu-button span:nth-child(2) { width: 70%; }
+  .app-menu-button:active { background: var(--cream); }
+  .app-header-spacer { display: block; height: 42px; width: 42px; }
+
+  /* --- الخلفية المعتمة + القائمة الجانبية --- */
+  .app-drawer-backdrop {
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); background: rgb(15 20 17 / .5); display: block;
+    inset: 0; opacity: 0; position: fixed; visibility: hidden; z-index: 90;
+    transition: opacity .3s ease, visibility 0s linear .3s;
+  }
+  .app-drawer-backdrop.is-open { opacity: 1; transition-delay: 0s; visibility: visible; }
+
+  .app-drawer {
+    background: var(--paper); border-radius: 24px 0 0 24px; box-shadow: -20px 0 50px -20px rgb(0 0 0 / .45); color: var(--ink);
+    display: flex; flex-direction: column; inset-block: 0; inset-inline-start: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom, 0px); padding-top: env(safe-area-inset-top, 0px); position: fixed;
+    transform: translateX(100%); visibility: hidden; width: min(86vw, 340px); z-index: 100;
+    transition: transform .38s var(--drawer-ease), visibility 0s linear .38s;
+  }
+  .app-drawer.is-open { transform: none; transition-delay: 0s; visibility: visible; }
+
+  .app-drawer-head { align-items: center; display: flex; justify-content: space-between; padding: 18px 20px 8px; }
+  .app-drawer-head .brand { font-size: 28px; }
+  .app-drawer-close {
+    align-items: center; background: transparent; border: 1px solid var(--line); border-radius: 50%; color: var(--ink);
+    cursor: pointer; display: inline-flex; height: 40px; justify-content: center; width: 40px;
+  }
+  .app-drawer-close:active { background: var(--cream); }
+
+  .app-drawer-user {
+    align-items: center; background: var(--cream); border-radius: 18px; display: flex; gap: 12px; margin: 10px 16px 6px; padding: 16px;
+  }
+  .app-drawer-user.is-guest { align-items: stretch; flex-direction: column; gap: 6px; }
+  .app-drawer-user .account-avatar { flex: 0 0 44px; font-size: 17px; height: 44px; width: 44px; }
+  .app-drawer-user strong { display: block; font-size: 15px; }
+  .app-drawer-user small { color: var(--muted); display: block; font-size: 12px; margin-top: 3px; }
+  .app-drawer-user .primary-button { justify-content: center; margin-top: 10px; }
+  .app-drawer-user-copy { min-width: 0; }
+  .app-drawer-user-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .app-drawer-list { display: grid; gap: 2px; list-style: none; margin: 0; padding: 8px 12px; }
+  .app-drawer-list + .app-drawer-list { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; }
+  .app-drawer-label { color: var(--muted); font-size: 11px; font-weight: 700; padding: 6px 12px 4px; }
+  .app-drawer-link {
+    align-items: center; border-radius: 14px; color: var(--ink); display: flex; font-size: 15px; font-weight: 600; gap: 14px;
+    padding: 13px 12px; transition: background-color .2s ease, transform .2s ease;
+  }
+  .app-drawer-link svg { color: var(--green); flex: 0 0 auto; }
+  .app-drawer-link:active { background: var(--cream); transform: scale(.98); }
+  .app-drawer-link[aria-current='page'] { background: color-mix(in srgb, var(--green) 11%, transparent); color: var(--green); }
+  .app-drawer-badge {
+    background: var(--green); border-radius: 999px; color: var(--on-primary); font-size: 11px; font-weight: 700;
+    margin-inline-start: auto; min-width: 22px; padding: 3px 7px; text-align: center;
+  }
+  .app-drawer-footer { margin-top: auto; padding: 14px 16px 18px; }
+  .app-drawer-logout {
+    align-items: center; background: transparent; border: 1px solid var(--line); border-radius: 14px; color: var(--danger);
+    cursor: pointer; display: flex; font-size: 14px; font-weight: 700; gap: 10px; justify-content: center; padding: 13px; width: 100%;
+  }
+  .app-drawer-logout:active { background: var(--cream); }
+
+  /* --- شريط التبويب السفلي --- */
+  .app-tabbar {
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); background: color-mix(in srgb, var(--paper) 94%, transparent);
+    border-top: 1px solid var(--line); bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); inset-inline: 0;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); position: fixed; z-index: 80;
+  }
+  .app-tab {
+    align-items: center; border-radius: 14px; color: var(--muted); display: flex; flex-direction: column; font-size: 11px;
+    font-weight: 700; gap: 3px; padding: 7px 4px; position: relative; user-select: none;
+    transition: color .2s ease, background-color .2s ease, transform .2s ease;
+  }
+  .app-tab svg { transition: transform .3s var(--drawer-ease); }
+  .app-tab:active { transform: scale(.94); }
+  .app-tab[aria-current='page'] { background: color-mix(in srgb, var(--green) 10%, transparent); color: var(--green); }
+  .app-tab[aria-current='page'] svg { transform: translateY(-2px) scale(1.1); }
+  .app-tab-badge {
+    align-items: center; background: var(--green); border-radius: 999px; color: var(--on-primary); display: flex; font-size: 10px;
+    font-weight: 700; height: 17px; justify-content: center; left: calc(50% + 4px); min-width: 17px; padding: 0 4px; position: absolute; top: 2px;
+  }
+}
