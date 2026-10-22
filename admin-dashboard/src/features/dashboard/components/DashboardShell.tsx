@@ -66,7 +66,7 @@ export function DashboardShell({ children, navItems, activeNav, currentUser, ord
             <label className="global-search" onClick={() => onCommandOpen()}>
               <Search size={17} />
               <input value={search} onChange={(event) => onSearchChange(event.target.value)} onFocus={() => onCommandOpen()} placeholder="ابحث عن طلب أو عميل..." />
-              <kbd>⌘ K</kbd>
+              <kbd>⌘ / Ctrl K</kbd>
             </label>
             <div className="notification-wrap">
               <button className="notification-button" onClick={() => onNotificationsChange(!notificationsOpen)} aria-label="الإشعارات">
